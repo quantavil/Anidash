@@ -14,6 +14,7 @@ export interface DisplayAnime {
 	startSeason: string | null; // "Spring 2024"
 	mediaType: string;
 	animeStatus: string;
+	numListUsers: number;
 	synopsis: string | null;
 }
 
@@ -34,6 +35,7 @@ export function mapMalNodeToDisplay(
 			: null,
 		mediaType: node.media_type ?? 'unknown',
 		animeStatus: node.status ?? 'unknown',
+		numListUsers: node.num_list_users ?? 0,
 		synopsis: null
 	};
 }
@@ -63,6 +65,7 @@ export function mapJikanToDisplay(
 					: null,
 		mediaType: anime.type ?? 'unknown',
 		animeStatus: anime.status ?? 'unknown',
+		numListUsers: anime.members ?? 0,
 		synopsis: anime.synopsis ?? null
 	};
 }

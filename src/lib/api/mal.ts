@@ -79,7 +79,9 @@ const LIST_FIELDS = [
 	'start_season',
 	'media_type',
 	'status',
-	'studios'
+	'studios',
+	'num_list_users',
+	'num_scoring_users'
 ].join(',');
 
 export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
@@ -140,6 +142,8 @@ function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
 		startSeason: node.start_season ?? { year: null, season: null },
 		mediaType: node.media_type ?? 'unknown',
 		animeStatus: node.status ?? 'unknown',
+		numListUsers: node.num_list_users ?? 0,
+		numScoringUsers: node.num_scoring_users ?? 0,
 		status: ls.status,
 		score: ls.score,
 		numWatchedEpisodes: ls.num_episodes_watched,
@@ -165,7 +169,9 @@ const DETAIL_FIELDS = [
 	'recommendations',
 	'start_season',
 	'status',
-	'media_type'
+	'media_type',
+	'num_list_users',
+	'num_scoring_users'
 ].join(',');
 
 export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
@@ -189,6 +195,8 @@ function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 		startSeason: detail.start_season ?? { year: null, season: null },
 		mediaType: detail.media_type ?? 'unknown',
 		animeStatus: detail.status ?? 'unknown',
+		numListUsers: detail.num_list_users ?? 0,
+		numScoringUsers: detail.num_scoring_users ?? 0,
 		synopsis: detail.synopsis ?? null,
 		relatedAnime:
 			detail.related_anime?.map((r) => ({
@@ -286,7 +294,9 @@ const SEARCH_FIELDS = [
 	'start_season',
 	'media_type',
 	'status',
-	'studios'
+	'studios',
+	'num_list_users',
+	'num_scoring_users'
 ].join(',');
 
 export async function searchAnime(

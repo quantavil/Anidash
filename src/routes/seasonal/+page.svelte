@@ -169,7 +169,7 @@
 					: 'text-text-secondary'}"
 			>
 				<ArrowUpDown size={14} />
-				MAL Rating
+				Rating
 			</button>
 		</div>
 	</div>

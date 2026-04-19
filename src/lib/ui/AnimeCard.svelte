@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { UserListRecord } from '$lib/cache/db';
-	import { formatMediaType } from '$lib/utils/format';
+	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
 	import { Star, Mic } from 'lucide-svelte';
 	import StatusBadge from './StatusBadge.svelte';
 	import EpisodeCounter from './EpisodeCounter.svelte';
@@ -49,9 +49,15 @@
 
 			<!-- Score overlay -->
 			{#if entry.mean}
-				<div class="glass-badge absolute right-2 top-2 px-2 py-0.5 text-xs font-medium">
+				<div
+					class="glass-badge absolute right-2 top-2 px-2 py-0.5 text-[10px] font-bold tracking-tight"
+				>
 					<Star size={10} class="mr-1 text-warning" fill="currentColor" />
-					{entry.mean.toFixed(1)}
+					<span class="text-text-primary">{entry.mean.toFixed(1)}</span>
+					{#if entry.numListUsers > 0}
+						<span class="mx-0.5 opacity-40">|</span>
+						<span class="text-text-secondary">{formatNumberShort(entry.numListUsers)}</span>
+					{/if}
 				</div>
 			{/if}
 

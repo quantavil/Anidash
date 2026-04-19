@@ -43,8 +43,8 @@
 	];
 
 	const SORTS = [
-		{ value: 'score', label: 'Highest Score' },
-		{ value: 'popularity', label: 'Most Popular' },
+		{ value: 'score', label: 'Rating' },
+		{ value: 'popularity', label: 'Popularity' },
 		{ value: 'title', label: 'Title A-Z' },
 		{ value: 'start_date', label: 'Newest First' }
 	];

@@ -15,6 +15,7 @@
 
 	import {
 		formatMediaType,
+		formatNumberShort,
 		formatAnimeStatus,
 		formatStatus,
 		formatSeason
@@ -245,10 +246,20 @@
 				<!-- Quick stats row -->
 				<div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
 					{#if anime.mean}
-						<div class="flex items-center gap-1">
+						<div
+							class="flex items-center gap-1"
+							title={anime.numScoringUsers
+								? anime.numScoringUsers.toLocaleString() + ' users scored this'
+								: ''}
+						>
 							<Star size={16} class="text-warning" fill="currentColor" />
 							<span class="font-semibold text-text-primary">{anime.mean.toFixed(1)}</span>
-							<span class="text-text-muted">community</span>
+						</div>
+					{/if}
+					{#if anime.numListUsers && anime.numListUsers > 0}
+						<div class="flex items-center gap-1">
+							<Users size={14} class="text-text-muted" />
+							<span><span class="text-text-primary font-medium">{formatNumberShort(anime.numListUsers)}</span> members</span>
 						</div>
 					{/if}
 					{#if anime.mediaType}

@@ -78,7 +78,9 @@ export const MalAnimeLeanSchema = z.object({
 	studios: z.array(StudioSchema).optional(),
 	start_season: StartSeasonSchema.nullable().optional(),
 	media_type: z.string().optional(),
-	status: z.string().optional()
+	status: z.string().optional(),
+	num_list_users: z.number().optional(),
+	num_scoring_users: z.number().optional()
 });
 
 export type MalAnimeLean = z.infer<typeof MalAnimeLeanSchema>;

@@ -166,7 +166,8 @@ export const JikanAnimeSchema = z.object({
 		.optional(),
 	season: z.string().nullable().optional(),
 	year: z.number().nullable().optional(),
-	rating: z.string().nullable().optional()
+	rating: z.string().nullable().optional(),
+	members: z.number().optional()
 });
 
 export type JikanAnime = z.infer<typeof JikanAnimeSchema>;

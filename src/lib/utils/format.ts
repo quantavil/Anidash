@@ -1,6 +1,15 @@
 // ─── Display formatting helpers ───
 
-/** MAL 1-10 score → display string. 0 = "—" (unrated) */
+/** Formats large numbers into short strings (e.g., 1500 -> 1.5K, 1200000 -> 1.2M) */
+export function formatNumberShort(num: number): string {
+	if (num >= 1_000_000) {
+		return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+	}
+	if (num >= 1_000) {
+		return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+	}
+	return String(num);
+}
 export function formatScore(score: number): string {
 	return score === 0 ? '—' : String(score);
 }

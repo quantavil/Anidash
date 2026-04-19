@@ -2,8 +2,8 @@
 	import type { DisplayAnime } from '$lib/utils/types';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { formatMediaType } from '$lib/utils/format';
-	import { Star, Plus, Check, Mic } from 'lucide-svelte';
+	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
+	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 
@@ -28,10 +28,14 @@
 		<!-- Score overlay -->
 		{#if anime.mean}
 			<div
-				class="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm"
+				class="glass-badge absolute right-2 top-2 px-2 py-0.5 text-[10px] font-bold tracking-tight"
 			>
 				<Star size={10} class="text-warning" fill="currentColor" />
-				{anime.mean.toFixed(1)}
+				<span class="text-text-primary">{anime.mean.toFixed(1)}</span>
+				{#if anime.numListUsers && anime.numListUsers > 0}
+					<span class="mx-0.5 opacity-40">|</span>
+					<span class="text-text-secondary">{formatNumberShort(anime.numListUsers)}</span>
+				{/if}
 			</div>
 		{/if}
 

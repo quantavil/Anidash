@@ -244,6 +244,8 @@ function createUserListStore() {
 			startSeason: { year: null, season: null },
 			mediaType: 'unknown',
 			animeStatus: 'unknown',
+			numListUsers: 0,
+			numScoringUsers: 0,
 			status,
 			score: 0,
 			numWatchedEpisodes: 0,
@@ -265,6 +267,8 @@ function createUserListStore() {
 			newEntry.startSeason = d.startSeason;
 			newEntry.mediaType = d.mediaType;
 			newEntry.animeStatus = d.animeStatus;
+			newEntry.numListUsers = d.numListUsers;
+			newEntry.numScoringUsers = d.numScoringUsers;
 		}
 
 		entries[malId] = newEntry;

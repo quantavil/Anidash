@@ -11,7 +11,7 @@
 		{ key: 'updated', label: 'Last Updated' },
 		{ key: 'title', label: 'Title' },
 		{ key: 'score', label: 'My Score' },
-		{ key: 'mean', label: 'MAL Rating' },
+		{ key: 'mean', label: 'Rating' },
 		{ key: 'progress', label: 'Progress' }
 	];
 

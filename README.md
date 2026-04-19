@@ -12,6 +12,8 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **MAL-Dubs Integration**: Instantly identify which anime have English dubs available using the MAL-Dubs dataset with a persistent 7-day TTL cache.
 - **Advanced Recommendations**: Dual-source suggestions from both MyAnimeList and the Jikan community, unified into a premium suggested gallery.
 - **Dynamic Stats & Sorting**: Comprehensive dashboard tracking your watching habits, episode distribution, and rating history with responsive visualizations. Enhanced data navigation with "MAL Rating" sorting for your personal list and seasonal anime.
+- **Smart Data Insights**: Community rating and member statistics (e.g., "8.3 | 250K") displayed on poster overlays using short-scale formatting (K/M) for maximum density.
+- **Enhanced Detail Gallery**: Lazy-loaded characters, community recommendations from Jikan, and a "Quick Stats" row with precise scoring user counts.
 
 ## 🏗️ Architecture
 

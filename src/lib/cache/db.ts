@@ -16,6 +16,8 @@ export interface AnimeRecord {
 	startSeason: { year: number | null; season: string | null } | null;
 	mediaType: string;
 	animeStatus: string;
+	numListUsers: number;
+	numScoringUsers: number;
 	synopsis: string | null;
 	relatedAnime: RelatedAnimeRecord[] | null;
 	recommendations: RecommendationRecord[] | null;
@@ -50,6 +52,8 @@ export interface UserListRecord {
 	startSeason: { year: number | null; season: string | null } | null;
 	mediaType: string;
 	animeStatus: string;
+	numListUsers: number;
+	numScoringUsers: number;
 	// User status
 	status: 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
 	score: number;

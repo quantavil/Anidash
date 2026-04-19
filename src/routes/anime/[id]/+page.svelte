@@ -13,7 +13,12 @@
 		JikanRecommendationEntry
 	} from '$lib/api/schemas/jikan.schema';
 
-	import { formatMediaType, formatAnimeStatus, formatStatus, formatSeason } from '$lib/utils/format';
+	import {
+		formatMediaType,
+		formatAnimeStatus,
+		formatStatus,
+		formatSeason
+	} from '$lib/utils/format';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { dubStore } from '$lib/stores/dub.svelte';
@@ -136,8 +141,6 @@
 		showCompleteDialog = true;
 	}
 
-
-
 	// ─── Lifecycle ───
 
 	onMount(() => {
@@ -205,14 +208,19 @@
 		<!-- ─── Header ─── -->
 		<div class="flex flex-col gap-6 sm:flex-row">
 			<!-- Cover -->
-			<div class="shrink-0 w-full sm:w-[200px] relative rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
+			<div
+				class="shrink-0 w-full sm:w-[200px] relative rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5"
+			>
 				<ImageWithFallback
 					src={anime.mainPicture?.large ?? anime.mainPicture?.medium}
 					alt={anime.title}
 					class="w-full sm:w-[200px] h-full"
 				/>
 				{#if dubStore.hasDub(anime.malId)}
-					<div class="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/95 text-white backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/20" title="Dubbed">
+					<div
+						class="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/95 text-white backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/20"
+						title="Dubbed"
+					>
 						<Mic size={14} fill="currentColor" />
 					</div>
 				{/if}
@@ -220,10 +228,15 @@
 
 			<!-- Info -->
 			<div class="flex-1">
-				<h1 class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl">
+				<h1
+					class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl"
+				>
 					{anime.title}
 					{#if dubStore.hasDub(anime.malId)}
-						<span class="inline-flex items-center justify-center rounded-md bg-primary/20 text-primary px-1.5 py-0.5" title="Dubbed">
+						<span
+							class="inline-flex items-center justify-center rounded-lg bg-primary/20 text-primary px-2 py-1 shadow-[0_0_10px_rgba(var(--color-primary),0.2)] border border-primary/30"
+							title="Dubbed"
+						>
 							<Mic size={16} fill="currentColor" />
 						</span>
 					{/if}
@@ -283,7 +296,9 @@
 				{/if}
 
 				<!-- ─── User List Controls ─── -->
-				<div class="mt-5 rounded-xl border border-border bg-surface-1 p-4">
+				<div
+					class="mt-5 rounded-2xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-5 shadow-xl"
+				>
 					{#if inList && listEntry}
 						<div class="flex flex-wrap items-center gap-4">
 							<!-- Status -->
@@ -341,14 +356,14 @@
 
 		<!-- ─── Tabs ─── -->
 		<div class="mt-8">
-			<div class="flex gap-1 overflow-x-auto border-b border-border pb-px scrollbar-none">
+			<div class="flex gap-2 overflow-x-auto pb-4 scrollbar-none">
 				{#each TABS as tab}
 					<button
 						onclick={() => handleTabChange(tab.key)}
-						class="shrink-0 border-b-2 px-4 pb-2.5 pt-1 text-sm font-medium transition-colors
+						class="shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300
               {activeTab === tab.key
-							? 'border-primary text-primary'
-							: 'border-transparent text-text-muted hover:text-text-secondary'}"
+							? 'bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--color-primary),0.2)] border border-primary/40'
+							: 'bg-surface-1/50 text-text-muted hover:bg-surface-1 hover:text-text-secondary border border-white/5'}"
 					>
 						{tab.label}
 						{#if tab.key === 'characters' && characters.length > 0}
@@ -364,7 +379,7 @@
 				{#if activeTab === 'overview'}
 					<div class="space-y-6">
 						{#if anime.synopsis}
-							<div>
+							<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5">
 								<h3 class="mb-2 text-sm font-semibold text-text-primary">Synopsis</h3>
 								<p class="text-sm leading-relaxed text-text-secondary">
 									{anime.synopsis}
@@ -373,14 +388,14 @@
 						{/if}
 
 						<!-- Info Grid -->
-						<div>
+						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5">
 							<h3 class="mb-3 text-sm font-semibold text-text-primary">Information</h3>
-							<div class="grid gap-2 sm:grid-cols-2">
+							<div class="grid gap-4 sm:grid-cols-2">
 								{#each [{ label: 'Type', value: formatMediaType(anime.mediaType) }, { label: 'Episodes', value: anime.numEpisodes || 'Unknown' }, { label: 'Status', value: formatAnimeStatus(anime.animeStatus) }, { label: 'Season', value: formatSeason(anime.startSeason?.year ?? null, anime.startSeason?.season ?? null) }, { label: 'Studios', value: anime.studios
 												.map((s) => s.name)
 												.join(', ') || '—' }, { label: 'Score', value: anime.mean ? anime.mean.toFixed(2) : '—' }] as item}
-									<div class="flex items-start gap-2 text-sm">
-										<span class="shrink-0 w-20 text-text-muted">{item.label}</span>
+									<div class="flex items-start gap-3 text-sm">
+										<span class="shrink-0 w-20 font-medium text-text-muted">{item.label}</span>
 										<span class="text-text-primary">{item.value}</span>
 									</div>
 								{/each}
@@ -395,7 +410,7 @@
 									{#each anime.recommendations.slice(0, 3) as rec}
 										<a
 											href="/anime/{rec.id}"
-											class="flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-2 transition-colors hover:border-primary/40"
+											class="flex items-center gap-3 rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30"
 										>
 											<ImageWithFallback
 												src={rec.mainPicture?.medium}
@@ -445,7 +460,7 @@
 						<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 							{#each characters as entry}
 								<div
-									class="flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-3"
+									class="flex items-center gap-3 rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-3 transition-transform hover:-translate-y-0.5 hover:shadow-lg"
 								>
 									<ImageWithFallback
 										src={entry.character.images?.jpg?.image_url}
@@ -498,7 +513,9 @@
 											/>
 										</div>
 										<div class="min-w-0 flex-1">
-											<p class="line-clamp-2 text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
+											<p
+												class="line-clamp-2 text-sm font-semibold text-text-primary group-hover:text-primary transition-colors"
+											>
 												{rec.title}
 											</p>
 											<div class="mt-1 flex flex-col gap-0.5">
@@ -510,7 +527,8 @@
 												{/if}
 												{#if rec.numRecommendations}
 													<p class="text-[10px] text-text-muted">
-														{rec.numRecommendations} {rec.numRecommendations === 1 ? 'recommendation' : 'recommendations'}
+														{rec.numRecommendations}
+														{rec.numRecommendations === 1 ? 'recommendation' : 'recommendations'}
 													</p>
 												{/if}
 											</div>
@@ -522,14 +540,20 @@
 
 						<!-- Jikan recommendations -->
 						{#if recommendations.length > 0}
-							<h3 class="mb-3 mt-8 text-sm font-semibold text-text-primary">Community Recommendations</h3>
+							<h3 class="mb-3 mt-8 text-sm font-semibold text-text-primary">
+								Community Recommendations
+							</h3>
 							<div class="space-y-3">
 								{#each recommendations.slice(0, 10) as rec}
-									<div class="rounded-xl border border-border bg-surface-1/50 p-4 transition-colors hover:bg-surface-1">
+									<div
+										class="rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-4 transition-all duration-300 hover:shadow-lg hover:border-primary/30"
+									>
 										<div class="flex items-start gap-4">
 											{#if rec.entry}
 												<a href="/anime/{rec.entry.mal_id}" class="shrink-0 group">
-													<div class="overflow-hidden rounded-lg border border-white/5 shadow-2xl group-active:scale-95 transition-transform duration-200">
+													<div
+														class="overflow-hidden rounded-lg border border-white/5 shadow-2xl group-active:scale-95 transition-transform duration-200"
+													>
 														<ImageWithFallback
 															src={rec.entry.images?.jpg?.image_url}
 															alt={rec.entry.title}
@@ -549,7 +573,10 @@
 														</a>
 													{/if}
 													{#if rec.votes}
-														<div class="flex items-center gap-1.5 shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-text-secondary border border-white/10 shadow-sm" title="{rec.votes} users recommended this">
+														<div
+															class="flex items-center gap-1.5 shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-text-secondary border border-white/10 shadow-sm"
+															title="{rec.votes} users recommended this"
+														>
 															<Users size={12} class="text-primary" />
 															{rec.votes}
 														</div>
@@ -562,11 +589,15 @@
 												{/if}
 												{#if rec.user}
 													<div class="mt-4 flex items-center gap-2">
-														<div class="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center">
+														<div
+															class="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center"
+														>
 															<Users size={10} class="text-primary" />
 														</div>
 														<span class="text-[10px] font-medium text-text-muted">
-															Suggested by <span class="text-text-secondary">{rec.user.username}</span>
+															Suggested by <span class="text-text-secondary"
+																>{rec.user.username}</span
+															>
 														</span>
 													</div>
 												{/if}
@@ -603,7 +634,7 @@
 										{#each items as item}
 											<a
 												href="/anime/{item.id}"
-												class="flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-3 transition-colors hover:border-primary/40"
+												class="flex items-center gap-3 rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30"
 											>
 												<ImageWithFallback
 													src={item.mainPicture?.medium}
@@ -644,7 +675,4 @@
 />
 
 <!-- Complete Confirmation Dialog -->
-<CompleteAnimeDialog
-	bind:open={showCompleteDialog}
-	bind:malId={completeTargetId}
-/>
+<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />

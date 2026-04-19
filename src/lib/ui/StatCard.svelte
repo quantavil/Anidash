@@ -23,11 +23,17 @@
 	this={href ? 'a' : onclick ? 'button' : 'div'}
 	{href}
 	{onclick}
-	class="group flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-1/40 p-2.5 text-center backdrop-blur-md transition-all duration-300 {href || onclick ? 'cursor-pointer hover:-translate-y-1 hover:border-primary/30 hover:bg-surface-2/60 active:scale-95' : ''}"
+	class="group flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-1/40 p-2.5 text-center backdrop-blur-md transition-all duration-300 {href ||
+	onclick
+		? 'cursor-pointer hover:-translate-y-1 hover:border-primary/30 hover:bg-surface-2/60 active:scale-95'
+		: ''}"
 >
 	{#if icon}
 		{@const Icon = icon}
-		<Icon size={20} class="{color} opacity-80 transition-transform duration-300 group-hover:scale-110" />
+		<Icon
+			size={20}
+			class="{color} opacity-80 transition-transform duration-300 group-hover:scale-110"
+		/>
 	{/if}
 	<div class="min-w-0">
 		<div class="text-lg font-bold leading-tight {color}">{value}</div>

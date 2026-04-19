@@ -7,242 +7,253 @@ import { tokens, refreshTokens } from './tokens';
 import { authFetch } from '$lib/api/fetch';
 import { MAL_API_BASE } from '$lib/api/config';
 import { ok, err, type Result } from '$lib/api/result';
-import {
-  MalUserSchema,
-  MalTokenResponseSchema,
-  type MalUser,
-} from '$lib/api/schemas/mal.schema';
+import { MalUserSchema, MalTokenResponseSchema, type MalUser } from '$lib/api/schemas/mal.schema';
 import { zodIssuesToSummaries } from '$lib/api/result';
 
 const PKCE_STORAGE_KEY = 'anidash_pkce_verifier';
 const AUTH_ROUTES = ['/login', '/auth/callback'];
 
 function createAuthStore() {
-  let user = $state<MalUser | null>(null);
-  let isLoading = $state(true);
-  let error = $state<string | null>(null);
-  let isExchanging = $state(false);
+	let user = $state<MalUser | null>(null);
+	let isLoading = $state(true);
+	let error = $state<string | null>(null);
+	let isExchanging = $state(false);
 
-  const isAuthenticated = $derived(user !== null);
-  const userId = $derived(user?.id ?? null);
+	const isAuthenticated = $derived(user !== null);
+	const userId = $derived(user?.id ?? null);
 
-  // ─── Initialize ───
+	// ─── Initialize ───
 
-  async function init(): Promise<void> {
-    isLoading = true;
-    error = null;
+	async function init(): Promise<void> {
+		isLoading = true;
+		error = null;
 
-    const storedTokens = tokens.get();
-    if (!storedTokens) {
-      isLoading = false;
-      return;
-    }
+		const storedTokens = tokens.get();
+		if (!storedTokens) {
+			isLoading = false;
+			return;
+		}
 
-    const result = await fetchUserProfile();
-    if (result.ok) {
-      user = result.value;
-    } else {
-      // Try refreshing the token
-      const refreshed = await refreshTokens();
-      if (refreshed.ok) {
-        const retry = await fetchUserProfile();
-        if (retry.ok) {
-          user = retry.value;
-        } else {
-          // Refresh worked but profile fetch failed — keep session, try again later
-          console.warn('Profile fetch failed after refresh:', retry.error);
-        }
-      } else {
-        // Refresh failed — clear tokens, force re-login
-        tokens.clear();
-      }
-    }
+		const result = await fetchUserProfile();
+		if (result.ok) {
+			user = result.value;
+		} else {
+			// Try refreshing the token
+			const refreshed = await refreshTokens();
+			if (refreshed.ok) {
+				const retry = await fetchUserProfile();
+				if (retry.ok) {
+					user = retry.value;
+				} else {
+					// Refresh worked but profile fetch failed — keep session, try again later
+					console.warn('Profile fetch failed after refresh:', retry.error);
+				}
+			} else {
+				// Refresh failed — clear tokens, force re-login
+				tokens.clear();
+			}
+		}
 
-    isLoading = false;
-  }
+		isLoading = false;
+	}
 
-  // ─── Fetch User Profile ───
+	// ─── Fetch User Profile ───
 
-  async function fetchUserProfile(): Promise<Result<MalUser>> {
-    const result = await authFetch(`${MAL_API_BASE}/users/@me?fields=anime_statistics`);
-    if (!result.ok) return result;
+	async function fetchUserProfile(): Promise<Result<MalUser>> {
+		const result = await authFetch(`${MAL_API_BASE}/users/@me?fields=anime_statistics`);
+		if (!result.ok) return result;
 
-    try {
-      const data = await result.value.json();
-      const parsed = MalUserSchema.safeParse(data);
+		try {
+			const data = await result.value.json();
+			const parsed = MalUserSchema.safeParse(data);
 
-      if (!parsed.success) {
-        return err({
-          type: 'validation',
-          message: 'Invalid user profile data from MAL',
-          issues: zodIssuesToSummaries(parsed.error.issues),
-        });
-      }
+			if (!parsed.success) {
+				return err({
+					type: 'validation',
+					message: 'Invalid user profile data from MAL',
+					issues: zodIssuesToSummaries(parsed.error.issues)
+				});
+			}
 
-      return ok(parsed.data);
-    } catch (e) {
-      return err({
-        type: 'network',
-        message: 'Failed to parse user profile response',
-        cause: e instanceof Error ? e : undefined,
-      });
-    }
-  }
+			return ok(parsed.data);
+		} catch (e) {
+			return err({
+				type: 'network',
+				message: 'Failed to parse user profile response',
+				cause: e instanceof Error ? e : undefined
+			});
+		}
+	}
 
-  // ─── Login ───
+	// ─── Login ───
 
-  async function login(): Promise<void> {
-    error = null;
+	async function login(): Promise<void> {
+		error = null;
 
-    try {
-      const { verifier, challenge } = await generatePKCE();
-      sessionStorage.setItem(PKCE_STORAGE_KEY, verifier);
+		try {
+			const { verifier, challenge } = await generatePKCE();
+			sessionStorage.setItem(PKCE_STORAGE_KEY, verifier);
 
-      const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
-      if (!clientId) {
-        error = 'MAL Client ID not configured';
-        return;
-      }
+			const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
+			if (!clientId) {
+				error = 'MAL Client ID not configured';
+				return;
+			}
 
-      const redirectUri = `${window.location.origin}/auth/callback`;
-      const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: clientId,
-        code_challenge: challenge,
-        redirect_uri: redirectUri,
-      });
+			const redirectUri = `${window.location.origin}/auth/callback`;
+			const params = new URLSearchParams({
+				response_type: 'code',
+				client_id: clientId,
+				code_challenge: challenge,
+				redirect_uri: redirectUri
+			});
 
-      window.location.href = `https://myanimelist.net/v1/oauth2/authorize?${params}`;
-    } catch (e) {
-      error = 'Failed to initiate login';
-      console.error('Login error:', e);
-    }
-  }
+			window.location.href = `https://myanimelist.net/v1/oauth2/authorize?${params}`;
+		} catch (e) {
+			error = 'Failed to initiate login';
+			console.error('Login error:', e);
+		}
+	}
 
-  let exchangePromise: Promise<Result<void>> | null = null;
+	let exchangePromise: Promise<Result<void>> | null = null;
 
-  async function handleCallback(code: string): Promise<Result<void>> {
-    if (exchangePromise) return exchangePromise;
+	async function handleCallback(code: string): Promise<Result<void>> {
+		if (exchangePromise) return exchangePromise;
 
-    exchangePromise = (async () => {
-      isExchanging = true;
-      error = null;
+		exchangePromise = (async () => {
+			isExchanging = true;
+			error = null;
 
-      const verifier = sessionStorage.getItem(PKCE_STORAGE_KEY);
-    if (!verifier) {
-      isExchanging = false;
-      return err({ type: 'auth', message: 'Missing PKCE verifier — please try logging in again' });
-    }
+			const verifier = sessionStorage.getItem(PKCE_STORAGE_KEY);
+			if (!verifier) {
+				isExchanging = false;
+				return err({
+					type: 'auth',
+					message: 'Missing PKCE verifier — please try logging in again'
+				});
+			}
 
-    // Use default local worker if not configured to prevent crashes in local dev
-    const workerUrl = import.meta.env.VITE_WORKER_URL || '';
+			// Use default local worker if not configured to prevent crashes in local dev
+			const workerUrl = import.meta.env.VITE_WORKER_URL || '';
 
-    try {
-      const redirectUri = `${window.location.origin}/auth/callback`;
+			try {
+				const redirectUri = `${window.location.origin}/auth/callback`;
 
-      const response = await fetch(`${workerUrl}/auth/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          code_verifier: verifier,
-          redirect_uri: redirectUri,
-        }),
-      });
+				const response = await fetch(`${workerUrl}/auth/token`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						code,
+						code_verifier: verifier,
+						redirect_uri: redirectUri
+					})
+				});
 
-      const body = (await response.json()) as any;
+				const body = (await response.json()) as any;
 
-      if (!response.ok || !body.ok) {
-        isExchanging = false;
-        return err({
-          type: 'api',
-          status: response.status,
-          message: body.error || 'Token exchange failed',
-        });
-      }
+				if (!response.ok || !body.ok) {
+					isExchanging = false;
+					return err({
+						type: 'api',
+						status: response.status,
+						message: body.error || 'Token exchange failed'
+					});
+				}
 
-      // Validate token response
-      const parsed = MalTokenResponseSchema.safeParse(body);
-      if (!parsed.success) {
-        isExchanging = false;
-        return err({
-          type: 'validation',
-          message: 'Invalid token response from server',
-          issues: zodIssuesToSummaries(parsed.error.issues),
-        });
-      }
+				// Validate token response
+				const parsed = MalTokenResponseSchema.safeParse(body);
+				if (!parsed.success) {
+					isExchanging = false;
+					return err({
+						type: 'validation',
+						message: 'Invalid token response from server',
+						issues: zodIssuesToSummaries(parsed.error.issues)
+					});
+				}
 
-      const tokenData = parsed.data;
-      tokens.set({
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token ?? '',
-        expiresAt: Date.now() + tokenData.expires_in * 1000,
-      });
+				const tokenData = parsed.data;
+				tokens.set({
+					accessToken: tokenData.access_token,
+					refreshToken: tokenData.refresh_token ?? '',
+					expiresAt: Date.now() + tokenData.expires_in * 1000
+				});
 
-      // Clean up PKCE
-      sessionStorage.removeItem(PKCE_STORAGE_KEY);
+				// Clean up PKCE
+				sessionStorage.removeItem(PKCE_STORAGE_KEY);
 
-      // Fetch user profile
-      const userResult = await fetchUserProfile();
-      if (userResult.ok) {
-        user = userResult.value;
-      }
+				// Fetch user profile
+				const userResult = await fetchUserProfile();
+				if (userResult.ok) {
+					user = userResult.value;
+				}
 
-      isExchanging = false;
-      return ok(undefined);
-    } catch (e) {
-      isExchanging = false;
-      return err({
-        type: 'network',
-        message: 'Network error during authentication',
-        cause: e instanceof Error ? e : undefined,
-      });
-    }
-  })();
-  const res = await exchangePromise;
-  exchangePromise = null;
-  return res;
-}
+				isExchanging = false;
+				return ok(undefined);
+			} catch (e) {
+				isExchanging = false;
+				return err({
+					type: 'network',
+					message: 'Network error during authentication',
+					cause: e instanceof Error ? e : undefined
+				});
+			}
+		})();
+		const res = await exchangePromise;
+		exchangePromise = null;
+		return res;
+	}
 
-  // ─── Logout ───
+	// ─── Logout ───
 
-  async function logout(): Promise<void> {
-    tokens.clear();
-    user = null;
-    error = null;
+	async function logout(): Promise<void> {
+		tokens.clear();
+		user = null;
+		error = null;
 
-    // Clear IndexedDB
-    try {
-      const { deleteDB } = await import('$lib/cache/db');
-      await deleteDB();
-    } catch {
-      // IDB deletion can fail if locked — not critical
-    }
+		// Clear IndexedDB
+		try {
+			const { deleteDB } = await import('$lib/cache/db');
+			await deleteDB();
+		} catch {
+			// IDB deletion can fail if locked — not critical
+		}
 
-    goto('/login');
-  }
+		goto('/login');
+	}
 
-  // ─── Auth Guard ───
+	// ─── Auth Guard ───
 
-  function isAuthRoute(pathname: string): boolean {
-    return AUTH_ROUTES.some((route) => pathname.startsWith(route));
-  }
+	function isAuthRoute(pathname: string): boolean {
+		return AUTH_ROUTES.some((route) => pathname.startsWith(route));
+	}
 
-  return {
-    get user() { return user; },
-    get isLoading() { return isLoading; },
-    get isAuthenticated() { return isAuthenticated; },
-    get userId() { return userId; },
-    get error() { return error; },
-    get isExchanging() { return isExchanging; },
+	return {
+		get user() {
+			return user;
+		},
+		get isLoading() {
+			return isLoading;
+		},
+		get isAuthenticated() {
+			return isAuthenticated;
+		},
+		get userId() {
+			return userId;
+		},
+		get error() {
+			return error;
+		},
+		get isExchanging() {
+			return isExchanging;
+		},
 
-    init,
-    login,
-    handleCallback,
-    logout,
-    isAuthRoute,
-    fetchUserProfile,
-  };
+		init,
+		login,
+		handleCallback,
+		logout,
+		isAuthRoute,
+		fetchUserProfile
+	};
 }
 
 export const authStore = createAuthStore();

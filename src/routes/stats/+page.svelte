@@ -3,17 +3,7 @@
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { formatMediaType, formatRelativeDate, formatStatus } from '$lib/utils/format';
-	import {
-		Film,
-		Star,
-		Tv,
-		Play,
-		Calendar,
-		CircleCheck,
-		Pause,
-		Trash,
-		Clock
-	} from 'lucide-svelte';
+	import { Film, Star, Tv, Play, Calendar, CircleCheck, Pause, Trash, Clock } from 'lucide-svelte';
 	import StatCard from '$lib/ui/StatCard.svelte';
 	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
@@ -25,9 +15,8 @@
 		const entries = userListStore.allEntries;
 		const totalEpisodes = entries.reduce((sum, e) => sum + e.numWatchedEpisodes, 0);
 		const scored = entries.filter((e) => e.score > 0);
-		const meanScore = scored.length > 0
-			? scored.reduce((sum, e) => sum + e.score, 0) / scored.length
-			: 0;
+		const meanScore =
+			scored.length > 0 ? scored.reduce((sum, e) => sum + e.score, 0) / scored.length : 0;
 		const daysWatched = Math.round((totalEpisodes * 24) / 60) / 10; // rough estimate: 24min/ep
 
 		return {
@@ -55,7 +44,6 @@
 			.sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
 			.slice(0, 8)
 	);
-
 
 	// ─── Complete prompt ───
 
@@ -251,7 +239,4 @@
 </div>
 
 <!-- Complete Confirmation Dialog -->
-<CompleteAnimeDialog
-	bind:open={showCompleteDialog}
-	bind:malId={completeTargetId}
-/>
+<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />

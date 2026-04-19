@@ -6,89 +6,89 @@ import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
 // ─── Types ───
 
 export interface AnimeRecord {
-  malId: number;
-  title: string;
-  mainPicture: { medium: string | null; large: string | null } | null;
-  mean: number | null;
-  numEpisodes: number;
-  genres: { id: number; name: string }[];
-  studios: { id: number; name: string }[];
-  startSeason: { year: number | null; season: string | null } | null;
-  mediaType: string;
-  animeStatus: string;
-  synopsis: string | null;
-  relatedAnime: RelatedAnimeRecord[] | null;
-  recommendations: RecommendationRecord[] | null;
-  isDetail: boolean; // true = full detail fetched, false = lean list data
-  cachedAt: number;  // epoch ms
+	malId: number;
+	title: string;
+	mainPicture: { medium: string | null; large: string | null } | null;
+	mean: number | null;
+	numEpisodes: number;
+	genres: { id: number; name: string }[];
+	studios: { id: number; name: string }[];
+	startSeason: { year: number | null; season: string | null } | null;
+	mediaType: string;
+	animeStatus: string;
+	synopsis: string | null;
+	relatedAnime: RelatedAnimeRecord[] | null;
+	recommendations: RecommendationRecord[] | null;
+	isDetail: boolean; // true = full detail fetched, false = lean list data
+	cachedAt: number; // epoch ms
 }
 
 export interface RelatedAnimeRecord {
-  id: number;
-  title: string;
-  mainPicture: { medium: string | null; large: string | null } | null;
-  mediaType: string | null;
-  relationType: string;
+	id: number;
+	title: string;
+	mainPicture: { medium: string | null; large: string | null } | null;
+	mediaType: string | null;
+	relationType: string;
 }
 
 export interface RecommendationRecord {
-  id: number;
-  title: string;
-  mainPicture: { medium: string | null; large: string | null } | null;
-  mean: number | null;
-  numRecommendations: number;
+	id: number;
+	title: string;
+	mainPicture: { medium: string | null; large: string | null } | null;
+	mean: number | null;
+	numRecommendations: number;
 }
 
 export interface UserListRecord {
-  malId: number;
-  title: string;
-  mainPicture: { medium: string | null; large: string | null } | null;
-  mean: number | null;
-  numEpisodes: number;
-  genres: { id: number; name: string }[];
-  studios: { id: number; name: string }[];
-  startSeason: { year: number | null; season: string | null } | null;
-  mediaType: string;
-  animeStatus: string;
-  // User status
-  status: 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
-  score: number;
-  numWatchedEpisodes: number;
-  isRewatching: boolean;
-  updatedAt: string | null;
-  startDate: string | null;
-  finishDate: string | null;
+	malId: number;
+	title: string;
+	mainPicture: { medium: string | null; large: string | null } | null;
+	mean: number | null;
+	numEpisodes: number;
+	genres: { id: number; name: string }[];
+	studios: { id: number; name: string }[];
+	startSeason: { year: number | null; season: string | null } | null;
+	mediaType: string;
+	animeStatus: string;
+	// User status
+	status: 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
+	score: number;
+	numWatchedEpisodes: number;
+	isRewatching: boolean;
+	updatedAt: string | null;
+	startDate: string | null;
+	finishDate: string | null;
 }
 
 export interface MetaRecord {
-  key: string;
-  value: unknown;
-  updatedAt: number;
+	key: string;
+	value: unknown;
+	updatedAt: number;
 }
 
 // ─── DB Schema ───
 
 interface AniDashDB extends DBSchema {
-  anime: {
-    key: number; // malId
-    value: AnimeRecord;
-    indexes: {
-      'by-cachedAt': number;
-      'by-mediaType': string;
-    };
-  };
-  userList: {
-    key: number; // malId
-    value: UserListRecord;
-    indexes: {
-      'by-status': string;
-      'by-updatedAt': string;
-    };
-  };
-  meta: {
-    key: string;
-    value: MetaRecord;
-  };
+	anime: {
+		key: number; // malId
+		value: AnimeRecord;
+		indexes: {
+			'by-cachedAt': number;
+			'by-mediaType': string;
+		};
+	};
+	userList: {
+		key: number; // malId
+		value: UserListRecord;
+		indexes: {
+			'by-status': string;
+			'by-updatedAt': string;
+		};
+	};
+	meta: {
+		key: string;
+		value: MetaRecord;
+	};
 }
 
 // ─── Connection ───
@@ -99,55 +99,55 @@ const DB_VERSION = 1;
 let dbPromise: Promise<IDBPDatabase<AniDashDB>> | null = null;
 
 export function getDB(): Promise<IDBPDatabase<AniDashDB>> {
-  if (!dbPromise) {
-    dbPromise = openDB<AniDashDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
-        // Version 1: initial schema
-        if (oldVersion < 1) {
-          // Anime store
-          const animeStore = db.createObjectStore('anime', { keyPath: 'malId' });
-          animeStore.createIndex('by-cachedAt', 'cachedAt');
-          animeStore.createIndex('by-mediaType', 'mediaType');
+	if (!dbPromise) {
+		dbPromise = openDB<AniDashDB>(DB_NAME, DB_VERSION, {
+			upgrade(db, oldVersion) {
+				// Version 1: initial schema
+				if (oldVersion < 1) {
+					// Anime store
+					const animeStore = db.createObjectStore('anime', { keyPath: 'malId' });
+					animeStore.createIndex('by-cachedAt', 'cachedAt');
+					animeStore.createIndex('by-mediaType', 'mediaType');
 
-          // User list store
-          const listStore = db.createObjectStore('userList', { keyPath: 'malId' });
-          listStore.createIndex('by-status', 'status');
-          listStore.createIndex('by-updatedAt', 'updatedAt');
+					// User list store
+					const listStore = db.createObjectStore('userList', { keyPath: 'malId' });
+					listStore.createIndex('by-status', 'status');
+					listStore.createIndex('by-updatedAt', 'updatedAt');
 
-          // Meta store
-          db.createObjectStore('meta', { keyPath: 'key' });
-        }
+					// Meta store
+					db.createObjectStore('meta', { keyPath: 'key' });
+				}
 
-        // Future migrations:
-        // if (oldVersion < 2) { ... }
-      },
-      blocked() {
-        console.warn('AniDash DB upgrade blocked — close other tabs');
-      },
-      blocking() {
-        console.warn('AniDash DB blocking — this tab is blocking an upgrade');
-      },
-      terminated() {
-        console.error('AniDash DB connection terminated unexpectedly');
-        dbPromise = null;
-      },
-    });
-  }
-  return dbPromise;
+				// Future migrations:
+				// if (oldVersion < 2) { ... }
+			},
+			blocked() {
+				console.warn('AniDash DB upgrade blocked — close other tabs');
+			},
+			blocking() {
+				console.warn('AniDash DB blocking — this tab is blocking an upgrade');
+			},
+			terminated() {
+				console.error('AniDash DB connection terminated unexpectedly');
+				dbPromise = null;
+			}
+		});
+	}
+	return dbPromise;
 }
 
 /** Close the DB connection (useful for logout cleanup) */
 export async function closeDB(): Promise<void> {
-  if (dbPromise) {
-    const db = await dbPromise;
-    db.close();
-    dbPromise = null;
-  }
+	if (dbPromise) {
+		const db = await dbPromise;
+		db.close();
+		dbPromise = null;
+	}
 }
 
 /** Delete the entire database (for logout or reset) */
 export async function deleteDB(): Promise<void> {
-  await closeDB();
-  dbPromise = null;
-  await indexedDB.deleteDatabase(DB_NAME);
+	await closeDB();
+	dbPromise = null;
+	await indexedDB.deleteDatabase(DB_NAME);
 }

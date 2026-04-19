@@ -104,7 +104,9 @@
 		<!-- Dub Mode -->
 		<button
 			onclick={() => dubStore.toggleDubMode()}
-			class="flex items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
+			class="flex items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode
+				? 'border-primary/30 bg-primary/10 text-primary'
+				: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 			title="Dub Mode Only"
 		>
 			<Mic size={14} class={dubStore.dubMode ? 'animate-pulse' : ''} />
@@ -113,49 +115,46 @@
 
 		<!-- Sort -->
 		<div class="relative">
-		<button
-			onclick={() => (showSortMenu = !showSortMenu)}
-			onkeydown={handleSortKeydown}
-			aria-haspopup="true"
-			aria-expanded={showSortMenu}
-			class="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-		>
-			<ArrowUpDown size={14} />
-			{sortLabel}
-		</button>
-
-		{#if showSortMenu}
-			<!-- Click-away overlay -->
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<div
-				class="fixed inset-0 z-40"
-				onclick={() => {
-					showSortMenu = false;
-					focusedIndex = -1;
-				}}
-				role="presentation"
-			></div>
-			<div
-				class="absolute right-0 top-full mt-2 glass-dropdown border-border!"
-				role="menu"
+			<button
+				onclick={() => (showSortMenu = !showSortMenu)}
+				onkeydown={handleSortKeydown}
+				aria-haspopup="true"
+				aria-expanded={showSortMenu}
+				class="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
 			>
-				{#each SORT_OPTIONS as option, idx}
-					<button
-						onclick={() => setSort(option.key)}
-						role="menuitem"
-						tabindex="-1"
-						class="glass-dropdown-item w-full
+				<ArrowUpDown size={14} />
+				{sortLabel}
+			</button>
+
+			{#if showSortMenu}
+				<!-- Click-away overlay -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<div
+					class="fixed inset-0 z-40"
+					onclick={() => {
+						showSortMenu = false;
+						focusedIndex = -1;
+					}}
+					role="presentation"
+				></div>
+				<div class="absolute right-0 top-full mt-2 glass-dropdown border-border!" role="menu">
+					{#each SORT_OPTIONS as option, idx}
+						<button
+							onclick={() => setSort(option.key)}
+							role="menuitem"
+							tabindex="-1"
+							class="glass-dropdown-item w-full
               {currentSort === option.key
-							? '!bg-primary/10 !text-primary'
-							: idx === focusedIndex
-								? '!bg-white/10 !text-text-primary'
-								: 'text-text-secondary'}"
-					>
-						{option.label}
-					</button>
-				{/each}
-			</div>
-		{/if}
+								? '!bg-primary/10 !text-primary'
+								: idx === focusedIndex
+									? '!bg-white/10 !text-text-primary'
+									: 'text-text-secondary'}"
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 </div>

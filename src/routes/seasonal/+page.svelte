@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
@@ -32,12 +31,14 @@
 	let sortByRating = $state(false);
 
 	const filteredAnime = $derived.by(() => {
-		let res = filterType ? anime.filter((a) => a.mediaType.toLowerCase() === filterType.toLowerCase()) : [...anime];
-		
+		let res = filterType
+			? anime.filter((a) => a.mediaType.toLowerCase() === filterType.toLowerCase())
+			: [...anime];
+
 		if (dubStore.dubMode) {
-			res = res.filter(a => dubStore.hasDub(a.malId));
+			res = res.filter((a) => dubStore.hasDub(a.malId));
 		}
-		
+
 		if (sortByRating) {
 			res.sort((a, b) => (b.mean ?? 0) - (a.mean ?? 0));
 		}
@@ -88,7 +89,6 @@
 			loadSeason();
 		}
 	});
-
 </script>
 
 <div class="mx-auto max-w-7xl px-4 py-6">
@@ -153,7 +153,9 @@
 			<!-- Dub Mode -->
 			<button
 				onclick={() => dubStore.toggleDubMode()}
-				class="flex shrink-0 items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
+				class="flex shrink-0 items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode
+					? 'border-primary/30 bg-primary/10 text-primary'
+					: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 				title="Dub Mode Only"
 			>
 				<Mic size={14} class={dubStore.dubMode ? 'animate-pulse' : ''} />
@@ -162,7 +164,9 @@
 
 			<button
 				onclick={() => (sortByRating = !sortByRating)}
-				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating ? 'text-primary border-primary/30' : 'text-text-secondary'}"
+				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating
+					? 'text-primary border-primary/30'
+					: 'text-text-secondary'}"
 			>
 				<ArrowUpDown size={14} />
 				MAL Rating
@@ -173,7 +177,9 @@
 	<!-- Results -->
 	<div class="mt-6">
 		{#if loading}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<div
+				class="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+			>
 				{#each Array(10) as _}
 					<div class="animate-pulse rounded-xl border border-border bg-surface-1 p-3">
 						<div class="aspect-[3/4] rounded-lg bg-surface-2"></div>
@@ -183,7 +189,9 @@
 				{/each}
 			</div>
 		{:else if filteredAnime.length > 0}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<div
+				class="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+			>
 				{#each filteredAnime as anime (anime.malId)}
 					<SearchResultCard {anime} />
 				{/each}

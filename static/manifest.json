@@ -1,0 +1,17 @@
+{
+  "name": "AniDash",
+  "short_name": "AniDash",
+  "description": "Personal anime tracker powered by MyAnimeList",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#7c6aef",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

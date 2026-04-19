@@ -59,3 +59,13 @@ export function filterByQuery(
   const q = query.toLowerCase().trim();
   return entries.filter((e) => e.title.toLowerCase().includes(q));
 }
+
+/** Filter entries by Dub Mode */
+export function filterByDub(
+  entries: UserListRecord[],
+  active: boolean,
+  hasDub: (malId: number) => boolean
+): UserListRecord[] {
+  if (!active) return entries;
+  return entries.filter((e) => hasDub(e.malId));
+}

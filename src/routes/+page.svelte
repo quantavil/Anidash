@@ -2,8 +2,8 @@
   import { page } from '$app/stores';
   import { getUrlParam } from '$lib/utils/url-state';
   import { userListStore } from '$lib/stores/userlist.svelte';
-  import { sortEntries, filterByStatus, filterByQuery, type SortKey } from '$lib/utils/sort';
-
+  import { sortEntries, filterByStatus, filterByQuery, filterByDub, type SortKey } from '$lib/utils/sort';
+  import { dubStore } from '$lib/stores/dub.svelte';
 
   import TabBar from '$lib/ui/TabBar.svelte';
   import FilterBar from '$lib/ui/FilterBar.svelte';
@@ -22,9 +22,13 @@
 
   const filteredEntries = $derived(
     sortEntries(
-      filterByQuery(
-        filterByStatus(userListStore.allEntries, currentTab),
-        currentQuery,
+      filterByDub(
+        filterByQuery(
+          filterByStatus(userListStore.allEntries, currentTab),
+          currentQuery,
+        ),
+        dubStore.dubMode,
+        (malId) => dubStore.hasDub(malId)
       ),
       currentSort,
     ),

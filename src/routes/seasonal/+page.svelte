@@ -7,9 +7,10 @@
 	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
 	import { formatMediaType, capitalize } from '$lib/utils/format';
-	import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, ArrowUpDown, Mic } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
+	import { dubStore } from '$lib/stores/dub.svelte';
 
 	// ─── Season State ───
 
@@ -31,7 +32,12 @@
 	let sortByRating = $state(false);
 
 	const filteredAnime = $derived.by(() => {
-		const res = filterType ? anime.filter((a) => a.mediaType.toLowerCase() === filterType.toLowerCase()) : [...anime];
+		let res = filterType ? anime.filter((a) => a.mediaType.toLowerCase() === filterType.toLowerCase()) : [...anime];
+		
+		if (dubStore.dubMode) {
+			res = res.filter(a => dubStore.hasDub(a.malId));
+		}
+		
 		if (sortByRating) {
 			res.sort((a, b) => (b.mean ?? 0) - (a.mean ?? 0));
 		}
@@ -143,13 +149,25 @@
 			{/each}
 		</div>
 
-		<button
-			onclick={() => (sortByRating = !sortByRating)}
-			class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating ? 'text-primary border-primary/30' : 'text-text-secondary'}"
-		>
-			<ArrowUpDown size={14} />
-			MAL Rating
-		</button>
+		<div class="flex items-center gap-2">
+			<!-- Dub Mode -->
+			<button
+				onclick={() => dubStore.toggleDubMode()}
+				class="flex shrink-0 items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
+				title="Dub Mode Only"
+			>
+				<Mic size={14} class={dubStore.dubMode ? 'animate-pulse' : ''} />
+				<span class="hidden sm:inline">Dubs Only</span>
+			</button>
+
+			<button
+				onclick={() => (sortByRating = !sortByRating)}
+				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating ? 'text-primary border-primary/30' : 'text-text-secondary'}"
+			>
+				<ArrowUpDown size={14} />
+				MAL Rating
+			</button>
+		</div>
 	</div>
 
 	<!-- Results -->

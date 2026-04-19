@@ -2,7 +2,8 @@
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { Search, ArrowUpDown, X } from 'lucide-svelte';
+	import { Search, ArrowUpDown, X, Mic } from 'lucide-svelte';
+	import { dubStore } from '$lib/stores/dub.svelte';
 
 	import type { SortKey } from '$lib/utils/sort';
 
@@ -98,8 +99,20 @@
 		{/if}
 	</div>
 
-	<!-- Sort -->
-	<div class="relative">
+	<!-- Controls -->
+	<div class="flex items-center gap-2">
+		<!-- Dub Mode -->
+		<button
+			onclick={() => dubStore.toggleDubMode()}
+			class="flex items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode ? 'border-primary/30 bg-primary/10 text-primary' : 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
+			title="Dub Mode Only"
+		>
+			<Mic size={14} class={dubStore.dubMode ? 'animate-pulse' : ''} />
+			<span class="hidden sm:inline">Dubs Only</span>
+		</button>
+
+		<!-- Sort -->
+		<div class="relative">
 		<button
 			onclick={() => (showSortMenu = !showSortMenu)}
 			onkeydown={handleSortKeydown}
@@ -143,5 +156,6 @@
 				{/each}
 			</div>
 		{/if}
+		</div>
 	</div>
 </div>

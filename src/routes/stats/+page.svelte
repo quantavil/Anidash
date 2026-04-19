@@ -85,17 +85,42 @@
 
 	<!-- Stats Grid -->
 	<div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-		<StatCard label="Watching" value={stats.watching} icon={Play} color="text-primary" />
-		<StatCard label="Plan to Watch" value={stats.planToWatch} icon={Calendar} color="text-info" />
+		<StatCard
+			label="Watching"
+			value={stats.watching}
+			icon={Play}
+			color="text-primary"
+			href="/?tab=watching"
+		/>
+		<StatCard
+			label="Plan to Watch"
+			value={stats.planToWatch}
+			icon={Calendar}
+			color="text-info"
+			href="/?tab=plan_to_watch"
+		/>
 		<StatCard
 			label="Completed"
 			value={stats.completed}
 			icon={CircleCheck}
 			color="text-success"
+			href="/?tab=completed"
 		/>
-		<StatCard label="On Hold" value={stats.onHold} icon={Pause} color="text-warning" />
-		<StatCard label="Dropped" value={stats.dropped} icon={Trash} color="text-error" />
-		<StatCard label="All Anime" value={stats.total} icon={Tv} />
+		<StatCard
+			label="On Hold"
+			value={stats.onHold}
+			icon={Pause}
+			color="text-warning"
+			href="/?tab=on_hold"
+		/>
+		<StatCard
+			label="Dropped"
+			value={stats.dropped}
+			icon={Trash}
+			color="text-error"
+			href="/?tab=dropped"
+		/>
+		<StatCard label="All Anime" value={stats.total} icon={Tv} href="/?tab=all" />
 	</div>
 
 	<div class="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">

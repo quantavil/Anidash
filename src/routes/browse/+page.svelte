@@ -6,9 +6,10 @@
   import { searchAnime, getAnimeGenres } from '$lib/api/jikan';
   import { mapJikanToDisplay, type DisplayAnime } from '$lib/utils/types';
   import { formatMediaType } from '$lib/utils/format';
-  import { Search, SlidersHorizontal, X, ChevronDown, Loader2 } from 'lucide-svelte';
+  import { Search, SlidersHorizontal, X, ChevronDown, Loader2, Mic } from 'lucide-svelte';
   import { toast } from 'svelte-sonner';
   import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
+  import { dubStore } from '$lib/stores/dub.svelte';
 
   // ─── URL State ───
 
@@ -74,7 +75,11 @@
     });
 
     if (result.ok) {
-      const mapped = result.value.anime.map(mapJikanToDisplay);
+      let mapped = result.value.anime.map(mapJikanToDisplay);
+      if (dubStore.dubMode) {
+        mapped = mapped.filter(a => dubStore.hasDub(a.malId));
+      }
+
       if (append) {
         results = [...results, ...mapped];
       } else {
@@ -98,7 +103,7 @@
   let prevSearchParams = '';
 
   $effect(() => {
-    const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}`;
+    const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}&d=${dubStore.dubMode}`;
     if (params !== prevSearchParams) {
       prevSearchParams = params;
       doSearch(1, false);
@@ -207,14 +212,26 @@
       {/if}
     </div>
 
-    <button
-      onclick={() => (showFilters = !showFilters)}
-      class="flex items-center gap-2 rounded-lg border border-border bg-surface-1 px-4 py-2.5 text-sm text-text-secondary transition-colors hover:bg-surface-2
-        {showFilters ? 'border-primary text-primary' : ''}"
-    >
-      <SlidersHorizontal size={16} />
-      Filters
-    </button>
+    <div class="flex items-center gap-2">
+      <!-- Dub Mode -->
+      <button
+        onclick={() => dubStore.toggleDubMode()}
+        class="flex items-center gap-1.5 rounded-lg border px-3 sm:px-4 py-2.5 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode ? 'border-primary/30 bg-primary/10 text-primary' : 'border-border bg-surface-1 text-text-secondary hover:bg-surface-2 hover:text-text-primary'}"
+        title="Dub Mode Only"
+      >
+        <Mic size={16} class={dubStore.dubMode ? 'animate-pulse' : ''} />
+        <span class="hidden sm:inline">Dubs Only</span>
+      </button>
+
+      <button
+        onclick={() => (showFilters = !showFilters)}
+        class="flex items-center gap-2 rounded-lg border border-border bg-surface-1 px-4 py-2.5 text-sm text-text-secondary transition-colors hover:bg-surface-2
+          {showFilters ? 'border-primary text-primary' : ''}"
+      >
+        <SlidersHorizontal size={16} />
+        Filters
+      </button>
+    </div>
   </div>
 
   <!-- Filters Panel -->

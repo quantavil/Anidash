@@ -5,9 +5,14 @@ import { getDB } from '$lib/cache/db';
 
 class DubStore {
 	dubs = $state<Set<number>>(new Set());
+	dubMode = $state(false);
 	#loading = false;
 
 	async init() {
+		if (typeof window !== 'undefined') {
+			this.dubMode = localStorage.getItem('anidash_dub_mode') === 'true';
+		}
+
 		if (this.dubs.size > 0 || this.#loading) return;
 		this.#loading = true;
 
@@ -66,6 +71,13 @@ class DubStore {
 	hasDub(malId: number | undefined): boolean {
 		if (!malId) return false;
 		return this.dubs.has(malId);
+	}
+
+	toggleDubMode() {
+		this.dubMode = !this.dubMode;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('anidash_dub_mode', String(this.dubMode));
+		}
 	}
 }
 

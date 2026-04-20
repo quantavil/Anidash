@@ -7,7 +7,7 @@
 		title,
 		titleEnglish,
 		class: className = '',
-		tag: tag = 'span'
+		tag = 'span'
 	}: {
 		title: string;
 		titleEnglish: string | null;
@@ -32,58 +32,36 @@
 	});
 
 	function handleFlip(e: MouseEvent) {
+		if (!hasBothTitles) return;
 		e.preventDefault();
 		e.stopPropagation();
-		if (!hasBothTitles) return;
 		showingEnglish = !showingEnglish;
 		flipped = !flipped;
 		key++;
 	}
 </script>
 
-{#if tag === 'h1'}
-	<h1 class={className} onclick={handleFlip} style:cursor={hasBothTitles ? 'pointer' : 'default'}>
-		{#key key}
-			<span
-				in:fade={{ duration: 200, easing: quintOut }}
-			>
-				{displayTitle}
-			</span>
-		{/key}
-		{#if hasBothTitles}
-			<span class="ml-1.5 inline-flex items-center rounded bg-white/10 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wider text-text-muted opacity-60 transition-opacity hover:opacity-100">
-				{showingEnglish ? 'EN' : 'JP'}
-			</span>
-		{/if}
-	</h1>
-{:else if tag === 'h3'}
-	<h3 class={className} onclick={handleFlip} style:cursor={hasBothTitles ? 'pointer' : 'default'}>
-		{#key key}
-			<span
-				in:fade={{ duration: 200, easing: quintOut }}
-			>
-				{displayTitle}
-			</span>
-		{/key}
-		{#if hasBothTitles}
-			<span class="ml-1 inline-flex items-center rounded bg-white/10 px-1 py-0.5 text-[8px] font-medium uppercase tracking-wider text-text-muted opacity-50 transition-opacity hover:opacity-90">
-				{showingEnglish ? 'EN' : 'JP'}
-			</span>
-		{/if}
-	</h3>
-{:else}
-	<span class={className} onclick={handleFlip} style:cursor={hasBothTitles ? 'pointer' : 'default'}>
-		{#key key}
-			<span
-				in:fade={{ duration: 200, easing: quintOut }}
-			>
-				{displayTitle}
-			</span>
-		{/key}
-		{#if hasBothTitles}
-			<span class="ml-1 inline-flex items-center rounded bg-white/10 px-1 py-0.5 text-[8px] font-medium uppercase tracking-wider text-text-muted opacity-50 transition-opacity hover:opacity-90">
-				{showingEnglish ? 'EN' : 'JP'}
-			</span>
-		{/if}
-	</span>
-{/if}
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<svelte:element
+	this={tag}
+	class={className}
+	onclick={handleFlip}
+	style:cursor={hasBothTitles ? 'pointer' : 'default'}
+>
+	{#key key}
+		<span in:fade={{ duration: 200, easing: quintOut }}>
+			{displayTitle}
+		</span>
+	{/key}
+	{#if hasBothTitles}
+		<span
+			class="inline-flex items-center rounded bg-white/10 px-1 py-0.5 font-medium uppercase tracking-wider text-text-muted transition-opacity {tag === 'h1'
+				? 'ml-1.5 text-[9px] opacity-60 hover:opacity-100'
+				: 'ml-1 text-[8px] opacity-50 hover:opacity-90'}"
+		>
+			{showingEnglish ? 'EN' : 'JP'}
+		</span>
+	{/if}
+</svelte:element>

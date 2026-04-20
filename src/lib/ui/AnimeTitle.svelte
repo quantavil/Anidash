@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { settingsStore } from '$lib/stores/settings.svelte';
-	import { flip } from 'svelte/animate';
+	import { fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
 	let {
@@ -45,7 +45,7 @@
 	<h1 class={className} onclick={handleFlip} style:cursor={hasBothTitles ? 'pointer' : 'default'}>
 		{#key key}
 			<span
-				animate:flip={{ duration: 200, easing: quintOut }}
+				in:fade={{ duration: 200, easing: quintOut }}
 			>
 				{displayTitle}
 			</span>
@@ -60,7 +60,7 @@
 	<h3 class={className} onclick={handleFlip} style:cursor={hasBothTitles ? 'pointer' : 'default'}>
 		{#key key}
 			<span
-				animate:flip={{ duration: 200, easing: quintOut }}
+				in:fade={{ duration: 200, easing: quintOut }}
 			>
 				{displayTitle}
 			</span>
@@ -75,7 +75,7 @@
 	<span class={className} onclick={handleFlip} style:cursor={hasBothTitles ? 'pointer' : 'default'}>
 		{#key key}
 			<span
-				animate:flip={{ duration: 200, easing: quintOut }}
+				in:fade={{ duration: 200, easing: quintOut }}
 			>
 				{displayTitle}
 			</span>

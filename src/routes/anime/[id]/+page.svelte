@@ -106,7 +106,7 @@
 		}
 
 		loading = false;
-	}}] datasource=quantavil/Anidash git_root=/home/quantavil/Documents/Project/anidash datasource=quantavil/Anidash git_root=/home/quantavil/Documents/Project/anidash
+	}
 
 	// ─── Lazy Load Tab Data ───
 

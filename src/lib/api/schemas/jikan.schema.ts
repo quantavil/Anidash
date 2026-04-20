@@ -179,14 +179,6 @@ export const JikanSearchResponseSchema = z.object({
 
 export type JikanSearchResponse = z.infer<typeof JikanSearchResponseSchema>;
 
-// ─── Anime By ID (Jikan) ───
-
-export const JikanAnimeByIdResponseSchema = z.object({
-	data: JikanAnimeSchema
-});
-
-export type JikanAnimeByIdResponse = z.infer<typeof JikanAnimeByIdResponseSchema>;
-
 // ─── Genres ───
 
 export const JikanGenreSchema = z.object({

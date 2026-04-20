@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 
 	import { getAnimeDetail } from '$lib/api/mal';
-	import { getCharacters, getRecommendations, getJikanAnimeById } from '$lib/api/jikan';
+	import { getCharacters, getRecommendations } from '$lib/api/jikan';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
@@ -83,9 +83,6 @@
 		// Fetch fresh data
 		const result = await getAnimeDetail(malId);
 		if (result.ok) {
-			if (cached?.titleEnglish) {
-				result.value.titleEnglish = cached.titleEnglish;
-			}
 			anime = result.value;
 			await putAnime(result.value);
 		} else if (!cached) {
@@ -93,18 +90,7 @@
 			error = result.error.message || 'Failed to load anime';
 		}
 
-		// Fetch english title from Jikan (non-blocking enrichment)
-		if (anime && !anime.titleEnglish) {
-			getJikanAnimeById(malId).then((jikanResult) => {
-				if (jikanResult.ok && jikanResult.value.title_english) {
-					titleEnglish = jikanResult.value.title_english;
-					if (anime) {
-						anime.titleEnglish = jikanResult.value.title_english;
-						putAnime(anime).catch(() => {});
-					}
-				}
-			}).catch(() => {});
-		} else if (anime?.titleEnglish) {
+		if (anime?.titleEnglish) {
 			titleEnglish = anime.titleEnglish;
 		}
 
@@ -697,6 +683,21 @@
 {/if}
 
 <!-- Add to List Modal -->
+<AddToListModal
+	open={showAddModal}
+	onOpenChange={(v) => (showAddModal = v)}
+	{malId}
+	title={anime?.title ?? ''}
+	titleEnglish={anime?.titleEnglish ?? titleEnglish ?? null}
+	picture={anime?.mainPicture?.large ?? anime?.mainPicture?.medium ?? null}
+	mean={anime?.mean ?? null}
+	mediaType={anime?.mediaType ?? ''}
+	numEpisodes={anime?.numEpisodes ?? 0}
+/>
+
+<!-- Complete Confirmation Dialog -->
+<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />
+List Modal -->
 <AddToListModal
 	open={showAddModal}
 	onOpenChange={(v) => (showAddModal = v)}

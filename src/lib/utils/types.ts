@@ -26,7 +26,7 @@ export function mapMalNodeToDisplay(
 	return {
 		malId: node.id,
 		title: node.title,
-		titleEnglish: null,
+		titleEnglish: node.alternative_titles?.en || null,
 		mainPicture: node.main_picture?.large ?? node.main_picture?.medium ?? null,
 		mean: node.mean ?? null,
 		numEpisodes: node.num_episodes ?? 0,

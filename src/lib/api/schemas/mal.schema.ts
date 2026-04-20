@@ -80,7 +80,10 @@ export const MalAnimeLeanSchema = z.object({
 	media_type: z.string().optional(),
 	status: z.string().optional(),
 	num_list_users: z.number().optional(),
-	num_scoring_users: z.number().optional()
+	num_scoring_users: z.number().optional(),
+	alternative_titles: z.object({
+		en: z.string().optional()
+	}).optional()
 });
 
 export type MalAnimeLean = z.infer<typeof MalAnimeLeanSchema>;

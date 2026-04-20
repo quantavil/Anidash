@@ -134,7 +134,7 @@ function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
 	return {
 		malId: node.id,
 		title: node.title,
-		titleEnglish: null,
+		titleEnglish: node.alternative_titles?.en || null,
 		mainPicture: node.main_picture ?? null,
 		mean: node.mean ?? null,
 		numEpisodes: node.num_episodes ?? 0,
@@ -289,6 +289,7 @@ export async function deleteAnimeStatus(id: number): Promise<Result<void>> {
 const SEARCH_FIELDS = [
 	'id',
 	'title',
+	'alternative_titles',
 	'main_picture',
 	'mean',
 	'num_episodes',

@@ -11,7 +11,6 @@ import {
 	JikanRecommendationsResponseSchema,
 	JikanSearchResponseSchema,
 	JikanGenresResponseSchema,
-	JikanAnimeByIdResponseSchema,
 	type JikanEpisode,
 	type JikanCharacterEntry,
 	type JikanRecommendationEntry,
@@ -194,17 +193,6 @@ export async function searchAnime(params: JikanSearchParams = {}): Promise<
 		hasNextPage: result.value.pagination?.has_next_page ?? false,
 		currentPage: params.page ?? 1
 	});
-}
-
-// ─── Anime By ID ───
-
-export async function getJikanAnimeById(id: number): Promise<Result<JikanAnime>> {
-	const url = `${JIKAN_BASE}/anime/${id}`;
-	const result = await jikanFetch(url, JikanAnimeByIdResponseSchema);
-
-	if (!result.ok) return result as Result<never>;
-
-	return ok(result.value.data);
 }
 
 // ─── Genres ───

@@ -13,6 +13,7 @@
 		onOpenChange,
 		malId,
 		title: animeTitle = '',
+		titleEnglish = null,
 		picture = null,
 		mean = null,
 		mediaType = '',
@@ -22,6 +23,7 @@
 		onOpenChange?: (open: boolean) => void;
 		malId: number;
 		title?: string;
+		titleEnglish?: string | null;
 		picture?: string | null;
 		mean?: number | null;
 		mediaType?: string;
@@ -41,7 +43,7 @@
 
 	async function handleAdd() {
 		adding = true;
-		const result = await userListStore.addToList(malId, selectedStatus);
+		const result = await userListStore.addToList(malId, selectedStatus, titleEnglish);
 		adding = false;
 
 		if (result.ok) {

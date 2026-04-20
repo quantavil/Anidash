@@ -221,7 +221,7 @@ function createUserListStore() {
 
 	// ─── Add to List (from browse/detail) ───
 
-	async function addToList(malId: number, status: AnimeStatus): Promise<Result<void>> {
+	async function addToList(malId: number, status: AnimeStatus, titleEnglish?: string | null): Promise<Result<void>> {
 		// First, update MAL
 		const result = await updateAnimeStatus(malId, { status });
 		if (!result.ok) return result;
@@ -229,6 +229,9 @@ function createUserListStore() {
 		// Then fetch the anime detail to populate our cache
 		const detailResult = await getAnimeDetail(malId);
 		if (detailResult.ok) {
+			if (titleEnglish) {
+				detailResult.value.titleEnglish = titleEnglish;
+			}
 			await putAnime(detailResult.value);
 		}
 
@@ -236,7 +239,7 @@ function createUserListStore() {
 		const newEntry: UserListRecord = {
 			malId,
 			title: '',
-			titleEnglish: null,
+			titleEnglish: titleEnglish ?? null,
 			mainPicture: null,
 			mean: null,
 			numEpisodes: 0,

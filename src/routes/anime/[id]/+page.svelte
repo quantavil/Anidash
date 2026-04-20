@@ -83,6 +83,9 @@
 		// Fetch fresh data
 		const result = await getAnimeDetail(malId);
 		if (result.ok) {
+			if (cached?.titleEnglish) {
+				result.value.titleEnglish = cached.titleEnglish;
+			}
 			anime = result.value;
 			await putAnime(result.value);
 		} else if (!cached) {
@@ -699,6 +702,7 @@
 	onOpenChange={(v) => (showAddModal = v)}
 	{malId}
 	title={anime?.title ?? ''}
+	titleEnglish={anime?.titleEnglish ?? titleEnglish ?? null}
 	picture={anime?.mainPicture?.large ?? anime?.mainPicture?.medium ?? null}
 	mean={anime?.mean ?? null}
 	mediaType={anime?.mediaType ?? ''}

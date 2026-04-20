@@ -94,7 +94,7 @@
 				onclick={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
-					userListStore.addToList(anime.malId, 'plan_to_watch');
+					userListStore.addToList(anime.malId, 'plan_to_watch', anime.titleEnglish);
 				}}
 				class="mt-2 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
 			>

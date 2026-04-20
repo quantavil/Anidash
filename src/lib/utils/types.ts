@@ -6,6 +6,7 @@ import { formatSeason, capitalize } from './format';
 export interface DisplayAnime {
 	malId: number;
 	title: string;
+	titleEnglish: string | null;
 	mainPicture: string | null;
 	mean: number | null;
 	numEpisodes: number;
@@ -25,6 +26,7 @@ export function mapMalNodeToDisplay(
 	return {
 		malId: node.id,
 		title: node.title,
+		titleEnglish: null,
 		mainPicture: node.main_picture?.large ?? node.main_picture?.medium ?? null,
 		mean: node.mean ?? null,
 		numEpisodes: node.num_episodes ?? 0,
@@ -47,6 +49,7 @@ export function mapJikanToDisplay(
 	return {
 		malId: anime.mal_id,
 		title: anime.title,
+		titleEnglish: anime.title_english ?? null,
 		mainPicture:
 			anime.images?.webp?.large_image_url ??
 			anime.images?.webp?.image_url ??

@@ -5,6 +5,7 @@
 	import StatusBadge from './StatusBadge.svelte';
 	import EpisodeCounter from './EpisodeCounter.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
+	import AnimeTitle from './AnimeTitle.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
 	let {
@@ -75,11 +76,12 @@
 		<!-- Info -->
 		<div class="flex flex-1 flex-col gap-2 p-3">
 			<!-- Title -->
-			<h3
+			<AnimeTitle
+				title={entry.title}
+				titleEnglish={entry.titleEnglish ?? null}
+				tag="h3"
 				class="line-clamp-2 text-sm font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
-			>
-				{entry.title}
-			</h3>
+			/>
 
 			<!-- Type + Season -->
 			<div class="flex items-center gap-2 text-xs text-text-muted">

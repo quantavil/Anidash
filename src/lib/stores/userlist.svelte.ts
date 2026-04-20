@@ -236,6 +236,7 @@ function createUserListStore() {
 		const newEntry: UserListRecord = {
 			malId,
 			title: '',
+			titleEnglish: null,
 			mainPicture: null,
 			mean: null,
 			numEpisodes: 0,
@@ -259,6 +260,7 @@ function createUserListStore() {
 		if (detailResult.ok) {
 			const d = detailResult.value;
 			newEntry.title = d.title;
+			newEntry.titleEnglish = d.titleEnglish;
 			newEntry.mainPicture = d.mainPicture;
 			newEntry.mean = d.mean;
 			newEntry.numEpisodes = d.numEpisodes;

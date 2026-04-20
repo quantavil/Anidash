@@ -6,6 +6,7 @@
 	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
+	import AnimeTitle from './AnimeTitle.svelte';
 
 	let { anime }: { anime: DisplayAnime } = $props();
 
@@ -59,11 +60,12 @@
 
 	<!-- Info -->
 	<div class="flex flex-1 flex-col gap-1.5 p-3">
-		<h3
+		<AnimeTitle
+			title={anime.title}
+			titleEnglish={anime.titleEnglish}
+			tag="h3"
 			class="line-clamp-2 text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
-		>
-			{anime.title}
-		</h3>
+		/>
 
 		<div class="flex items-center gap-2 text-xs text-text-muted">
 			{#if anime.mediaType}

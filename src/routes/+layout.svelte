@@ -12,6 +12,7 @@
 	import FluidNav from '$lib/ui/FluidNav.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { settingsStore } from '$lib/stores/settings.svelte';
 
 	import { purgeStaleAnime } from '$lib/cache/anime.cache';
 	import { deleteDB, closeDB } from '$lib/cache/db';
@@ -24,6 +25,7 @@
 
 	onMount(async () => {
 		await authStore.init();
+		settingsStore.init();
 
 		if (authStore.isAuthenticated) {
 			await userListStore.loadFromCache();

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 
 	import { getAnimeDetail } from '$lib/api/mal';
-	import { getCharacters, getRecommendations } from '$lib/api/jikan';
+	import { getCharacters, getRecommendations, getJikanAnimeById } from '$lib/api/jikan';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
@@ -24,6 +24,7 @@
 	import { toast } from 'svelte-sonner';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
+	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
 	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
 	import RatingStars from '$lib/ui/RatingStars.svelte';
@@ -38,6 +39,7 @@
 	// ─── State ───
 
 	let anime = $state<AnimeRecord | null>(null);
+	let titleEnglish = $state<string | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -88,8 +90,23 @@
 			error = result.error.message || 'Failed to load anime';
 		}
 
+		// Fetch english title from Jikan (non-blocking enrichment)
+		if (anime && !anime.titleEnglish) {
+			getJikanAnimeById(malId).then((jikanResult) => {
+				if (jikanResult.ok && jikanResult.value.title_english) {
+					titleEnglish = jikanResult.value.title_english;
+					if (anime) {
+						anime.titleEnglish = jikanResult.value.title_english;
+						putAnime(anime).catch(() => {});
+					}
+				}
+			}).catch(() => {});
+		} else if (anime?.titleEnglish) {
+			titleEnglish = anime.titleEnglish;
+		}
+
 		loading = false;
-	}
+	}}] datasource=quantavil/Anidash git_root=/home/quantavil/Documents/Project/anidash datasource=quantavil/Anidash git_root=/home/quantavil/Documents/Project/anidash
 
 	// ─── Lazy Load Tab Data ───
 
@@ -229,10 +246,13 @@
 
 			<!-- Info -->
 			<div class="flex-1">
-				<h1
-					class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl"
-				>
-					{anime.title}
+				<div class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl">
+					<AnimeTitle
+						title={anime.title}
+						titleEnglish={titleEnglish}
+						tag="span"
+						class=""
+					/>
 					{#if dubStore.hasDub(anime.malId)}
 						<span
 							class="inline-flex items-center justify-center rounded-lg bg-primary/20 text-primary px-2 py-1 shadow-[0_0_10px_rgba(var(--color-primary),0.2)] border border-primary/30"
@@ -241,7 +261,7 @@
 							<Mic size={16} fill="currentColor" />
 						</span>
 					{/if}
-				</h1>
+				</div>
 
 				<!-- Quick stats row -->
 				<div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-text-secondary">

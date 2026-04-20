@@ -1,33 +1,25 @@
 # Anime Recommender Design
 
 ## Goal
-Provide a feature that helps users decide what to watch next by recommending anime either from their "Plan to Watch" list or from the current season's lineup.
+Provide a feature that helps users decide what to watch next by recommending a random anime either from their "Plan to Watch" list or from the current season's lineup.
 
-## Approaches Considered
+## Approach
+Instead of the current empty state on the `/browse` page when no search is active, we will show two large, clickable widgets side-by-side (stacking vertically on mobile for PWA compatibility).
 
-**Approach A: "Smart Pick" Widget on the Home Page**
-A new section on the root `/` page (or above the anime grid) that surfaces a "What to Watch Next" card. It randomly alternates between:
-- **PTW Roulette:** A highly-rated or random anime from the user's local "Plan to Watch" list.
-- **Seasonal Highlight:** A popular anime from the current season.
+### The Widgets
+1. **🎲 Random from Plan to Watch:** Picks a random anime the user has saved for later.
+2. **🌸 Random from Current Season:** Picks a random popular anime airing right now.
 
-**Approach B: Interactive "Suggest Anime" Modal (Recommended)**
-A magic wand button that opens a focused modal with a single recommendation, letting the user "Reroll" if they don't like it.
-- **Location:** A new "🪄 Suggest" button in the main navigation or TabBar.
-- **Logic:** The modal has a toggle for the source ("Plan to Watch" vs "Current Season").
-  - If "Plan to Watch" is selected, it randomly picks an item from the user's PTW list.
-  - If "Current Season" is selected, it fetches the current season from the MAL API and picks one of the top most popular ones.
-  - A "Reroll" button allows cycling to another suggestion.
-- **Why this?** It's focused, fun, and doesn't clutter the main list views.
+### UI / UX
+- **Design:** The widgets will feature a glassmorphism style (blurred background) overlaid on a subtle anime-themed background image or gradient to look premium and "alive."
+- **Responsiveness:** Side-by-side on desktop, stacked on mobile. Fully responsive and compatible with the PWA.
+- **Behavior:** Clicking either widget calculates the random anime from the chosen source and navigates directly to that anime's detail page (`/anime/[id]`).
+- **Navigation:** Standard browser back button behavior will apply (returning the user back to the `/browse` page).
 
-**Approach C: Dedicated `/discover` Page**
-Create a new route (`/discover`) that provides multiple rows of recommendations (e.g., "From your PTW", "Top Seasonal", "Because you liked [X]"). This is more complex but scalable.
-
-## Recommended Design Details (Approach B)
-
-1. **Component:** Create `src/lib/ui/RecommenderModal.svelte`.
-2. **Trigger:** Add a prominent button (e.g., a "Sparkles" icon) to `src/lib/ui/FluidNav.svelte` (or `TabBar.svelte`).
-3. **Data Sources:** 
+## Implementation Details
+1. **Data Sources:** 
    - *PTW*: Use Svelte 5 derived state to pick from `userListStore.planToWatch`.
-   - *Seasonal*: Use `getSeasonal()` and `getCurrentSeason()` from existing helpers, caching the result locally while the modal is open.
-4. **UI:** Present the anime using the existing `AnimeCard` or a larger `SearchResultCard` style, with a big "Reroll" button below it.
-
+   - *Seasonal*: Use `getSeasonal()` and `getCurrentSeason()` from existing helpers.
+2. **Component:** Create `src/lib/ui/RecommenderWidgets.svelte` containing the two widgets.
+3. **Integration:** Update `src/routes/browse/+page.svelte` to conditionally render `RecommenderWidgets` when `!hasSearched` and `!query` and `results.length === 0`.
+4. **Styling:** Use Tailwind's `backdrop-blur`, semi-transparent backgrounds, and potentially a subtle Ken Burns effect or gradient for the anime reflection.

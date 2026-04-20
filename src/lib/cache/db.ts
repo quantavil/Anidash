@@ -8,6 +8,7 @@ import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
 export interface AnimeRecord {
 	malId: number;
 	title: string;
+	titleEnglish: string | null;
 	mainPicture: { medium: string | null; large: string | null } | null;
 	mean: number | null;
 	numEpisodes: number;
@@ -44,6 +45,7 @@ export interface RecommendationRecord {
 export interface UserListRecord {
 	malId: number;
 	title: string;
+	titleEnglish: string | null;
 	mainPicture: { medium: string | null; large: string | null } | null;
 	mean: number | null;
 	numEpisodes: number;

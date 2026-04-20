@@ -134,6 +134,7 @@ function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
 	return {
 		malId: node.id,
 		title: node.title,
+		titleEnglish: null,
 		mainPicture: node.main_picture ?? null,
 		mean: node.mean ?? null,
 		numEpisodes: node.num_episodes ?? 0,
@@ -187,6 +188,7 @@ function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 	return {
 		malId: detail.id,
 		title: detail.title,
+		titleEnglish: null,
 		mainPicture: detail.main_picture ?? null,
 		mean: detail.mean ?? null,
 		numEpisodes: detail.num_episodes ?? 0,

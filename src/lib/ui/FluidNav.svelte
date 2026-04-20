@@ -2,9 +2,10 @@
 	import { page } from '$app/stores';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
-	import { List, Search, Calendar, LogOut, RefreshCw, User } from 'lucide-svelte';
+	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
+	import { settingsStore } from '$lib/stores/settings.svelte';
 
 	async function handleSync() {
 		await import('$lib/stores/userlist.svelte').then((m) => m.userListStore.syncFromRemote());
@@ -71,6 +72,15 @@
 
 	<!-- Actions -->
 	<div class="flex items-center gap-2 pr-1">
+		<!-- Title Preference Toggle -->
+		<button
+			onclick={() => settingsStore.togglePreferEnglish()}
+			class="group flex h-9 w-9 items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {settingsStore.preferEnglish ? 'text-primary' : 'text-text-muted'}"
+			title="Toggle English/Romaji titles"
+		>
+			<Languages size={16} />
+		</button>
+
 		<button
 			onclick={handleSync}
 			disabled={syncStore.isSyncing}

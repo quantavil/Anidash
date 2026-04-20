@@ -13,6 +13,8 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **Advanced Recommendations**: Dual-source suggestions from both MyAnimeList and the Jikan community, unified into a premium suggested gallery.
 - **Dynamic Stats & Sorting**: Comprehensive dashboard tracking your watching habits, episode distribution, and rating history with responsive visualizations. Enhanced data navigation with "MAL Rating" sorting for your personal list and seasonal anime.
 - **Smart Data Insights**: Community rating and member statistics (e.g., "8.3 | 250K") displayed on poster overlays using short-scale formatting (K/M) for maximum density.
+- **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
+- **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
 - **Enhanced Detail Gallery**: Lazy-loaded characters, community recommendations from Jikan, and a "Quick Stats" row with precise scoring user counts.
 
 ## 🏗️ Architecture

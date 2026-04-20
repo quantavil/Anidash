@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
 
 	import { getAnimeDetail } from '$lib/api/mal';
 	import { getCharacters, getRecommendations } from '$lib/api/jikan';
@@ -39,7 +38,6 @@
 	// ─── State ───
 
 	let anime = $state<AnimeRecord | null>(null);
-	let titleEnglish = $state<string | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -69,29 +67,25 @@
 
 	// ─── Load Anime Detail ───
 
-	async function loadAnime() {
+	async function loadAnime(id: number) {
 		loading = true;
 		error = null;
 
 		// Try cache first (stale-while-revalidate)
-		const cached = await getAnimeAllowStale(malId);
+		const cached = await getAnimeAllowStale(id);
 		if (cached) {
 			anime = cached;
 			loading = false;
 		}
 
 		// Fetch fresh data
-		const result = await getAnimeDetail(malId);
+		const result = await getAnimeDetail(id);
 		if (result.ok) {
 			anime = result.value;
 			await putAnime(result.value);
 		} else if (!cached) {
 			// No cache and fetch failed
 			error = result.error.message || 'Failed to load anime';
-		}
-
-		if (anime?.titleEnglish) {
-			titleEnglish = anime.titleEnglish;
 		}
 
 		loading = false;
@@ -150,11 +144,7 @@
 
 	// ─── Lifecycle ───
 
-	onMount(() => {
-		loadAnime();
-	});
-
-	// Re-load when navigating to a different anime
+	// Load anime when route changes (handles both initial mount and navigation)
 	$effect(() => {
 		const id = Number($page.params.id);
 		if (id && id !== anime?.malId) {
@@ -162,25 +152,7 @@
 			characters = [];
 			recommendations = [];
 			activeTab = 'overview';
-			loading = true;
-
-			// IIFE to handle async in effect
-			(async () => {
-				const cached = await getAnimeAllowStale(id);
-				if (cached) {
-					anime = cached;
-					loading = false;
-				}
-
-				const result = await getAnimeDetail(id);
-				if (result.ok) {
-					anime = result.value;
-					await putAnime(result.value);
-				} else if (!cached) {
-					error = result.error.message || 'Failed to load anime';
-				}
-				loading = false;
-			})();
+			loadAnime(id);
 		}
 	});
 
@@ -204,7 +176,7 @@
 	<div class="mx-auto max-w-5xl px-4 py-16 text-center">
 		<p class="text-lg text-error">{error}</p>
 		<button
-			onclick={loadAnime}
+			onclick={() => loadAnime(malId)}
 			class="mt-4 rounded-lg bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover"
 		>
 			Retry
@@ -238,7 +210,7 @@
 				<div class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl">
 					<AnimeTitle
 						title={anime.title}
-						titleEnglish={titleEnglish}
+						titleEnglish={anime.titleEnglish ?? null}
 						tag="span"
 						class=""
 					/>
@@ -688,22 +660,7 @@
 	onOpenChange={(v) => (showAddModal = v)}
 	{malId}
 	title={anime?.title ?? ''}
-	titleEnglish={anime?.titleEnglish ?? titleEnglish ?? null}
-	picture={anime?.mainPicture?.large ?? anime?.mainPicture?.medium ?? null}
-	mean={anime?.mean ?? null}
-	mediaType={anime?.mediaType ?? ''}
-	numEpisodes={anime?.numEpisodes ?? 0}
-/>
-
-<!-- Complete Confirmation Dialog -->
-<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />
-List Modal -->
-<AddToListModal
-	open={showAddModal}
-	onOpenChange={(v) => (showAddModal = v)}
-	{malId}
-	title={anime?.title ?? ''}
-	titleEnglish={anime?.titleEnglish ?? titleEnglish ?? null}
+	titleEnglish={anime?.titleEnglish ?? null}
 	picture={anime?.mainPicture?.large ?? anime?.mainPicture?.medium ?? null}
 	mean={anime?.mean ?? null}
 	mediaType={anime?.mediaType ?? ''}

@@ -5,41 +5,75 @@
 	import { getCurrentSeason } from '$lib/utils/season';
 	import { Dice5, Sparkles, Loader2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import { onMount } from 'svelte';
 
 	let loading = $state(false);
+	let initializing = $state(false);
+	let selectedPTW = $state<{ malId: number; poster: string | null } | null>(null);
+	let selectedSeasonal = $state<{ malId: number; poster: string | null } | null>(null);
 
-	function getRandomPlanToWatch() {
+	onMount(async () => {
+		initializing = true;
+
+		// Get random PTW anime
 		const ptw = userListStore.planToWatch;
-		if (!ptw || ptw.length === 0) {
-			toast.info('Your Plan to Watch list is empty.');
-			return;
+		if (ptw && ptw.length > 0) {
+			const random = ptw[Math.floor(Math.random() * ptw.length)];
+			selectedPTW = {
+				malId: random.malId,
+				poster: random.mainPicture?.large || random.mainPicture?.medium || null
+			};
 		}
-		const random = ptw[Math.floor(Math.random() * ptw.length)];
-		goto(`/anime/${random.malId}`);
-	}
 
-	async function getRandomSeasonal() {
-		if (loading) return;
-		loading = true;
+		// Get random seasonal anime
 		try {
 			const current = getCurrentSeason();
 			const result = await getSeasonal(current.year, current.season, { limit: 50 });
-			
-			if (!result.ok) {
-				toast.error('Failed to load seasonal anime.');
-				loading = false;
-				return;
+			if (result.ok && result.value.data.length > 0) {
+				const random = result.value.data[Math.floor(Math.random() * result.value.data.length)];
+				selectedSeasonal = { malId: random.node.id, poster: random.node.main_picture?.medium || null };
 			}
-			
-			const animeList = result.value.data;
-			if (animeList.length === 0) {
-				toast.info('No seasonal anime found.');
-				loading = false;
-				return;
+		} catch (error) {
+			// Silently fail if seasonal loading fails
+		}
+
+		initializing = false;
+	});
+
+	function getRandomPlanToWatch() {
+		if (selectedPTW) {
+			goto(`/anime/${selectedPTW.malId}`);
+		} else {
+			toast.info('Your Plan to Watch list is empty.');
+		}
+	}
+
+	async function getRandomSeasonal() {
+		if (loading || initializing) return;
+		loading = true;
+		try {
+			if (selectedSeasonal) {
+				goto(`/anime/${selectedSeasonal.malId}`);
+			} else {
+				// Fallback if no seasonal anime was loaded on mount
+				const current = getCurrentSeason();
+				const result = await getSeasonal(current.year, current.season, { limit: 50 });
+
+				if (!result.ok) {
+					toast.error('Failed to load seasonal anime.');
+					return;
+				}
+
+				const animeList = result.value.data;
+				if (animeList.length === 0) {
+					toast.info('No seasonal anime found.');
+					return;
+				}
+
+				const random = animeList[Math.floor(Math.random() * animeList.length)];
+				selectedSeasonal = { malId: random.node.id, poster: random.node.main_picture?.medium || null };
+				goto(`/anime/${random.node.id}`);
 			}
-			
-			const random = animeList[Math.floor(Math.random() * animeList.length)];
-			goto(`/anime/${random.node.id}`);
 		} catch (error) {
 			toast.error('An error occurred.');
 		} finally {
@@ -52,10 +86,11 @@
 	<!-- PTW Widget -->
 	<button
 		onclick={getRandomPlanToWatch}
-		class="group relative overflow-hidden rounded-2xl border border-white/10 bg-surface-1/40 p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg active:scale-95 sm:p-8 backdrop-blur-xl"
+		class="group relative overflow-hidden rounded-2xl border border-white/10 p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg active:scale-95 cursor-pointer sm:p-8 backdrop-blur-xl"
+		style="background-image: {selectedPTW?.poster ? `url(${selectedPTW.poster})` : 'none'}; background-size: cover; background-position: center;"
 	>
 		<!-- Background gradient / reflection -->
-		<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-50 transition-opacity group-hover:opacity-80"></div>
+		<div class="absolute inset-0 bg-gradient-to-br from-primary/20 via-surface-1/80 to-surface-1/95 opacity-90 transition-opacity group-hover:opacity-80"></div>
 		
 		<div class="relative z-10 flex items-start justify-between">
 			<div>
@@ -72,10 +107,11 @@
 	<button
 		onclick={getRandomSeasonal}
 		disabled={loading}
-		class="group relative overflow-hidden rounded-2xl border border-white/10 bg-surface-1/40 p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg active:scale-95 sm:p-8 backdrop-blur-xl disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100"
+		class="group relative overflow-hidden rounded-2xl border border-white/10 p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg active:scale-95 cursor-pointer sm:p-8 backdrop-blur-xl disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100"
+		style="background-image: {selectedSeasonal?.poster ? `url(${selectedSeasonal.poster})` : 'none'}; background-size: cover; background-position: center;"
 	>
 		<!-- Background gradient / reflection -->
-		<div class="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-transparent opacity-50 transition-opacity group-hover:opacity-80"></div>
+		<div class="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-surface-1/80 to-surface-1/95 opacity-90 transition-opacity group-hover:opacity-80"></div>
 		
 		<div class="relative z-10 flex items-start justify-between">
 			<div>

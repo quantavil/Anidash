@@ -16,8 +16,6 @@
 	} = $props();
 
 	let showingEnglish = $state(settingsStore.preferEnglish);
-	let flipped = $state(false);
-	let key = $state(0);
 
 	const hasBothTitles = $derived(titleEnglish !== null && titleEnglish !== title);
 
@@ -28,29 +26,26 @@
 
 	$effect(() => {
 		showingEnglish = settingsStore.preferEnglish;
-		flipped = false;
 	});
 
-	function handleFlip(e: MouseEvent) {
+	function handleFlip(e: Event) {
 		if (!hasBothTitles) return;
 		e.preventDefault();
 		e.stopPropagation();
 		showingEnglish = !showingEnglish;
-		flipped = !flipped;
-		key++;
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <svelte:element
 	this={tag}
 	class={className}
 	onclick={handleFlip}
+	onkeydown={hasBothTitles ? (e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && handleFlip(e) : undefined}
+	role={hasBothTitles ? 'button' : undefined}
+	tabindex={hasBothTitles ? 0 : undefined}
 	style:cursor={hasBothTitles ? 'pointer' : 'default'}
 >
-	{#key key}
+	{#key showingEnglish}
 		<span in:fade={{ duration: 200, easing: quintOut }}>
 			{displayTitle}
 		</span>

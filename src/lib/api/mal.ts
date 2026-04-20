@@ -81,7 +81,8 @@ const LIST_FIELDS = [
 	'status',
 	'studios',
 	'num_list_users',
-	'num_scoring_users'
+	'num_scoring_users',
+	'alternative_titles'
 ].join(',');
 
 export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
@@ -172,7 +173,8 @@ const DETAIL_FIELDS = [
 	'status',
 	'media_type',
 	'num_list_users',
-	'num_scoring_users'
+	'num_scoring_users',
+	'alternative_titles'
 ].join(',');
 
 export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
@@ -188,7 +190,7 @@ function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 	return {
 		malId: detail.id,
 		title: detail.title,
-		titleEnglish: null,
+		titleEnglish: detail.alternative_titles?.en || null,
 		mainPicture: detail.main_picture ?? null,
 		mean: detail.mean ?? null,
 		numEpisodes: detail.num_episodes ?? 0,

@@ -387,16 +387,8 @@
 				<p class="mt-1 text-xs text-text-muted">Try different keywords or filters</p>
 			</div>
 		{:else}
-			<div
-				class="flex flex-col items-center justify-center rounded-xl py-8 text-center"
-			>
-				<div class="mb-3 text-5xl drop-shadow-md">✨</div>
-				<h2 class="text-xl font-bold text-text-primary">Discover Anime</h2>
-				<p class="mt-2 max-w-md text-sm text-text-secondary">Search by title, use the filters above, or let us pick something for you to watch.</p>
-				
-				<div class="w-full mt-4">
-					<RecommenderWidgets />
-				</div>
+			<div class="w-full">
+				<RecommenderWidgets />
 			</div>
 		{/if}
 	</div>

@@ -131,7 +131,7 @@ a,
 }
 
 .glass-widget {
-	@apply group relative overflow-hidden rounded-2xl border border-white/5 p-4 text-center transition-all hover:-translate-y-1 hover:shadow-lg hover:border-white/10 active:scale-95 cursor-pointer sm:p-6 bg-surface-1/40 backdrop-blur-xl disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm;
+	@apply relative overflow-hidden rounded-2xl border border-white/5 p-4 text-center transition-all hover:-translate-y-1 hover:shadow-lg hover:border-white/10 active:scale-95 cursor-pointer sm:p-6 bg-surface-1/40 backdrop-blur-xl disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm;
 }
 
 .glass-icon-wrapper {

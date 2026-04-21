@@ -40,7 +40,9 @@
 	this={tag}
 	class={className}
 	onclick={handleFlip}
-	onkeydown={hasBothTitles ? (e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && handleFlip(e) : undefined}
+	onkeydown={hasBothTitles
+		? (e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && handleFlip(e)
+		: undefined}
 	role={hasBothTitles ? 'button' : undefined}
 	tabindex={hasBothTitles ? 0 : undefined}
 	style:cursor={hasBothTitles ? 'pointer' : 'default'}
@@ -52,7 +54,8 @@
 	{/key}
 	{#if hasBothTitles}
 		<span
-			class="inline-flex items-center rounded bg-white/10 px-1 py-0.5 font-medium uppercase tracking-wider text-text-muted transition-opacity {tag === 'h1'
+			class="inline-flex items-center rounded bg-white/10 px-1 py-0.5 font-medium uppercase tracking-wider text-text-muted transition-opacity {tag ===
+			'h1'
 				? 'ml-1.5 text-[9px] opacity-60 hover:opacity-100'
 				: 'ml-1 text-[8px] opacity-50 hover:opacity-90'}"
 		>

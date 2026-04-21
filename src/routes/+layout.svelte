@@ -124,7 +124,7 @@
 		<FluidNav />
 
 		<!-- Main content area -->
-		<div class="flex flex-1 flex-col min-w-0 pt-0 md:pt-24 pb-20 md:pb-0 max-w-7xl mx-auto w-full">
+		<div class="flex flex-1 flex-col min-w-0 pt-16 md:pt-24 pb-20 md:pb-0 max-w-7xl mx-auto w-full">
 			<!-- Offline banner -->
 			<OfflineBanner />
 

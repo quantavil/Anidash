@@ -221,7 +221,11 @@ function createUserListStore() {
 
 	// ─── Add to List (from browse/detail) ───
 
-	async function addToList(malId: number, status: AnimeStatus, titleEnglish?: string | null): Promise<Result<void>> {
+	async function addToList(
+		malId: number,
+		status: AnimeStatus,
+		titleEnglish?: string | null
+	): Promise<Result<void>> {
 		// First, update MAL
 		const result = await updateAnimeStatus(malId, { status });
 		if (!result.ok) return result;

@@ -9,8 +9,8 @@
 
 	let loading = $state(false);
 	let initializing = $state(false);
-	let selectedPTW = $state<{ malId: number; poster: string | null } | null>(null);
-	let selectedSeasonal = $state<{ malId: number; poster: string | null } | null>(null);
+	let selectedPTW = $state<{ malId: number } | null>(null);
+	let selectedSeasonal = $state<{ malId: number } | null>(null);
 
 	onMount(async () => {
 		initializing = true;
@@ -19,10 +19,7 @@
 		const ptw = userListStore.planToWatch;
 		if (ptw && ptw.length > 0) {
 			const random = ptw[Math.floor(Math.random() * ptw.length)];
-			selectedPTW = {
-				malId: random.malId,
-				poster: random.mainPicture?.large || random.mainPicture?.medium || null
-			};
+			selectedPTW = { malId: random.malId };
 		}
 
 		// Get random seasonal anime
@@ -31,7 +28,7 @@
 			const result = await getSeasonal(current.year, current.season, { limit: 50 });
 			if (result.ok && result.value.data.length > 0) {
 				const random = result.value.data[Math.floor(Math.random() * result.value.data.length)];
-				selectedSeasonal = { malId: random.node.id, poster: random.node.main_picture?.medium || null };
+				selectedSeasonal = { malId: random.node.id };
 			}
 		} catch (error) {
 			// Silently fail if seasonal loading fails
@@ -71,7 +68,7 @@
 				}
 
 				const random = animeList[Math.floor(Math.random() * animeList.length)];
-				selectedSeasonal = { malId: random.node.id, poster: random.node.main_picture?.medium || null };
+				selectedSeasonal = { malId: random.node.id };
 				goto(`/anime/${random.node.id}`);
 			}
 		} catch (error) {
@@ -82,49 +79,71 @@
 	}
 </script>
 
-<div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-	<!-- PTW Widget -->
-	<button
-		onclick={getRandomPlanToWatch}
-		class="group relative overflow-hidden rounded-2xl border border-white/10 p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg active:scale-95 cursor-pointer sm:p-8 backdrop-blur-xl"
-		style="background-image: {selectedPTW?.poster ? `url(${selectedPTW.poster})` : 'none'}; background-size: cover; background-position: center;"
-	>
-		<!-- Background gradient / reflection -->
-		<div class="absolute inset-0 bg-gradient-to-br from-primary/20 via-surface-1/80 to-surface-1/95 opacity-90 transition-opacity group-hover:opacity-80"></div>
-		
-		<div class="relative z-10 flex items-start justify-between">
-			<div>
-				<div class="mb-3 inline-flex rounded-xl bg-white/10 p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md">
-					<Dice5 size={24} class="text-primary drop-shadow-[0_0_8px_rgba(var(--color-primary),0.5)]" />
-				</div>
-				<h3 class="text-lg font-bold text-text-primary">Plan to Watch Roulette</h3>
-				<p class="mt-1 text-sm text-text-secondary">Pick a random anime from your backlog.</p>
-			</div>
-		</div>
-	</button>
+{#snippet widget({
+	title,
+	desc,
+	icon: Icon,
+	action,
+	isLoading,
+	colorClass,
+	gradientClass,
+	loadingIcon: LoadingIcon
+}: any)}
+	<button onclick={action} disabled={isLoading} class="glass-widget">
+		<!-- Background gradient -->
+		<div
+			class="absolute inset-0 bg-gradient-to-br {gradientClass} opacity-5 transition-opacity duration-300 group-hover:opacity-10 pointer-events-none"
+		></div>
 
-	<!-- Seasonal Widget -->
-	<button
-		onclick={getRandomSeasonal}
-		disabled={loading}
-		class="group relative overflow-hidden rounded-2xl border border-white/10 p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg active:scale-95 cursor-pointer sm:p-8 backdrop-blur-xl disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100"
-		style="background-image: {selectedSeasonal?.poster ? `url(${selectedSeasonal.poster})` : 'none'}; background-size: cover; background-position: center;"
-	>
-		<!-- Background gradient / reflection -->
-		<div class="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-surface-1/80 to-surface-1/95 opacity-90 transition-opacity group-hover:opacity-80"></div>
-		
-		<div class="relative z-10 flex items-start justify-between">
-			<div>
-				<div class="mb-3 inline-flex rounded-xl bg-white/10 p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md">
-					{#if loading}
-						<Loader2 size={24} class="animate-spin text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]" />
-					{:else}
-						<Sparkles size={24} class="text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]" />
-					{/if}
-				</div>
-				<h3 class="text-lg font-bold text-text-primary">Seasonal Surprise</h3>
-				<p class="mt-1 text-sm text-text-secondary">Discover a random anime airing right now.</p>
+		<!-- Large SVG in background/middle -->
+		<div
+			class="absolute inset-0 flex items-center justify-center opacity-[0.03] transition-transform duration-700 group-hover:scale-125 group-hover:opacity-[0.06] group-active:scale-100 pointer-events-none"
+		>
+			<Icon size={150} class={colorClass} strokeWidth={1} />
+		</div>
+
+		<div class="relative z-10 flex flex-col items-center justify-center w-full">
+			<div class="glass-icon-wrapper">
+				{#if isLoading && LoadingIcon}
+					<LoadingIcon
+						size={24}
+						class="animate-spin {colorClass} drop-shadow-[0_0_8px_currentColor]"
+					/>
+				{:else}
+					<Icon size={24} class="{colorClass} drop-shadow-[0_0_8px_currentColor]" />
+				{/if}
 			</div>
+			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
+				{title}
+			</h3>
+			<p
+				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
+			>
+				{desc}
+			</p>
 		</div>
 	</button>
+{/snippet}
+
+<div class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
+	{@render widget({
+		title: 'PTW Roulette',
+		desc: 'Random from backlog',
+		icon: Dice5,
+		action: getRandomPlanToWatch,
+		isLoading: false,
+		colorClass: 'text-primary',
+		gradientClass: 'from-primary via-transparent to-transparent'
+	})}
+
+	{@render widget({
+		title: 'Seasonal Surprise',
+		desc: 'Random airing anime',
+		icon: Sparkles,
+		action: getRandomSeasonal,
+		isLoading: loading,
+		loadingIcon: Loader2,
+		colorClass: 'text-pink-400',
+		gradientClass: 'from-pink-500 via-transparent to-transparent'
+	})}
 </div>

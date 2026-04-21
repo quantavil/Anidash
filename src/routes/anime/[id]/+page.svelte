@@ -207,7 +207,9 @@
 
 			<!-- Info -->
 			<div class="flex-1">
-				<div class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl">
+				<div
+					class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl"
+				>
 					<AnimeTitle
 						title={anime.title}
 						titleEnglish={anime.titleEnglish ?? null}
@@ -240,7 +242,11 @@
 					{#if anime.numListUsers && anime.numListUsers > 0}
 						<div class="flex items-center gap-1">
 							<Users size={14} class="text-text-muted" />
-							<span><span class="text-text-primary font-medium">{formatNumberShort(anime.numListUsers)}</span> members</span>
+							<span
+								><span class="text-text-primary font-medium"
+									>{formatNumberShort(anime.numListUsers)}</span
+								> members</span
+							>
 						</div>
 					{/if}
 					{#if anime.mediaType}

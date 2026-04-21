@@ -129,3 +129,11 @@ a,
 	@apply bg-primary/15 text-primary-hover border-primary/35;
 	box-shadow: 0 0 14px rgba(139, 126, 248, 0.2);
 }
+
+.glass-widget {
+	@apply group relative overflow-hidden rounded-2xl border border-white/5 p-4 text-center transition-all hover:-translate-y-1 hover:shadow-lg hover:border-white/10 active:scale-95 cursor-pointer sm:p-6 bg-surface-1/40 backdrop-blur-xl disabled:opacity-70 disabled:hover:translate-y-0 disabled:active:scale-100 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm;
+}
+
+.glass-icon-wrapper {
+	@apply mb-3 inline-flex rounded-2xl bg-white/5 p-3 sm:p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:bg-white/10 group-hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/5;
+}

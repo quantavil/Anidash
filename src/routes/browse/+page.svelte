@@ -216,18 +216,6 @@
 		</div>
 
 		<div class="flex items-center gap-2">
-			<!-- Dub Mode -->
-			<button
-				onclick={() => dubStore.toggleDubMode()}
-				class="flex items-center gap-1.5 rounded-lg border px-3 sm:px-4 py-2.5 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode
-					? 'border-primary/30 bg-primary/10 text-primary'
-					: 'border-border bg-surface-1 text-text-secondary hover:bg-surface-2 hover:text-text-primary'}"
-				title="Dub Mode Only"
-			>
-				<Mic size={16} class={dubStore.dubMode ? 'animate-pulse' : ''} />
-				<span class="hidden sm:inline">Dubs Only</span>
-			</button>
-
 			<button
 				onclick={() => (showFilters = !showFilters)}
 				class="flex items-center gap-2 rounded-lg border border-border bg-surface-1 px-4 py-2.5 text-sm text-text-secondary transition-colors hover:bg-surface-2

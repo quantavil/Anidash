@@ -1,5 +1,9 @@
 <script lang="ts">
 	let { size = 24, class: clazz = '' }: { size?: number | string; class?: string } = $props();
+
+	// Generate a unique ID to prevent `display: none` bugs in mobile layouts
+	// where hidden parent nodes invalidate shared SVG def IDs for visible siblings.
+	const gradientId = 'logo-glow-' + Math.random().toString(36).slice(2, 9);
 </script>
 
 <svg
@@ -8,21 +12,20 @@
 	height={size}
 	viewBox="0 0 24 24"
 	fill="none"
-	stroke="currentColor"
-	stroke-width="2.5"
-	stroke-linecap="round"
-	stroke-linejoin="round"
+	stroke="none"
 	class={clazz}
 >
 	<defs>
-		<linearGradient id="logo-glow" x1="0" y1="0" x2="1" y2="1">
+		<linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
 			<stop offset="0%" stop-color="var(--color-primary)" />
 			<stop offset="100%" stop-color="var(--color-info)" />
 		</linearGradient>
 	</defs>
-	<!-- Stylized A / Play Shape -->
-	<path d="M3 21l9-18 9 18" stroke="url(#logo-glow)" />
-	<path d="M8 14h8" stroke="url(#logo-glow)" />
-	<!-- Dynamic Dash -->
-	<path d="M12 6L18 6" stroke="url(#logo-glow)" fill="none" opacity="0.5" />
+	
+	<g fill="url(#{gradientId})">
+		<!-- The 'A' shape -->
+		<path d="M12 2l-9 19h4.5L12 11l4.5 10H21L12 2z" />
+		<!-- The 'Dash' across -->
+		<path d="M7.5 16h9l2-4h-13z" opacity="0.6" />
+	</g>
 </svg>

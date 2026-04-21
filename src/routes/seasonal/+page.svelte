@@ -150,18 +150,6 @@
 		</div>
 
 		<div class="flex items-center gap-2">
-			<!-- Dub Mode -->
-			<button
-				onclick={() => dubStore.toggleDubMode()}
-				class="flex shrink-0 items-center gap-1.5 rounded-full border px-3 sm:px-4 py-2 text-sm transition-all duration-500 ease-spring shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] active:scale-95 {dubStore.dubMode
-					? 'border-primary/30 bg-primary/10 text-primary'
-					: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
-				title="Dub Mode Only"
-			>
-				<Mic size={14} class={dubStore.dubMode ? 'animate-pulse' : ''} />
-				<span class="hidden sm:inline">Dubs Only</span>
-			</button>
-
 			<button
 				onclick={() => (sortByRating = !sortByRating)}
 				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating

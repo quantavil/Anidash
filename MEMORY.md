@@ -61,6 +61,7 @@ anidash/
 
 ## Blunders
 
+- [2026-04-22] Empty UI on first load after login callback → ROOT CAUSE: Data loading (cache load, sync) was inside an `onMount` block that was conditionally skipped if `isAuthenticated` was false when the layout initially mounted (before token exchange). → FIX: Moved data loading logic to a reactive `$effect` that watches `authStore.isAuthenticated` and triggers automatically.
 - [2026-04-20] Redundant state in AnimeTitle component → ROOT CAUSE: Used unnecessary `flipped` and `key` state variables for transitions when `showingEnglish` was already reactive. → FIX: Removed redundant variables and used `{#key showingEnglish}` directly for transition.
 - [2026-04-20] Navigation logic duplication in AnimeDetail page → ROOT CAUSE: Both `onMount` and `$effect` had duplicate anime loading logic, causing potential double-fetch on mount. → FIX: Consolidated into single `$effect` that handles both initial mount and route changes, removed `onMount` call.
 - [2026-04-20] Race condition in RecommenderWidgets → ROOT CAUSE: Silent onMount fetch for seasonal anime could conflict with user clicks before completion, causing duplicate API calls. → FIX: Added `initializing` state to prevent button interaction during onMount fetch.

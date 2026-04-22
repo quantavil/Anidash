@@ -57,34 +57,43 @@
 			/>
 		</button>
 
-		<!-- Profile / Logout -->
-		<div class="flex items-center {isMobile ? 'gap-1.5 ml-1 pr-2' : 'gap-2 pl-1 pr-3'} rounded-full border border-white/5 bg-surface-2/50 py-1 pl-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-			<a
-				href="/stats"
-				data-sveltekit-reload
-				class="flex items-center transition-transform hover:scale-105 active:scale-95"
-				title="View Profile Stats"
-			>
-				{#if authStore.user?.picture}
-					<img
-						src={authStore.user.picture}
-						alt={authStore.user.name}
-						class="{isMobile ? 'h-6 w-6' : 'h-7 w-7'} rounded-full object-cover"
-					/>
-				{:else}
-					<div class="flex {isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-full bg-surface-3">
-						<User size={isMobile ? 12 : 14} class="text-text-muted" />
-					</div>
-				{/if}
-			</a>
+		<!-- Profile / Logout / Login -->
+		{#if authStore.isAuthenticated}
+			<div class="flex items-center {isMobile ? 'gap-1.5 ml-1 pr-2' : 'gap-2 pl-1 pr-3'} rounded-full border border-white/5 bg-surface-2/50 py-1 pl-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+				<a
+					href="/stats"
+					data-sveltekit-reload
+					class="flex items-center transition-transform hover:scale-105 active:scale-95"
+					title="View Profile Stats"
+				>
+					{#if authStore.user?.picture}
+						<img
+							src={authStore.user.picture}
+							alt={authStore.user.name}
+							class="{isMobile ? 'h-6 w-6' : 'h-7 w-7'} rounded-full object-cover"
+						/>
+					{:else}
+						<div class="flex {isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-full bg-surface-3">
+							<User size={isMobile ? 12 : 14} class="text-text-muted" />
+						</div>
+					{/if}
+				</a>
+				<button
+					onclick={handleLogout}
+					class="text-text-muted transition-colors hover:text-error {isMobile ? '' : 'ml-1'}"
+					title="Logout"
+				>
+					<LogOut size={isMobile ? 14 : 16} />
+				</button>
+			</div>
+		{:else}
 			<button
-				onclick={handleLogout}
-				class="text-text-muted transition-colors hover:text-error {isMobile ? '' : 'ml-1'}"
-				title="Logout"
+				onclick={() => authStore.login()}
+				class="ml-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95"
 			>
-				<LogOut size={isMobile ? 14 : 16} />
+				Login
 			</button>
-		</div>
+		{/if}
 	</div>
 {/snippet}
 

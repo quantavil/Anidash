@@ -76,8 +76,9 @@
 			const result = await getSeasonal(seasonYear, seasonKey, { limit: 100 });
 
 			if (result.ok) {
-				anime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
-				await setMeta(cacheKey, anime);
+				const fetchedAnime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
+				await setMeta(cacheKey, fetchedAnime);
+				anime = fetchedAnime;
 			} else if (!cached) {
 				toast.error('Failed to load seasonal anime');
 			}

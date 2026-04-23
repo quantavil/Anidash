@@ -28,7 +28,7 @@
 	// Setup intersection observer for infinite scroll
 	$effect(() => {
 		if (!loaderRef) return;
-		
+
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting) {
@@ -37,9 +37,9 @@
 			},
 			{ rootMargin: '400px' }
 		);
-		
+
 		observer.observe(loaderRef);
-		
+
 		return () => {
 			observer.disconnect();
 		};
@@ -70,10 +70,9 @@
 			<AnimeCard {entry} {onComplete} index={i} />
 		{/each}
 	</div>
-	
+
 	{#if limit < entries.length}
 		<!-- Infinite scroll loader anchor -->
 		<div bind:this={loaderRef} class="h-10 w-full mt-4"></div>
 	{/if}
 {/if}
-Generating...

@@ -2,7 +2,7 @@
 	import type { DisplayAnime } from '$lib/utils/types';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
+	import { formatMediaType, formatNumberShort, formatStatus } from '$lib/utils/format';
 	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
@@ -41,12 +41,23 @@
 		{/if}
 
 		<!-- In-list indicator -->
-		{#if inList}
+		{#if inList && listEntry}
 			<div
-				class="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-success/90 px-2 py-0.5 text-xs font-medium text-white"
+				class={[
+					'absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-md',
+					listEntry.status === 'watching' && 'bg-primary/90',
+					listEntry.status === 'completed' && 'bg-success/90',
+					listEntry.status === 'on_hold' && 'bg-warning/90',
+					listEntry.status === 'dropped' && 'bg-error/90',
+					listEntry.status === 'plan_to_watch' && 'bg-info/90'
+				]}
 			>
-				<Check size={10} />
-				In List
+				{formatStatus(listEntry.status)}
+				{#if listEntry.status === 'watching'}
+					<span class="opacity-75 font-bold ml-0.5"
+						>{listEntry.numWatchedEpisodes}/{anime.numEpisodes || '?'}</span
+					>
+				{/if}
 			</div>
 		{/if}
 

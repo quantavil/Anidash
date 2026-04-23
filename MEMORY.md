@@ -19,6 +19,7 @@ anidash/
 │ └── routes/ # SvelteKit App Pages (+page.svelte, +layout.svelte)
 │ ├── api/ # Cloudflare Pages Functions proxying MAL API
 │ └── auth/ # OAuth token exchange routes
+│ └── schedule/ # Weekly airing calendar
 ├── package.json
 └── vite.config.ts
 
@@ -60,12 +61,14 @@ anidash/
 - **Glassmorphic Widgets**: Implementing interactive "Roulette" and "Surprise" glassmorphic widgets on empty states (like the Browse page) turns a dead-end UI into an engaging discovery feature without cluttering the main navigation.
 - **Virtualized Rendering (Infinite Scroll)**: Added infinite scrolling to `AnimeGrid` to prevent main-thread blocking when rendering large lists (e.g., "Completed" tab with 500+ items). Uses `IntersectionObserver` to progressively render chunks of 40.
 - **Fused Filtering Logic**: Optimized `+page.svelte` by consolidating chained filter calls into a single `O(N)` pass, reducing intermediate array allocations and GC pressure during user interaction.
+- **Offline Sync Queue**: Implemented a discrete `syncQueue` IndexedDB store (DB_VERSION 2) to natively sequester offline or failed user mutations. Ensures offline mutations are maintained optimistically and re-attempted sequentially upon resolving `navigator.onLine` or triggering `flushPersistentQueue`.
+- **Zero-Dependency Visuals**: Implemented score and media format distribution charts using pure CSS/Svelte logic, maintaining high performance and small bundle size while providing premium analytics.
 
 ## Blunders
 
 - [2026-04-23] Severe lag/freeze on tab switching → ROOT CAUSE: Synchronously rendering hundreds of anime cards blocked the main thread. → FIX: Implemented infinite scroll with `IntersectionObserver` in `AnimeGrid.svelte` and optimized store counts via `.reduce`.
 - [2026-04-22] Empty UI on first load after login callback → ROOT CAUSE: Data loading (cache load, sync) was inside an `onMount` block that was conditionally skipped if `isAuthenticated` was false when the layout initially mounted (before token exchange). → FIX: Moved data loading logic to a reactive `$effect` that watches `authStore.isAuthenticated` and triggers automatically.
-- [2026-04-20] Redundant state in AnimeTitle component → ROOT CAUSE: Used unnecessary `flipped` and `key` state variables for transitions when `showingEnglish` was already reactive. → FIX: Removed redundant variables and used `{#key showingEnglish}` directly for transition. 
+- [2026-04-20] Redundant state in AnimeTitle component → ROOT CAUSE: Used unnecessary `flipped` and `key` state variables for transitions when `showingEnglish` was already reactive. → FIX: Removed redundant variables and used `{#key showingEnglish}` directly for transition.
 - [2026-04-20] Navigation logic duplication in AnimeDetail page → ROOT CAUSE: Both `onMount` and `$effect` had duplicate anime loading logic, causing potential double-fetch on mount. → FIX: Consolidated into single `$effect` that handles both initial mount and route changes, removed `onMount` call.
 - [2026-04-20] Race condition in RecommenderWidgets → ROOT CAUSE: Silent onMount fetch for seasonal anime could conflict with user clicks before completion, causing duplicate API calls. → FIX: Added `initializing` state to prevent button interaction during onMount fetch.
 - [2026-04-20] Retry button passing Event object → ROOT CAUSE: After refactoring `loadAnime` to require `id` parameter, Retry button still passed raw Event object. → FIX: Updated button to call `loadAnime(malId)`.
@@ -78,3 +81,5 @@ anidash/
 - [2026-04-19] Incorrect assumption: "MAL has no DELETE API" → ROOT CAUSE: Previous community knowledge/v1 behavior suggested setting status to 'plan_to_watch' as a workaround. Proper research confirmed `DELETE /v2/anime/{id}/my_list_status` exists in the v2 reference → FIX: Implemented proper DELETE verb in the MAL client and synchronized list removal.
 - [2026-04-19] Svelte 5 a11y warnings in `RatingStars` → ROOT CAUSE: Using `onclick` on a `role="slider"` without an `onkeydown` handler for keyboard navigation → FIX: Implemented ArrowKey navigation and added `svelte-ignore` for non-interactive element interactions where appropriate.
 - [2026-04-19] Missing dub icon in seasonal section → ROOT CAUSE: `SearchResultCard.svelte` didn't implement the `dubStore` check like `AnimeCard.svelte` did → FIX: Imported `dubStore` and `Mic` icon, added glass-badge overlay to `SearchResultCard`. Also updated episode counter buttons to be larger and match the glassmorphism aesthetic.
+- [2026-04-23] Schema mismatch/type error in `AppError` → ROOT CAUSE: Attempted to access `.status` on a union type where not all members (like `'network'`) had that property. → FIX: Implemented strict type narrowing by checking `type === 'api'` before status access.
+- [2026-04-23] Leftover 'Generating...' debug artifact in `AnimeGrid.svelte` → ROOT CAUSE: Incomplete removal of debug string after implementing vitualized grid. → FIX: Manually removed the string literal from the component markup.

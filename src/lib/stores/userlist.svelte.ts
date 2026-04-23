@@ -4,10 +4,11 @@
 
 import {
 	getAllEntries,
-	getListEntry,
 	putEntry,
-	updateEntry,
-	removeEntry
+	removeEntry,
+	putSyncQueue,
+	getSyncQueue,
+	deleteSyncQueue
 } from '$lib/cache/userlist.cache';
 import { updateAnimeStatus, getAnimeDetail } from '$lib/api/mal';
 import { putAnime } from '$lib/cache/anime.cache';
@@ -81,6 +82,7 @@ function createUserListStore() {
 	}
 
 	async function syncFromRemote(): Promise<Result<void>> {
+		await flushPersistentQueue();
 		const result = await syncStore.fullSync();
 		if (result.success) {
 			await loadFromCache();
@@ -109,17 +111,29 @@ function createUserListStore() {
 		// 3. Debounced MAL sync
 		cancelPendingSync(malId);
 		const syncFn = debounce(async () => {
+			// 3a. Save to persistent offline queue immediately
+			await putSyncQueue({
+				malId,
+				payload: malPayload,
+				timestamp: Date.now()
+			});
+
+			// If explicitly offline, just leave it in queue
+			if (typeof navigator !== 'undefined' && !navigator.onLine) {
+				pendingSyncs.delete(malId);
+				return;
+			}
+
+			// 3b. Attempt sync
 			const result = await updateAnimeStatus(malId, malPayload);
-			if (!result.ok) {
-				// Rollback: reload from cache
-				const cached = await getListEntry(malId);
-				if (cached && entries[malId]) {
-					entries[malId] = cached;
-				}
-				// Show error via syncStore
+			if (result.ok) {
+				// Success — remove from queue
+				await deleteSyncQueue(malId);
+			} else {
+				// Show error, but LEAVE IN QUEUE. It will be flushed later.
 				syncStore.syncError = result.error;
 				import('svelte-sonner').then(({ toast }) => {
-					toast.error('Failed to sync changes — will retry on next sync');
+					toast.error('Network error. Edit saved locally & will sync later.');
 				});
 			}
 			pendingSyncs.delete(malId);
@@ -303,6 +317,39 @@ function createUserListStore() {
 		}
 	}
 
+	// ─── Flush persistent offline queue ───
+
+	async function flushPersistentQueue(): Promise<void> {
+		const queue = await getSyncQueue();
+		if (queue.length === 0) return;
+
+		for (const record of queue) {
+			const result = await updateAnimeStatus(
+				record.malId,
+				record.payload as Record<string, unknown>
+			);
+			if (result.ok) {
+				await deleteSyncQueue(record.malId);
+			} else {
+				// Drop the payload if it's a persistent bad request, else break
+				if (
+					result.error?.type === 'api' &&
+					(result.error.status === 400 || result.error.status === 404)
+				) {
+					await deleteSyncQueue(record.malId);
+				} else {
+					break; // Stop flushing if rate limited or network is still down
+				}
+			}
+		}
+	}
+
+	if (typeof window !== 'undefined') {
+		window.addEventListener('online', () => {
+			flushPersistentQueue().catch(console.error);
+		});
+	}
+
 	return {
 		get entries() {
 			return entries;
@@ -348,7 +395,8 @@ function createUserListStore() {
 		markCompleted,
 		removeFromList,
 		addToList,
-		flushPendingSyncs
+		flushPendingSyncs,
+		flushPersistentQueue
 	};
 }
 

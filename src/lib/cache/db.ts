@@ -72,6 +72,12 @@ export interface MetaRecord {
 	updatedAt: number;
 }
 
+export interface SyncQueueRecord {
+	malId: number;
+	payload: Record<string, unknown>;
+	timestamp: number; // epoch ms
+}
+
 // ─── DB Schema ───
 
 interface AniDashDB extends DBSchema {
@@ -95,12 +101,19 @@ interface AniDashDB extends DBSchema {
 		key: string;
 		value: MetaRecord;
 	};
+	syncQueue: {
+		key: number; // malId
+		value: SyncQueueRecord;
+		indexes: {
+			'by-timestamp': number;
+		};
+	};
 }
 
 // ─── Connection ───
 
 const DB_NAME = 'anidash';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<AniDashDB>> | null = null;
 
@@ -124,8 +137,11 @@ export function getDB(): Promise<IDBPDatabase<AniDashDB>> {
 					db.createObjectStore('meta', { keyPath: 'key' });
 				}
 
-				// Future migrations:
-				// if (oldVersion < 2) { ... }
+				if (oldVersion < 2) {
+					// Offline Sync Queue store
+					const syncQueueStore = db.createObjectStore('syncQueue', { keyPath: 'malId' });
+					syncQueueStore.createIndex('by-timestamp', 'timestamp');
+				}
 			},
 			blocked() {
 				console.warn('AniDash DB upgrade blocked — close other tabs');

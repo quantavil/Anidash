@@ -2,10 +2,7 @@
 	import { page } from '$app/stores';
 	import { getUrlParam } from '$lib/utils/url-state';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import {
-		sortEntries,
-		type SortKey
-	} from '$lib/utils/sort';
+	import { sortEntries, type SortKey } from '$lib/utils/sort';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
 	import TabBar from '$lib/ui/TabBar.svelte';
@@ -28,16 +25,16 @@
 			userListStore.allEntries.filter((e) => {
 				// 1. Status loop
 				if (currentTab !== 'all' && e.status !== currentTab) return false;
-				
+
 				// 2. Query loop
 				if (currentQuery) {
 					const q = currentQuery.toLowerCase().trim();
 					if (!e.title.toLowerCase().includes(q)) return false;
 				}
-				
+
 				// 3. Dub loop
 				if (dubStore.dubMode && !dubStore.hasDub(e.malId)) return false;
-				
+
 				return true;
 			}),
 			currentSort

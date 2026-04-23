@@ -3,7 +3,17 @@
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages, Mic } from 'lucide-svelte';
+	import {
+		List,
+		Search,
+		Calendar,
+		LogOut,
+		RefreshCw,
+		User,
+		Languages,
+		Mic,
+		Clock
+	} from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
@@ -20,6 +30,7 @@
 		{ href: '/', label: 'My List', icon: List },
 		{ href: '/browse', label: 'Browse', icon: Search },
 		{ href: '/seasonal', label: 'Seasonal', icon: Calendar },
+		{ href: '/schedule', label: 'Schedule', icon: Clock },
 		{ href: '/stats', label: 'Stats', icon: User }
 	];
 </script>
@@ -29,7 +40,9 @@
 		<!-- Dub Mode Toggle -->
 		<button
 			onclick={() => dubStore.toggleDubMode()}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile ? 'h-8 w-8' : 'group h-9 w-9'} {dubStore.dubMode ? 'text-primary' : 'text-text-muted'}"
+			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile
+				? 'h-8 w-8'
+				: 'group h-9 w-9'} {dubStore.dubMode ? 'text-primary' : 'text-text-muted'}"
 			title="Toggle Dub Mode"
 		>
 			<Mic size={isMobile ? 14 : 16} class={dubStore.dubMode ? 'animate-pulse' : ''} />
@@ -38,7 +51,9 @@
 		<!-- Title Preference Toggle -->
 		<button
 			onclick={() => settingsStore.togglePreferEnglish()}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile ? 'h-8 w-8' : 'group h-9 w-9'} {settingsStore.preferEnglish ? 'text-primary' : 'text-text-muted'}"
+			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile
+				? 'h-8 w-8'
+				: 'group h-9 w-9'} {settingsStore.preferEnglish ? 'text-primary' : 'text-text-muted'}"
 			title="Toggle English/Romaji titles"
 		>
 			<Languages size={isMobile ? 14 : 16} />
@@ -48,18 +63,26 @@
 		<button
 			onclick={handleSync}
 			disabled={syncStore.isSyncing}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 disabled:opacity-50 text-text-secondary {isMobile ? 'h-8 w-8' : 'group h-9 w-9'}"
+			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 disabled:opacity-50 text-text-secondary {isMobile
+				? 'h-8 w-8'
+				: 'group h-9 w-9'}"
 			title="Sync"
 		>
 			<RefreshCw
 				size={isMobile ? 14 : 16}
-				class="transition-transform duration-700 ease-spring {isMobile ? '' : 'group-hover:scale-110'} {syncStore.isSyncing ? 'animate-spin' : ''}"
+				class="transition-transform duration-700 ease-spring {isMobile
+					? ''
+					: 'group-hover:scale-110'} {syncStore.isSyncing ? 'animate-spin' : ''}"
 			/>
 		</button>
 
 		<!-- Profile / Logout / Login -->
 		{#if authStore.isAuthenticated}
-			<div class="flex items-center {isMobile ? 'gap-1.5 ml-1 pr-2' : 'gap-2 pl-1 pr-3'} rounded-full border border-white/5 bg-surface-2/50 py-1 pl-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+			<div
+				class="flex items-center {isMobile
+					? 'gap-1.5 ml-1 pr-2'
+					: 'gap-2 pl-1 pr-3'} rounded-full border border-white/5 bg-surface-2/50 py-1 pl-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+			>
 				<a
 					href="/stats"
 					data-sveltekit-reload
@@ -73,7 +96,11 @@
 							class="{isMobile ? 'h-6 w-6' : 'h-7 w-7'} rounded-full object-cover"
 						/>
 					{:else}
-						<div class="flex {isMobile ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-full bg-surface-3">
+						<div
+							class="flex {isMobile
+								? 'h-6 w-6'
+								: 'h-7 w-7'} items-center justify-center rounded-full bg-surface-3"
+						>
 							<User size={isMobile ? 12 : 14} class="text-text-muted" />
 						</div>
 					{/if}

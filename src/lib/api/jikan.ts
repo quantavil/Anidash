@@ -11,6 +11,7 @@ import {
 	JikanRecommendationsResponseSchema,
 	JikanSearchResponseSchema,
 	JikanGenresResponseSchema,
+	JikanSchedulesResponseSchema,
 	type JikanEpisode,
 	type JikanCharacterEntry,
 	type JikanRecommendationEntry,
@@ -212,4 +213,23 @@ export async function getAnimeGenres(): Promise<
 			count: g.count ?? 0
 		}))
 	);
+}
+
+// ─── Schedules ───
+
+export async function getSchedule(filterDay?: string): Promise<Result<{ anime: JikanAnime[] }>> {
+	const params = new URLSearchParams();
+	if (filterDay) params.set('filter', filterDay);
+	params.set('kids', 'false');
+	params.set('sfw', 'true');
+	params.set('limit', '25');
+
+	const url = `${JIKAN_BASE}/schedules?${params.toString()}`;
+	const result = await jikanFetch(url, JikanSchedulesResponseSchema);
+
+	if (!result.ok) return result as Result<never>;
+
+	return ok({
+		anime: result.value.data
+	});
 }

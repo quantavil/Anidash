@@ -195,3 +195,12 @@ export const JikanGenresResponseSchema = z.object({
 });
 
 export type JikanGenresResponse = z.infer<typeof JikanGenresResponseSchema>;
+
+// ─── Schedules ───
+
+export const JikanSchedulesResponseSchema = z.object({
+	data: z.array(JikanAnimeSchema),
+	pagination: JikanPaginationSchema.optional()
+});
+
+export type JikanSchedulesResponse = z.infer<typeof JikanSchedulesResponseSchema>;

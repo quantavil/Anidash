@@ -28,7 +28,7 @@
 	$effect(() => {
 		if (authStore.isAuthenticated && !dataLoaded) {
 			dataLoaded = true;
-			
+
 			userListStore.loadFromCache().then(() => {
 				// Background sync if stale (>5 min) or never synced
 				if (!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000) {
@@ -153,15 +153,23 @@
 
 	<!-- Login Prompt Modal -->
 	{#if !authStore.isAuthenticated && showLoginPrompt}
-		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-			<div class="w-full max-w-md rounded-2xl bg-surface-1 p-6 shadow-xl border border-white/10 text-center space-y-6">
+		<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+		>
+			<div
+				class="w-full max-w-md rounded-2xl bg-surface-1 p-6 shadow-xl border border-white/10 text-center space-y-6"
+			>
 				<h2 class="text-2xl font-bold text-text-primary">Welcome to AniDash</h2>
 				<p class="text-text-secondary">
-					Log in with your MyAnimeList account to manage your list, track progress, and get personalized recommendations.
+					Log in with your MyAnimeList account to manage your list, track progress, and get
+					personalized recommendations.
 				</p>
 				<div class="flex flex-col gap-3">
 					<button
-						onclick={() => { closeLoginPrompt(); authStore.login(); }}
+						onclick={() => {
+							closeLoginPrompt();
+							authStore.login();
+						}}
 						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-primary-hover transition-colors"
 					>
 						Login with MyAnimeList

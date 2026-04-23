@@ -32,5 +32,3 @@ export function sortEntries(entries: UserListRecord[], key: SortKey): UserListRe
 		}
 	});
 }
-
-

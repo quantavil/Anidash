@@ -21,7 +21,7 @@
 			<stop offset="100%" stop-color="var(--color-info)" />
 		</linearGradient>
 	</defs>
-	
+
 	<g fill="url(#{gradientId})">
 		<!-- The 'A' shape -->
 		<path d="M12 2l-9 19h4.5L12 11l4.5 10H21L12 2z" />

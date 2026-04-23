@@ -1,7 +1,7 @@
 // ─── User anime list cache (IndexedDB) ───
 // Always reflects the last-known MAL state. Sync on login.
 
-import { getDB, type UserListRecord } from './db';
+import { getDB, type UserListRecord, type SyncQueueRecord } from './db';
 import { ok, err, type Result } from '$lib/api/result';
 import type { AppError } from '$lib/api/result';
 
@@ -97,4 +97,21 @@ export async function removeEntry(malId: number): Promise<void> {
 export async function clearList(): Promise<void> {
 	const db = await getDB();
 	await db.clear('userList');
+}
+
+// ─── Sync Queue ───
+
+export async function putSyncQueue(record: SyncQueueRecord): Promise<void> {
+	const db = await getDB();
+	await db.put('syncQueue', record);
+}
+
+export async function getSyncQueue(): Promise<SyncQueueRecord[]> {
+	const db = await getDB();
+	return db.getAllFromIndex('syncQueue', 'by-timestamp');
+}
+
+export async function deleteSyncQueue(malId: number): Promise<void> {
+	const db = await getDB();
+	await db.delete('syncQueue', malId);
 }

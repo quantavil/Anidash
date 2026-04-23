@@ -32,6 +32,41 @@
 		};
 	});
 
+	const analytics = $derived.by(() => {
+		const entries = userListStore.allEntries;
+
+		// Score distribution (1-10)
+		const scoreDist = Array(10).fill(0);
+		let maxScoreCount = 0;
+		entries.forEach((e) => {
+			if (e.score >= 1 && e.score <= 10) {
+				scoreDist[Math.floor(e.score) - 1]++;
+				maxScoreCount = Math.max(maxScoreCount, scoreDist[Math.floor(e.score) - 1]);
+			}
+		});
+
+		// Format distribution
+		const formatDist: Record<string, number> = {};
+		entries.forEach((e) => {
+			const type = e.mediaType || 'unknown';
+			formatDist[type] = (formatDist[type] || 0) + 1;
+		});
+
+		const formats = Object.entries(formatDist)
+			.map(([label, count]) => ({ label: formatMediaType(label), count }))
+			.sort((a, b) => b.count - a.count)
+			.slice(0, 5);
+
+		const maxFormatCount = formats[0]?.count || 1;
+
+		return {
+			scoreDist,
+			maxScoreCount: maxScoreCount || 1,
+			formats,
+			maxFormatCount
+		};
+	});
+
 	const statCards = $derived([
 		{
 			label: 'Watching',
@@ -136,6 +171,64 @@
 			<StatCard {...card} class={i === summaryCards.length - 1 ? 'col-span-2 sm:col-span-1' : ''} />
 		{/each}
 	</div>
+
+	<!-- Visual Analytics -->
+	{#if stats.total > 0}
+		<div class="mb-8 grid gap-4 lg:grid-cols-2">
+			<!-- Score Distribution -->
+			<section
+				class="rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
+			>
+				<h2 class="mb-4 text-sm font-semibold text-text-primary">Score Distribution</h2>
+				<div class="flex h-32 items-end gap-1.5 sm:gap-2">
+					{#each analytics.scoreDist as count, i}
+						{@const heightPct =
+							count === 0 ? 0 : Math.max(5, (count / analytics.maxScoreCount) * 100)}
+						<div class="group relative flex flex-1 flex-col items-center gap-1">
+							<!-- Tooltip -->
+							<div
+								class="absolute -top-8 hidden rounded bg-surface-3 px-2 py-1 text-[10px] font-medium text-white shadow-lg group-hover:block whitespace-nowrap z-10 pointer-events-none"
+							>
+								{count} series
+							</div>
+
+							<div
+								class="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-80
+								{i >= 7 ? 'bg-success' : i >= 4 ? 'bg-primary' : 'bg-warning'}"
+								style="height: {heightPct}%"
+							></div>
+							<span class="text-[10px] sm:text-xs font-medium text-text-muted">{i + 1}</span>
+						</div>
+					{/each}
+				</div>
+			</section>
+
+			<!-- Format Distribution -->
+			<section
+				class="rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
+			>
+				<h2 class="mb-4 text-sm font-semibold text-text-primary">Format Distribution</h2>
+				<div class="flex h-32 flex-col justify-end gap-3 pb-[18px]">
+					{#each analytics.formats as f}
+						<div class="flex items-center gap-3">
+							<span class="w-16 shrink-0 truncate text-xs font-medium text-text-muted text-right">
+								{f.label}
+							</span>
+							<div class="relative h-4 flex-1 overflow-hidden rounded-full bg-surface-2">
+								<div
+									class="absolute left-0 top-0 h-full rounded-full bg-primary/70 transition-all duration-500 ease-out"
+									style="width: {(f.count / analytics.maxFormatCount) * 100}%"
+								></div>
+							</div>
+							<span class="w-8 shrink-0 text-xs font-medium text-text-primary">
+								{f.count}
+							</span>
+						</div>
+					{/each}
+				</div>
+			</section>
+		</div>
+	{/if}
 
 	<!-- Continue Watching -->
 	{#if watching.length > 0}

@@ -8,6 +8,9 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 
 - **Ethereal Glass UI**: A custom-crafted design system using frosted glassmorphism, fluid animations, and high-contrast OLED black themes.
 - **Offline-First Resilience**: Full IndexedDB caching for your entire watch list. Browse, check stats, and view anime details even without an internet connection.
+- **Fused Filtering Logic**: Optimized `+page.svelte` by consolidating chained filter calls into a single `O(N)` pass, reducing intermediate array allocations and GC pressure during user interaction.
+- **Offline Sync Queue**: Implemented a discrete `syncQueue` IndexedDB store (DB_VERSION 2) to natively sequester offline or failed user mutations. Ensures offline mutations are maintained optimistically and re-attempted sequentially upon resolving `navigator.onLine` or triggering `flushPersistentQueue`.
+- **Zero-Dependency Visuals**: Implemented score and media format distribution charts using pure CSS/Svelte logic, maintaining high performance and small bundle size while providing premium analytics.
 - **Bi-Directional Sync**: Modern MAL API v2 integration with proper PKCE OAuth, real-time status updates, and permanent list deletion support.
 - **MAL-Dubs Integration**: Instantly identify which anime have English dubs available using the MAL-Dubs dataset with a persistent 7-day TTL cache.
 - **Advanced Recommendations**: Dual-source suggestions from both MyAnimeList and the Jikan community, unified into a premium suggested gallery.
@@ -16,6 +19,9 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
 - **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
 - **Enhanced Detail Gallery**: Lazy-loaded characters, community recommendations from Jikan, and a "Quick Stats" row with precise scoring user counts.
+- **Weekly Airing Calendar**: Stay ahead of the season with a dedicated airing schedule. Features a day-picker navigation and 24-hour intelligent caching of Jikan schedule data.
+- **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
+- **Detailed Search Context**: Search and browse results now explicitly show your list status (Watching, Completed, etc.) and real-time watch progress (e.g. 12/24) directly on the posters.
 
 ## 🏗️ Architecture
 

@@ -12,14 +12,21 @@ const KEY_GENRE_MAP = 'genreMap';
 
 // ─── Generic ───
 
-async function getMeta<T>(key: string): Promise<T | null> {
+export async function getMetaRecord<T>(
+	key: string
+): Promise<{ key: string; value: T; updatedAt: number } | null> {
 	const db = await getDB();
 	const record = await db.get('meta', key);
 	if (!record) return null;
-	return record.value as T;
+	return record as { key: string; value: T; updatedAt: number };
 }
 
-async function setMeta<T>(key: string, value: T): Promise<void> {
+export async function getMeta<T>(key: string): Promise<T | null> {
+	const record = await getMetaRecord<T>(key);
+	return record ? record.value : null;
+}
+
+export async function setMeta<T>(key: string, value: T): Promise<void> {
 	const db = await getDB();
 	await db.put('meta', { key, value, updatedAt: Date.now() });
 }

@@ -10,13 +10,16 @@
 	let { counts }: { counts: Record<string, number> } = $props();
 
 	const tabs: { key: TabKey; label: string }[] = [
-		{ key: 'watching', label: 'Watching' },
-		{ key: 'plan_to_watch', label: 'Plan to Watch' },
-		{ key: 'completed', label: 'Completed' },
-		{ key: 'on_hold', label: 'On Hold' },
-		{ key: 'dropped', label: 'Dropped' },
-		{ key: 'all', label: 'All' }
-	];
+		'watching',
+		'plan_to_watch',
+		'completed',
+		'on_hold',
+		'dropped',
+		'all'
+	].map((k) => ({
+		key: k as TabKey,
+		label: k === 'all' ? 'All' : formatStatus(k)
+	}));
 
 	const activeColors: Record<string, string> = {
 		all: 'bg-surface-2 text-text-primary',

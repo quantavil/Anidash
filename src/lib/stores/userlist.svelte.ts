@@ -41,13 +41,22 @@ function createUserListStore() {
 
 	const totalCount = $derived(allEntries.length);
 
-	const statusCounts = $derived({
-		watching: watching.length,
-		completed: completed.length,
-		on_hold: onHold.length,
-		dropped: dropped.length,
-		plan_to_watch: planToWatch.length
-	});
+	const statusCounts = $derived(
+		allEntries.reduce(
+			(acc, e) => {
+				const s = e.status as AnimeStatus;
+				if (acc[s] !== undefined) acc[s]++;
+				return acc;
+			},
+			{
+				watching: 0,
+				completed: 0,
+				on_hold: 0,
+				dropped: 0,
+				plan_to_watch: 0
+			}
+		)
+	);
 
 	function getEntry(malId: number): UserListRecord | undefined {
 		return entries[malId];

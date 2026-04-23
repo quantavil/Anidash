@@ -58,9 +58,12 @@ anidash/
 - **Micro-Copy Density**: Using short-form formatting (K/M) for large member counts maintains a clean interface even on small mobile screens.
 - **Native MAL English Titles**: Discovered that MAL provides English titles natively via the `alternative_titles` field when requested in the `fields` query parameter. This eliminates the need for a secondary fallback API (like Jikan) just to resolve English names, greatly improving performance and reducing rate-limit concerns.
 - **Glassmorphic Widgets**: Implementing interactive "Roulette" and "Surprise" glassmorphic widgets on empty states (like the Browse page) turns a dead-end UI into an engaging discovery feature without cluttering the main navigation.
+- **Virtualized Rendering (Infinite Scroll)**: Added infinite scrolling to `AnimeGrid` to prevent main-thread blocking when rendering large lists (e.g., "Completed" tab with 500+ items). Uses `IntersectionObserver` to progressively render chunks of 40.
+- **Fused Filtering Logic**: Optimized `+page.svelte` by consolidating chained filter calls into a single `O(N)` pass, reducing intermediate array allocations and GC pressure during user interaction.
 
 ## Blunders
 
+- [2026-04-23] Severe lag/freeze on tab switching → ROOT CAUSE: Synchronously rendering hundreds of anime cards blocked the main thread. → FIX: Implemented infinite scroll with `IntersectionObserver` in `AnimeGrid.svelte` and optimized store counts via `.reduce`.
 - [2026-04-22] Empty UI on first load after login callback → ROOT CAUSE: Data loading (cache load, sync) was inside an `onMount` block that was conditionally skipped if `isAuthenticated` was false when the layout initially mounted (before token exchange). → FIX: Moved data loading logic to a reactive `$effect` that watches `authStore.isAuthenticated` and triggers automatically.
 - [2026-04-20] Redundant state in AnimeTitle component → ROOT CAUSE: Used unnecessary `flipped` and `key` state variables for transitions when `showingEnglish` was already reactive. → FIX: Removed redundant variables and used `{#key showingEnglish}` directly for transition.
 - [2026-04-20] Navigation logic duplication in AnimeDetail page → ROOT CAUSE: Both `onMount` and `$effect` had duplicate anime loading logic, causing potential double-fetch on mount. → FIX: Consolidated into single `$effect` that handles both initial mount and route changes, removed `onMount` call.

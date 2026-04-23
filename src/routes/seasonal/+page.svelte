@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { getSeasonal } from '$lib/api/mal';
+	import { getMetaRecord, setMeta } from '$lib/cache/meta.cache';
 	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
 	import { formatMediaType, capitalize } from '$lib/utils/format';
@@ -57,18 +58,31 @@
 	// ─── Fetch ───
 
 	async function loadSeason() {
-		loading = true;
-		anime = [];
+		const cacheKey = `seasonal:${seasonYear}:${seasonKey}`;
+		const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-		const result = await getSeasonal(seasonYear, seasonKey, { limit: 100 });
+		const cached = await getMetaRecord<DisplayAnime[]>(cacheKey);
+		const isStale = !cached || Date.now() - cached.updatedAt > CACHE_TTL;
 
-		if (result.ok) {
-			anime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
+		if (cached) {
+			anime = cached.value;
+			loading = false;
 		} else {
-			toast.error('Failed to load seasonal anime');
+			loading = true;
+			anime = [];
 		}
 
-		loading = false;
+		if (isStale) {
+			const result = await getSeasonal(seasonYear, seasonKey, { limit: 100 });
+
+			if (result.ok) {
+				anime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
+				await setMeta(cacheKey, anime);
+			} else if (!cached) {
+				toast.error('Failed to load seasonal anime');
+			}
+			loading = false;
+		}
 	}
 
 	// ─── Navigation ───

@@ -4,9 +4,6 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import {
 		sortEntries,
-		filterByStatus,
-		filterByQuery,
-		filterByDub,
 		type SortKey
 	} from '$lib/utils/sort';
 	import { dubStore } from '$lib/stores/dub.svelte';
@@ -28,11 +25,21 @@
 
 	const filteredEntries = $derived(
 		sortEntries(
-			filterByDub(
-				filterByQuery(filterByStatus(userListStore.allEntries, currentTab), currentQuery),
-				dubStore.dubMode,
-				(malId) => dubStore.hasDub(malId)
-			),
+			userListStore.allEntries.filter((e) => {
+				// 1. Status loop
+				if (currentTab !== 'all' && e.status !== currentTab) return false;
+				
+				// 2. Query loop
+				if (currentQuery) {
+					const q = currentQuery.toLowerCase().trim();
+					if (!e.title.toLowerCase().includes(q)) return false;
+				}
+				
+				// 3. Dub loop
+				if (dubStore.dubMode && !dubStore.hasDub(e.malId)) return false;
+				
+				return true;
+			}),
 			currentSort
 		)
 	);

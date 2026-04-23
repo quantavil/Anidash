@@ -33,25 +33,4 @@ export function sortEntries(entries: UserListRecord[], key: SortKey): UserListRe
 	});
 }
 
-/** Filter entries by status tab */
-export function filterByStatus(entries: UserListRecord[], tab: string): UserListRecord[] {
-	if (tab === 'all') return entries;
-	return entries.filter((e) => e.status === tab);
-}
 
-/** Filter entries by search query (title match) */
-export function filterByQuery(entries: UserListRecord[], query: string): UserListRecord[] {
-	if (!query.trim()) return entries;
-	const q = query.toLowerCase().trim();
-	return entries.filter((e) => e.title.toLowerCase().includes(q));
-}
-
-/** Filter entries by Dub Mode */
-export function filterByDub(
-	entries: UserListRecord[],
-	active: boolean,
-	hasDub: (malId: number) => boolean
-): UserListRecord[] {
-	if (!active) return entries;
-	return entries.filter((e) => hasDub(e.malId));
-}

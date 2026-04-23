@@ -130,6 +130,13 @@ export type MalUserListResponse = z.infer<typeof MalUserListResponseSchema>;
 
 export const MalAnimeDetailSchema = MalAnimeLeanSchema.extend({
 	synopsis: z.string().nullable().optional(),
+	broadcast: z
+		.object({
+			day_of_the_week: z.string(),
+			start_time: z.string().optional()
+		})
+		.nullable()
+		.optional(),
 	related_anime: z
 		.array(
 			z.object({

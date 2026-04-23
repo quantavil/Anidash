@@ -19,7 +19,7 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
 - **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
 - **Enhanced Detail Gallery**: Lazy-loaded characters, community recommendations from Jikan, and a "Quick Stats" row with precise scoring user counts.
-- **Weekly Airing Calendar**: Stay ahead of the season with a dedicated airing schedule. Features a day-picker navigation and 24-hour intelligent caching of Jikan schedule data.
+- **Integrated Airing Schedules**: Stay ahead of the season with native MAL broadcast times (e.g. "Airs Mondays at 23:30 JST") displayed directly on anime detail pages for accurate airing information.
 - **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
 - **Detailed Search Context**: Search and browse results now explicitly show your list status (Watching, Completed, etc.) and real-time watch progress (e.g. 12/24) directly on the posters.
 

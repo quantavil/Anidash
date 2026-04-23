@@ -20,6 +20,7 @@ export interface AnimeRecord {
 	numListUsers: number;
 	numScoringUsers: number;
 	synopsis: string | null;
+	broadcast: { day_of_the_week: string; start_time?: string } | null;
 	relatedAnime: RelatedAnimeRecord[] | null;
 	recommendations: RecommendationRecord[] | null;
 	isDetail: boolean; // true = full detail fetched, false = lean list data

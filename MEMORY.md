@@ -19,7 +19,6 @@ anidash/
 │ └── routes/ # SvelteKit App Pages (+page.svelte, +layout.svelte)
 │ ├── api/ # Cloudflare Pages Functions proxying MAL API
 │ └── auth/ # OAuth token exchange routes
-│ └── schedule/ # Weekly airing calendar
 ├── package.json
 └── vite.config.ts
 
@@ -83,3 +82,5 @@ anidash/
 - [2026-04-19] Missing dub icon in seasonal section → ROOT CAUSE: `SearchResultCard.svelte` didn't implement the `dubStore` check like `AnimeCard.svelte` did → FIX: Imported `dubStore` and `Mic` icon, added glass-badge overlay to `SearchResultCard`. Also updated episode counter buttons to be larger and match the glassmorphism aesthetic.
 - [2026-04-23] Schema mismatch/type error in `AppError` → ROOT CAUSE: Attempted to access `.status` on a union type where not all members (like `'network'`) had that property. → FIX: Implemented strict type narrowing by checking `type === 'api'` before status access.
 - [2026-04-23] Leftover 'Generating...' debug artifact in `AnimeGrid.svelte` → ROOT CAUSE: Incomplete removal of debug string after implementing vitualized grid. → FIX: Manually removed the string literal from the component markup.
+- [2026-04-23] Score distribution graph not visible in stats → ROOT CAUSE: Flex container used `items-end` without defined height context, preventing percentage heights from rendering. → FIX: Changed parent to `items-stretch` and added `h-full` to children.
+- [2026-04-23] Global schedule page empty/unreliable → ROOT CAUSE: Relying on Jikan for full schedules was buggy and often empty. → FIX: Removed `/schedule` route entirely and integrated native MAL `broadcast` data directly into the anime detail page.

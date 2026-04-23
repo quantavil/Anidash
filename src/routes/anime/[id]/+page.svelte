@@ -282,6 +282,16 @@
 							{anime.studios.map((s) => s.name).join(', ')}
 						</div>
 					{/if}
+					{#if anime.broadcast?.day_of_the_week}
+						<div class="flex items-center gap-1">
+							<Clock size={12} />
+							{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
+							<span class="capitalize">{anime.broadcast.day_of_the_week}s</span>{anime.broadcast
+								.start_time
+								? ` at ${anime.broadcast.start_time} JST`
+								: ''}
+						</div>
+					{/if}
 				</div>
 
 				<!-- Genres -->

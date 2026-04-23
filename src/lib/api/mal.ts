@@ -174,7 +174,8 @@ const DETAIL_FIELDS = [
 	'media_type',
 	'num_list_users',
 	'num_scoring_users',
-	'alternative_titles'
+	'alternative_titles',
+	'broadcast'
 ].join(',');
 
 export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
@@ -202,6 +203,7 @@ function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 		numListUsers: detail.num_list_users ?? 0,
 		numScoringUsers: detail.num_scoring_users ?? 0,
 		synopsis: detail.synopsis ?? null,
+		broadcast: detail.broadcast ?? null,
 		relatedAnime:
 			detail.related_anime?.map((r) => ({
 				id: r.node.id,

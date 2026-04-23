@@ -30,7 +30,6 @@
 		{ href: '/', label: 'My List', icon: List },
 		{ href: '/browse', label: 'Browse', icon: Search },
 		{ href: '/seasonal', label: 'Seasonal', icon: Calendar },
-		{ href: '/schedule', label: 'Schedule', icon: Clock },
 		{ href: '/stats', label: 'Stats', icon: User }
 	];
 </script>

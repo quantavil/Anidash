@@ -180,11 +180,11 @@
 				class="rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
 			>
 				<h2 class="mb-4 text-sm font-semibold text-text-primary">Score Distribution</h2>
-				<div class="flex h-32 items-end gap-1.5 sm:gap-2">
+				<div class="flex h-32 items-stretch gap-1.5 sm:gap-2 pt-2">
 					{#each analytics.scoreDist as count, i}
 						{@const heightPct =
 							count === 0 ? 0 : Math.max(5, (count / analytics.maxScoreCount) * 100)}
-						<div class="group relative flex flex-1 flex-col items-center gap-1">
+						<div class="group relative flex h-full flex-1 flex-col items-center justify-end">
 							<!-- Tooltip -->
 							<div
 								class="absolute -top-8 hidden rounded bg-surface-3 px-2 py-1 text-[10px] font-medium text-white shadow-lg group-hover:block whitespace-nowrap z-10 pointer-events-none"
@@ -193,7 +193,7 @@
 							</div>
 
 							<div
-								class="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-80
+								class="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-80 mb-1
 								{i >= 7 ? 'bg-success' : i >= 4 ? 'bg-primary' : 'bg-warning'}"
 								style="height: {heightPct}%"
 							></div>

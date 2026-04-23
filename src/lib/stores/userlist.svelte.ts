@@ -16,9 +16,7 @@ import { syncStore } from './sync.svelte.ts';
 import { debounce, type DebouncedFn } from '$lib/utils/debounce';
 import { ok, err, type Result } from '$lib/api/result';
 import type { AppError } from '$lib/api/result';
-import type { UserListRecord } from '$lib/cache/db';
-
-type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
+import type { UserListRecord, AnimeStatus } from '$lib/cache/db';
 
 // ─── Store ───
 
@@ -236,7 +234,8 @@ function createUserListStore() {
 
 		if (!result.ok) {
 			console.warn(`Failed to sync deletion for ${malId} to MAL:`, result.error);
-			// We don't rollback here as it's better to stay deleted locally and try again on next sync
+			// Queue for retry on next sync flush
+			await putSyncQueue({ malId, payload: { _delete: true }, timestamp: Date.now() });
 		}
 
 		return ok(undefined);
@@ -247,7 +246,9 @@ function createUserListStore() {
 	async function addToList(
 		malId: number,
 		status: AnimeStatus,
-		titleEnglish?: string | null
+		titleEnglish?: string | null,
+		fallbackTitle?: string,
+		fallbackPicture?: string | null
 	): Promise<Result<void>> {
 		// First, update MAL
 		const result = await updateAnimeStatus(malId, { status });
@@ -265,9 +266,9 @@ function createUserListStore() {
 		// Create a local list entry
 		const newEntry: UserListRecord = {
 			malId,
-			title: '',
+			title: fallbackTitle ?? '',
 			titleEnglish: titleEnglish ?? null,
-			mainPicture: null,
+			mainPicture: fallbackPicture ? { medium: fallbackPicture, large: fallbackPicture } : null,
 			mean: null,
 			numEpisodes: 0,
 			genres: [],
@@ -286,7 +287,7 @@ function createUserListStore() {
 			finishDate: null
 		};
 
-		// If we got detail, use it
+		// If we got detail, use it (overrides fallbacks)
 		if (detailResult.ok) {
 			const d = detailResult.value;
 			newEntry.title = d.title;

@@ -43,6 +43,8 @@ export interface RecommendationRecord {
 	numRecommendations: number;
 }
 
+export type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
+
 export interface UserListRecord {
 	malId: number;
 	title: string;
@@ -58,7 +60,7 @@ export interface UserListRecord {
 	numListUsers: number;
 	numScoringUsers: number;
 	// User status
-	status: 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
+	status: AnimeStatus;
 	score: number;
 	numWatchedEpisodes: number;
 	isRewatching: boolean;

@@ -6,7 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 
-	type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
+	import type { AnimeStatus } from '$lib/cache/db';
 
 	let {
 		open = false,
@@ -43,7 +43,7 @@
 
 	async function handleAdd() {
 		adding = true;
-		const result = await userListStore.addToList(malId, selectedStatus, titleEnglish);
+		const result = await userListStore.addToList(malId, selectedStatus, titleEnglish, animeTitle, picture);
 		adding = false;
 
 		if (result.ok) {

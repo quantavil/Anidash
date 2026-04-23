@@ -1,11 +1,8 @@
 // ─── User anime list cache (IndexedDB) ───
 // Always reflects the last-known MAL state. Sync on login.
 
-import { getDB, type UserListRecord, type SyncQueueRecord } from './db';
+import { getDB, type UserListRecord, type SyncQueueRecord, type AnimeStatus } from './db';
 import { ok, err, type Result } from '$lib/api/result';
-import type { AppError } from '$lib/api/result';
-
-type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
 
 // ─── Read ───
 

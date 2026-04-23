@@ -9,6 +9,7 @@
 	import { Search, SlidersHorizontal, X, ChevronDown, Loader2, Mic } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
+	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
 	import RecommenderWidgets from '$lib/ui/RecommenderWidgets.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
@@ -332,19 +333,13 @@
 	<div class="mt-6">
 		{#if loading}
 			<div
-				class="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
 			>
-				{#each Array(10) as _}
-					<div class="animate-pulse rounded-xl border border-border bg-surface-1 p-3">
-						<div class="aspect-[3/4] rounded-lg bg-surface-2"></div>
-						<div class="mt-3 h-4 w-3/4 rounded bg-surface-2"></div>
-						<div class="mt-2 h-3 w-1/2 rounded bg-surface-2"></div>
-					</div>
-				{/each}
+				<AnimeCardSkeleton count={10} />
 			</div>
 		{:else if results.length > 0}
 			<div
-				class="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
 			>
 				{#each results as anime (anime.malId)}
 					<SearchResultCard {anime} />

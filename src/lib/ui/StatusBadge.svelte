@@ -5,7 +5,7 @@
 	import { formatStatus } from '$lib/utils/format';
 	import { tick } from 'svelte';
 
-	type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
+	import type { AnimeStatus } from '$lib/cache/db';
 
 	let { malId, status }: { malId: number; status: AnimeStatus } = $props();
 

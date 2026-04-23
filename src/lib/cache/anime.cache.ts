@@ -1,14 +1,12 @@
 // ─── Anime detail cache (IndexedDB) ───
-// TTL: 7 days for basic (list) data, 24 hours for full detail.
+// TTL: 24 hours for all cached anime data.
 
 import { getDB, type AnimeRecord } from './db';
 
-const BASIC_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-const DETAIL_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-function isStale(cachedAt: number, isDetail: boolean): boolean {
-	const ttl = isDetail ? DETAIL_TTL_MS : BASIC_TTL_MS;
-	return Date.now() - cachedAt > ttl;
+function isStale(cachedAt: number): boolean {
+	return Date.now() - cachedAt > CACHE_TTL_MS;
 }
 
 // ─── Read ───
@@ -18,7 +16,7 @@ export async function getAnime(malId: number): Promise<AnimeRecord | null> {
 	const db = await getDB();
 	const record = await db.get('anime', malId);
 	if (!record) return null;
-	if (isStale(record.cachedAt, record.isDetail)) return null;
+	if (isStale(record.cachedAt)) return null;
 	return record;
 }
 
@@ -38,7 +36,7 @@ export async function getAnimeBatch(malIds: number[]): Promise<Map<number, Anime
 	await Promise.all(
 		malIds.map(async (id) => {
 			const record = await tx.store.get(id);
-			if (record && !isStale(record.cachedAt, record.isDetail)) {
+			if (record && !isStale(record.cachedAt)) {
 				results.set(id, record);
 			}
 		})
@@ -91,8 +89,7 @@ export async function purgeStaleAnime(): Promise<number> {
 	let cursor = await tx.store.openCursor();
 	while (cursor) {
 		const record = cursor.value;
-		const ttl = record.isDetail ? DETAIL_TTL_MS : BASIC_TTL_MS;
-		if (now - record.cachedAt > ttl) {
+		if (now - record.cachedAt > CACHE_TTL_MS) {
 			await cursor.delete();
 			purged++;
 		}

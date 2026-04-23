@@ -461,7 +461,13 @@
 							{/each}
 						</div>
 					{:else if charactersError}
-						<p class="text-sm text-error">{charactersError}</p>
+						<div class="flex items-center gap-3">
+							<p class="text-sm text-error">{charactersError}</p>
+							<button
+								onclick={() => { characters = []; loadCharacters(); }}
+								class="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-2"
+							>Retry</button>
+						</div>
 					{:else if characters.length === 0}
 						<p class="text-sm text-text-muted">No character information available.</p>
 					{:else}
@@ -502,7 +508,13 @@
 							{/each}
 						</div>
 					{:else if recsError}
-						<p class="text-sm text-error">{recsError}</p>
+						<div class="flex items-center gap-3">
+							<p class="text-sm text-error">{recsError}</p>
+							<button
+								onclick={() => { recommendations = []; loadRecommendations(); }}
+								class="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-2"
+							>Retry</button>
+						</div>
 					{:else}
 						<!-- MAL recommendations (from detail) -->
 						{#if anime.recommendations && anime.recommendations.length > 0}

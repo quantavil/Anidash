@@ -45,25 +45,27 @@
 			}
 		});
 
-		// Format distribution
-		const formatDist: Record<string, number> = {};
+		// Genre distribution
+		const genreDist: Record<string, number> = {};
 		entries.forEach((e) => {
-			const type = e.mediaType || 'unknown';
-			formatDist[type] = (formatDist[type] || 0) + 1;
+			(e.genres ?? []).forEach((g: any) => {
+				const name = typeof g === 'string' ? g : g.name;
+				if (name) genreDist[name] = (genreDist[name] || 0) + 1;
+			});
 		});
 
-		const formats = Object.entries(formatDist)
-			.map(([label, count]) => ({ label: formatMediaType(label), count }))
+		const genres = Object.entries(genreDist)
+			.map(([label, count]) => ({ label, count }))
 			.sort((a, b) => b.count - a.count)
-			.slice(0, 5);
+			.slice(0, 8);
 
-		const maxFormatCount = formats[0]?.count || 1;
+		const maxGenreCount = genres[0]?.count || 1;
 
 		return {
 			scoreDist,
 			maxScoreCount: maxScoreCount || 1,
-			formats,
-			maxFormatCount
+			genres,
+			maxGenreCount
 		};
 	});
 
@@ -203,25 +205,25 @@
 				</div>
 			</section>
 
-			<!-- Format Distribution -->
+			<!-- Genre Distribution -->
 			<section
 				class="rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
 			>
-				<h2 class="mb-4 text-sm font-semibold text-text-primary">Format Distribution</h2>
-				<div class="flex h-32 flex-col justify-end gap-3 pb-[18px]">
-					{#each analytics.formats as f}
-						<div class="flex items-center gap-3">
-							<span class="w-16 shrink-0 truncate text-xs font-medium text-text-muted text-right">
-								{f.label}
+				<h2 class="mb-4 text-sm font-semibold text-text-primary">Genre Distribution</h2>
+				<div class="flex flex-col gap-2">
+					{#each analytics.genres as g}
+						<div class="group flex items-center gap-3">
+							<span class="w-20 shrink-0 truncate text-xs font-medium text-text-muted text-right">
+								{g.label}
 							</span>
-							<div class="relative h-4 flex-1 overflow-hidden rounded-full bg-surface-2">
+							<div class="relative h-3.5 flex-1 overflow-hidden rounded-full bg-surface-2">
 								<div
-									class="absolute left-0 top-0 h-full rounded-full bg-primary/70 transition-all duration-500 ease-out"
-									style="width: {(f.count / analytics.maxFormatCount) * 100}%"
+									class="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary/80 to-success/60 transition-all duration-500 ease-out group-hover:from-primary group-hover:to-success"
+									style="width: {(g.count / analytics.maxGenreCount) * 100}%"
 								></div>
 							</div>
 							<span class="w-8 shrink-0 text-xs font-medium text-text-primary">
-								{f.count}
+								{g.count}
 							</span>
 						</div>
 					{/each}

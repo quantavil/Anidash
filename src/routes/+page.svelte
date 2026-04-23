@@ -29,7 +29,10 @@
 				// 2. Query loop
 				if (currentQuery) {
 					const q = currentQuery.toLowerCase().trim();
-					if (!e.title.toLowerCase().includes(q)) return false;
+					const matches =
+						e.title.toLowerCase().includes(q) ||
+						(e.titleEnglish?.toLowerCase().includes(q) ?? false);
+					if (!matches) return false;
 				}
 
 				// 3. Dub loop

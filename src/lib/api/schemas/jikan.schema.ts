@@ -16,34 +16,6 @@ const JikanPaginationSchema = z.object({
 		.optional()
 });
 
-// ─── Episodes ───
-
-export const JikanEpisodeSchema = z.object({
-	mal_id: z.number(),
-	url: z.string().url().nullable().optional(),
-	title: z.string().nullable().optional(),
-	title_japanese: z.string().nullable().optional(),
-	title_romanji: z.string().nullable().optional(),
-	aired: z
-		.object({
-			from: z.string().nullable().optional(),
-			to: z.string().nullable().optional()
-		})
-		.nullable()
-		.optional(),
-	filler: z.boolean().optional(),
-	recap: z.boolean().optional(),
-	forum_url: z.string().url().nullable().optional()
-});
-
-export const JikanEpisodesResponseSchema = z.object({
-	data: z.array(JikanEpisodeSchema),
-	pagination: JikanPaginationSchema.optional()
-});
-
-export type JikanEpisode = z.infer<typeof JikanEpisodeSchema>;
-export type JikanEpisodesResponse = z.infer<typeof JikanEpisodesResponseSchema>;
-
 // ─── Characters ───
 
 const JikanCharacterSchema = z.object({
@@ -195,12 +167,3 @@ export const JikanGenresResponseSchema = z.object({
 });
 
 export type JikanGenresResponse = z.infer<typeof JikanGenresResponseSchema>;
-
-// ─── Schedules ───
-
-export const JikanSchedulesResponseSchema = z.object({
-	data: z.array(JikanAnimeSchema),
-	pagination: JikanPaginationSchema.optional()
-});
-
-export type JikanSchedulesResponse = z.infer<typeof JikanSchedulesResponseSchema>;

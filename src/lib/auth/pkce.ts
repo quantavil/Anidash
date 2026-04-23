@@ -18,10 +18,3 @@ export async function generatePKCE(): Promise<{ verifier: string; challenge: str
 	// plain PKCE
 	return { verifier, challenge: verifier };
 }
-
-// ─── Internal ───
-
-function base64urlEncode(buffer: Uint8Array): string {
-	const binary = String.fromCharCode(...buffer);
-	return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}

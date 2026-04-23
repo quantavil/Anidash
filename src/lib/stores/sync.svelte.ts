@@ -1,7 +1,7 @@
 // ─── Sync Store (Svelte 5 Runes) ───
 // Manages full sync state: in-progress, last synced, errors.
 
-import { getAllEntries, bulkPut, clearList } from '$lib/cache/userlist.cache';
+import { bulkPut } from '$lib/cache/userlist.cache';
 import { getUserAnimeList } from '$lib/api/mal';
 import { getLastSync, setLastSync, setCachedProfile } from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';

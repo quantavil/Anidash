@@ -54,18 +54,35 @@
 			});
 		});
 
-		const genres = Object.entries(genreDist)
+		const allGenres = Object.entries(genreDist)
 			.map(([label, count]) => ({ label, count }))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 8);
+			.sort((a, b) => b.count - a.count);
 
-		const maxGenreCount = genres[0]?.count || 1;
+		const topGenres = allGenres.slice(0, 5);
+		const otherCount = allGenres.slice(5).reduce((sum, item) => sum + item.count, 0);
+
+		const genres = [...topGenres];
+		if (otherCount > 0) genres.push({ label: 'Other', count: otherCount });
+
+		const totalGenreCount = genres.reduce((sum, item) => sum + item.count, 0);
+
+		let cumulativePct = 0;
+		const donutSlices = genres.map((item) => {
+			const percentage = (item.count / totalGenreCount) * 100;
+			const slice = {
+				...item,
+				percentage,
+				offset: -cumulativePct
+			};
+			cumulativePct += percentage;
+			return slice;
+		});
 
 		return {
 			scoreDist,
 			maxScoreCount: maxScoreCount || 1,
-			genres,
-			maxGenreCount
+			donutSlices,
+			totalGenreCount
 		};
 	});
 
@@ -207,26 +224,93 @@
 
 			<!-- Genre Distribution -->
 			<section
-				class="rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
+				class="flex flex-col rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
 			>
 				<h2 class="mb-4 text-sm font-semibold text-text-primary">Genre Distribution</h2>
-				<div class="flex flex-col gap-2">
-					{#each analytics.genres as g}
-						<div class="group flex items-center gap-3">
-							<span class="w-20 shrink-0 truncate text-xs font-medium text-text-muted text-right">
-								{g.label}
-							</span>
-							<div class="relative h-3.5 flex-1 overflow-hidden rounded-full bg-surface-2">
-								<div
-									class="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary/80 to-success/60 transition-all duration-500 ease-out group-hover:from-primary group-hover:to-success"
-									style="width: {(g.count / analytics.maxGenreCount) * 100}%"
-								></div>
-							</div>
-							<span class="w-8 shrink-0 text-xs font-medium text-text-primary">
-								{g.count}
-							</span>
+				<div class="flex flex-1 items-center justify-center gap-6 pb-2">
+					<!-- Donut Chart -->
+					<div class="relative h-28 w-28 shrink-0">
+						<svg viewBox="0 0 42 42" class="h-full w-full -rotate-90 drop-shadow-md">
+							<circle
+								cx="21"
+								cy="21"
+								r="15.91549431"
+								fill="transparent"
+								stroke="rgba(255,255,255,0.05)"
+								stroke-width="5"
+							/>
+							{#each analytics.donutSlices as slice, i}
+								<circle
+									cx="21"
+									cy="21"
+									r="15.91549431"
+									fill="transparent"
+									stroke="currentColor"
+									stroke-width="5"
+									stroke-dasharray="{slice.percentage} {100 - slice.percentage}"
+									stroke-dashoffset={slice.offset}
+									class={[
+										'transition-all duration-700 ease-out hover:stroke-[6px]',
+										i === 0
+											? 'text-primary'
+											: i === 1
+												? 'text-success'
+												: i === 2
+													? 'text-info'
+													: i === 3
+														? 'text-warning'
+														: i === 4
+															? 'text-error'
+															: 'text-surface-3'
+									]}
+								/>
+							{/each}
+						</svg>
+						<!-- Center Info -->
+						<div
+							class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+						>
+							<span class="text-xs font-bold text-text-primary">{stats.total}</span>
+							<span class="text-[9px] text-text-muted">Total</span>
 						</div>
-					{/each}
+					</div>
+
+					<!-- Legend -->
+					<div class="flex flex-1 flex-col justify-center gap-2.5 text-xs">
+						{#each analytics.donutSlices as slice, i}
+							<div class="group flex items-center justify-between">
+								<div class="flex items-center gap-2 truncate pr-2">
+									<div
+										class={[
+											'h-2 w-2 shrink-0 rounded-full',
+											i === 0
+												? 'bg-primary'
+												: i === 1
+													? 'bg-success'
+													: i === 2
+														? 'bg-info'
+														: i === 3
+															? 'bg-warning'
+															: i === 4
+																? 'bg-error'
+																: 'bg-surface-3'
+										]}
+									></div>
+									<span
+										class="truncate font-medium text-text-secondary transition-colors group-hover:text-text-primary"
+									>
+										{slice.label}
+									</span>
+								</div>
+								<div class="flex items-center gap-1.5 pl-1">
+									<span class="font-semibold text-text-primary">{slice.count}</span>
+									<span class="hidden w-7 text-right text-[10px] text-text-muted sm:inline-block">
+										{Math.round(slice.percentage)}%
+									</span>
+								</div>
+							</div>
+						{/each}
+					</div>
 				</div>
 			</section>
 		</div>

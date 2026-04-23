@@ -6,13 +6,10 @@ import { jikanLimiter } from './rate-limit';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
 import type { AppError } from './result';
 import {
-	JikanEpisodesResponseSchema,
 	JikanCharactersResponseSchema,
 	JikanRecommendationsResponseSchema,
 	JikanSearchResponseSchema,
 	JikanGenresResponseSchema,
-	JikanSchedulesResponseSchema,
-	type JikanEpisode,
 	type JikanCharacterEntry,
 	type JikanRecommendationEntry,
 	type JikanAnime
@@ -69,47 +66,6 @@ async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<
 			message: error.message || 'Jikan request failed'
 		});
 	}
-}
-
-// ─── Episodes ───
-
-export async function getEpisodes(
-	malId: number,
-	page: number = 1
-): Promise<Result<{ episodes: JikanEpisode[]; hasNextPage: boolean }>> {
-	const url = `${JIKAN_BASE}/anime/${malId}/episodes?page=${page}`;
-	const result = await jikanFetch(url, JikanEpisodesResponseSchema);
-
-	if (!result.ok) return result as Result<never>;
-
-	return ok({
-		episodes: result.value.data,
-		hasNextPage: result.value.pagination?.has_next_page ?? false
-	});
-}
-
-/** Fetch ALL episodes (handles pagination) */
-export async function getAllEpisodes(
-	malId: number,
-	maxPages: number = 20
-): Promise<Result<JikanEpisode[]>> {
-	const all: JikanEpisode[] = [];
-	let page = 1;
-
-	while (page <= maxPages) {
-		const result = await getEpisodes(malId, page);
-		if (!result.ok) {
-			// Return what we have so far on error
-			return all.length > 0 ? ok(all) : result;
-		}
-
-		all.push(...result.value.episodes);
-
-		if (!result.value.hasNextPage) break;
-		page++;
-	}
-
-	return ok(all);
 }
 
 // ─── Characters ───
@@ -213,23 +169,4 @@ export async function getAnimeGenres(): Promise<
 			count: g.count ?? 0
 		}))
 	);
-}
-
-// ─── Schedules ───
-
-export async function getSchedule(filterDay?: string): Promise<Result<{ anime: JikanAnime[] }>> {
-	const params = new URLSearchParams();
-	if (filterDay) params.set('filter', filterDay);
-	params.set('kids', 'false');
-	params.set('sfw', 'true');
-	params.set('limit', '25');
-
-	const url = `${JIKAN_BASE}/schedules?${params.toString()}`;
-	const result = await jikanFetch(url, JikanSchedulesResponseSchema);
-
-	if (!result.ok) return result as Result<never>;
-
-	return ok({
-		anime: result.value.data
-	});
 }

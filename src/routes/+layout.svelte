@@ -14,8 +14,7 @@
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
 
-	import { purgeStaleAnime } from '$lib/cache/anime.cache';
-	import { deleteDB, closeDB } from '$lib/cache/db';
+	import { deleteDB } from '$lib/cache/db';
 	import { tokens } from '$lib/auth/tokens';
 	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
 
@@ -41,9 +40,6 @@
 			});
 			syncStore.init();
 			dubStore.init(); // non-blocking load of dub info
-
-			// Purge stale cache in background
-			purgeStaleAnime().catch(() => {});
 		}
 	});
 

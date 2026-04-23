@@ -28,26 +28,6 @@ export async function getEntriesByStatus(status: AnimeStatus): Promise<UserListR
 	return db.getAllFromIndex('userList', 'by-status', status);
 }
 
-/** Get count of entries per status */
-export async function getStatusCounts(): Promise<Record<AnimeStatus, number>> {
-	const db = await getDB();
-	const counts: Record<AnimeStatus, number> = {
-		watching: 0,
-		completed: 0,
-		on_hold: 0,
-		dropped: 0,
-		plan_to_watch: 0
-	};
-
-	let cursor = await db.transaction('userList', 'readonly').store.openCursor();
-	while (cursor) {
-		const status = cursor.value.status as AnimeStatus;
-		if (status in counts) counts[status]++;
-		cursor = await cursor.continue();
-	}
-
-	return counts;
-}
 
 // ─── Write ───
 

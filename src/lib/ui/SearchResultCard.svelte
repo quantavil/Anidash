@@ -2,7 +2,7 @@
 	import type { DisplayAnime } from '$lib/utils/types';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { formatMediaType, formatNumberShort, formatStatus } from '$lib/utils/format';
+	import { formatMediaType, formatNumberShort, formatStatus, STATUS_BG_COLORS } from '$lib/utils/format';
 	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
@@ -45,11 +45,7 @@
 			<div
 				class={[
 					'absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-md',
-					listEntry.status === 'watching' && 'bg-primary/90',
-					listEntry.status === 'completed' && 'bg-success/90',
-					listEntry.status === 'on_hold' && 'bg-warning/90',
-					listEntry.status === 'dropped' && 'bg-error/90',
-					listEntry.status === 'plan_to_watch' && 'bg-info/90'
+					STATUS_BG_COLORS[listEntry.status]
 				]}
 			>
 				{formatStatus(listEntry.status)}

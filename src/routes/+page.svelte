@@ -75,7 +75,12 @@
 		</div>
 
 		<!-- Grid / List -->
-		<AnimeGrid entries={filteredEntries} loading={false} onComplete={handleCompletePrompt} />
+		<AnimeGrid
+			entries={filteredEntries}
+			resetKey="{currentTab}-{currentSort}-{currentQuery}"
+			loading={false}
+			onComplete={handleCompletePrompt}
+		/>
 
 		<!-- Stats footer -->
 		{#if filteredEntries.length > 0}

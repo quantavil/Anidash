@@ -60,10 +60,21 @@
 		}
 	}
 
+	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 	function handleSearch(e: Event) {
 		const value = (e.target as HTMLInputElement).value;
-		goto(setUrlParam($page.url, 'q', value), { keepFocus: true, noScroll: true });
+		if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+		searchDebounceTimer = setTimeout(() => {
+			goto(setUrlParam($page.url, 'q', value), { keepFocus: true, noScroll: true });
+		}, 250);
 	}
+
+	$effect(() => {
+		return () => {
+			if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+		};
+	});
 
 	function clearSearch() {
 		goto(setUrlParam($page.url, 'q', ''), { keepFocus: true, noScroll: true });

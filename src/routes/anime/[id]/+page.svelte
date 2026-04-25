@@ -17,7 +17,8 @@
 		formatNumberShort,
 		formatAnimeStatus,
 		formatStatus,
-		formatSeason
+		formatSeason,
+		formatLocalBroadcast
 	} from '$lib/utils/format';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -286,10 +287,7 @@
 						<div class="flex items-center gap-1">
 							<Clock size={12} />
 							{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
-							<span class="capitalize">{anime.broadcast.day_of_the_week}s</span>{anime.broadcast
-								.start_time
-								? ` at ${anime.broadcast.start_time} JST`
-								: ''}
+							<span>{formatLocalBroadcast(anime.broadcast.day_of_the_week, anime.broadcast.start_time)}</span>
 						</div>
 					{/if}
 				</div>

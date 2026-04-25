@@ -2,7 +2,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { Check, ChevronDown } from 'lucide-svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { formatStatus } from '$lib/utils/format';
+	import { formatStatus, STATUS_COLORS, DOT_COLORS } from '$lib/utils/format';
 	import { tick } from 'svelte';
 
 	import type { AnimeStatus } from '$lib/cache/db';
@@ -16,22 +16,6 @@
 		'dropped',
 		'plan_to_watch'
 	];
-
-	const STATUS_COLORS: Record<AnimeStatus, string> = {
-		watching: 'bg-primary/15 text-primary border-primary/30',
-		completed: 'bg-success/15 text-success border-success/30',
-		on_hold: 'bg-warning/15 text-warning border-warning/30',
-		dropped: 'bg-error/15 text-error border-error/30',
-		plan_to_watch: 'bg-info/15 text-info border-info/30'
-	};
-
-	const DOT_COLORS: Record<AnimeStatus, string> = {
-		watching: 'bg-primary',
-		completed: 'bg-success',
-		on_hold: 'bg-warning',
-		dropped: 'bg-error',
-		plan_to_watch: 'bg-info'
-	};
 
 	function handleSelect(newStatus: AnimeStatus) {
 		if (newStatus !== status) {

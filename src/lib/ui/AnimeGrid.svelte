@@ -1,15 +1,18 @@
 <script lang="ts">
 	import type { UserListRecord } from '$lib/cache/db';
+	import { untrack } from 'svelte';
 	import AnimeCard from './AnimeCard.svelte';
 	import AnimeCardSkeleton from './skeletons/AnimeCardSkeleton.svelte';
 
 	let {
 		entries = [],
 		loading = false,
+		resetKey,
 		onComplete
 	}: {
 		entries: UserListRecord[];
 		loading?: boolean;
+		resetKey?: string;
 		onComplete?: (malId: number) => void;
 	} = $props();
 
@@ -20,9 +23,14 @@
 
 	// Reset limit when entries change (e.g., changing tabs, sorting, filtering)
 	$effect(() => {
-		// Just depend on entries to trigger reset
-		entries;
-		limit = PAGE_SIZE;
+		if (resetKey !== undefined) {
+			resetKey;
+		} else {
+			entries;
+		}
+		untrack(() => {
+			limit = PAGE_SIZE;
+		});
 	});
 
 	// Setup intersection observer for infinite scroll

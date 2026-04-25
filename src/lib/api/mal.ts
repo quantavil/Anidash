@@ -15,7 +15,8 @@ import {
 	type MalUserListEntry,
 	type MalAnimeDetail,
 	type MalAnimeSearchResponse,
-	type MalStatusUpdate
+	type MalStatusUpdate,
+	type MalAnimeLean
 } from './schemas/mal.schema';
 import type { UserListRecord, AnimeRecord } from '$lib/cache/db';
 
@@ -128,10 +129,7 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 	return ok(allEntries);
 }
 
-function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
-	const node = entry.node;
-	const ls = entry.list_status;
-
+function mapBaseAnimeNode(node: MalAnimeLean) {
 	return {
 		malId: node.id,
 		title: node.title,
@@ -145,7 +143,16 @@ function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
 		mediaType: node.media_type ?? 'unknown',
 		animeStatus: node.status ?? 'unknown',
 		numListUsers: node.num_list_users ?? 0,
-		numScoringUsers: node.num_scoring_users ?? 0,
+		numScoringUsers: node.num_scoring_users ?? 0
+	};
+}
+
+function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
+	const node = entry.node;
+	const ls = entry.list_status;
+
+	return {
+		...mapBaseAnimeNode(node),
 		status: ls.status,
 		score: ls.score,
 		numWatchedEpisodes: ls.num_episodes_watched,
@@ -189,19 +196,7 @@ export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
 
 function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 	return {
-		malId: detail.id,
-		title: detail.title,
-		titleEnglish: detail.alternative_titles?.en || null,
-		mainPicture: detail.main_picture ?? null,
-		mean: detail.mean ?? null,
-		numEpisodes: detail.num_episodes ?? 0,
-		genres: detail.genres ?? [],
-		studios: detail.studios ?? [],
-		startSeason: detail.start_season ?? { year: null, season: null },
-		mediaType: detail.media_type ?? 'unknown',
-		animeStatus: detail.status ?? 'unknown',
-		numListUsers: detail.num_list_users ?? 0,
-		numScoringUsers: detail.num_scoring_users ?? 0,
+		...mapBaseAnimeNode(detail),
 		synopsis: detail.synopsis ?? null,
 		broadcast: detail.broadcast ?? null,
 		relatedAnime:

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { syncStore } from './sync.svelte';
+import { syncStore } from '$lib/stores/sync.svelte';
 import { bulkPut } from '$lib/cache/userlist.cache';
 import { getUserAnimeList } from '$lib/api/mal';
 import { getLastSync, setLastSync, setCachedProfile } from '$lib/cache/meta.cache';

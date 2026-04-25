@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { mapBaseAnimeNode, mapListEntryToRecord, mapDetailToRecord } from './mal';
-import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from './schemas/mal.schema';
+import { mapBaseAnimeNode, mapListEntryToRecord, mapDetailToRecord } from '$lib/api/mal';
+import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from '$lib/api/schemas/mal.schema';
 
 describe('MAL API Mappers', () => {
 	it('should correctly map base anime node fields', () => {

@@ -27,7 +27,7 @@
 	<div
 		class="relative flex flex-col h-full overflow-hidden rounded-[14px] bg-surface-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
 	>
-		<a href="/anime/{entry.malId}" class="absolute inset-0 z-0" aria-label="View {entry.title} details"></a>
+		<a href="/anime/{entry.malId}" class="absolute inset-0 z-[1]" aria-label="View {entry.title} details"></a>
 		<!-- Cover Image -->
 		<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-2 border-b border-border">
 			<ImageWithFallback
@@ -37,7 +37,7 @@
 			/>
 
 			<!-- Status badge overlay -->
-			<div class="absolute left-2 top-2">
+			<div class="absolute left-2 top-2 z-10">
 				<StatusBadge malId={entry.malId} status={entry.status} />
 			</div>
 

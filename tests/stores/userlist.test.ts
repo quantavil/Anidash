@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { userListStore } from './userlist.svelte';
+import { userListStore } from '$lib/stores/userlist.svelte';
 import { putSyncQueue, getSyncQueue, deleteSyncQueue } from '$lib/cache/userlist.cache';
 import { updateAnimeStatus, deleteAnimeStatus } from '$lib/api/mal';
 

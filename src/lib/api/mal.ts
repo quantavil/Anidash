@@ -129,7 +129,7 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 	return ok(allEntries);
 }
 
-function mapBaseAnimeNode(node: MalAnimeLean) {
+export function mapBaseAnimeNode(node: MalAnimeLean) {
 	return {
 		malId: node.id,
 		title: node.title,
@@ -147,7 +147,7 @@ function mapBaseAnimeNode(node: MalAnimeLean) {
 	};
 }
 
-function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
+export function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
 	const node = entry.node;
 	const ls = entry.list_status;
 
@@ -194,7 +194,7 @@ export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
 	return ok(mapDetailToRecord(result.value));
 }
 
-function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
+export function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 	return {
 		...mapBaseAnimeNode(detail),
 		synopsis: detail.synopsis ?? null,

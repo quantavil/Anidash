@@ -25,7 +25,6 @@ export async function getEntriesByStatus(status: AnimeStatus): Promise<UserListR
 	return db.getAllFromIndex('userList', 'by-status', status);
 }
 
-
 // ─── Write ───
 
 /** Replace the entire list with fresh data from MAL */

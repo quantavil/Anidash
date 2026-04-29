@@ -140,7 +140,7 @@ a,
 
 /* ── External Links (MAL & Mirrors) ── */
 .ext-group {
-	@apply group relative inline-flex items-stretch rounded-full border border-white/10 bg-surface-1/50 backdrop-blur-sm transition-all duration-200 hover:border-white/20;
+	@apply relative inline-flex items-stretch rounded-full border border-white/10 bg-surface-1/50 backdrop-blur-sm transition-all duration-200 hover:border-white/20;
 }
 .ext-group:hover {
 	border-color: color-mix(in srgb, var(--site-color) 30%, transparent);

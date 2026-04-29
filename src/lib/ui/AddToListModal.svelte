@@ -43,7 +43,13 @@
 
 	async function handleAdd() {
 		adding = true;
-		const result = await userListStore.addToList(malId, selectedStatus, titleEnglish, animeTitle, picture);
+		const result = await userListStore.addToList(
+			malId,
+			selectedStatus,
+			titleEnglish,
+			animeTitle,
+			picture
+		);
 		adding = false;
 
 		if (result.ok) {

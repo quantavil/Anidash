@@ -28,10 +28,7 @@
 		if (authStore.isAuthenticated && !dataLoaded) {
 			dataLoaded = true;
 
-			Promise.all([
-				userListStore.loadFromCache(),
-				syncStore.init()
-			]).then(() => {
+			Promise.all([userListStore.loadFromCache(), syncStore.init()]).then(() => {
 				// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
 				const hasSyncedThisSession = sessionStorage.getItem('has_synced_this_session');
 				const isStale = !syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;

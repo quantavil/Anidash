@@ -26,7 +26,14 @@ export const EXTERNAL_SITES: ExternalSite[] = [
 	{
 		name: 'AnimeKai',
 		color: '#60a5fa',
-		domains: ['animekai.to', 'animekai.fi', 'animekai.la', 'animekai.gs', 'animekai.fo', 'anikai.to'],
+		domains: [
+			'animekai.to',
+			'animekai.fi',
+			'animekai.la',
+			'animekai.gs',
+			'animekai.fo',
+			'anikai.to'
+		],
 		iconUrl: (domain) => `https://${domain}/favicon.ico`,
 		searchUrl: (domain, title) => `https://${domain}/browser?keyword=${encode(title)}`
 	},

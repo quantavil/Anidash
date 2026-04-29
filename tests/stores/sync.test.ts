@@ -40,7 +40,7 @@ describe('sync.svelte.ts', () => {
 			{ malId: 1, title: 'Anime 1', status: 'watching' },
 			{ malId: 2, title: 'Anime 2', status: 'completed' }
 		];
-		
+
 		vi.mocked(getUserAnimeList).mockResolvedValueOnce({ ok: true, value: mockEntries as any });
 
 		const result = await syncStore.fullSync();
@@ -48,7 +48,7 @@ describe('sync.svelte.ts', () => {
 		expect(result).toEqual({ success: true, entryCount: 2 });
 		expect(syncStore.isSyncing).toBe(false);
 		expect(syncStore.syncError).toBeNull();
-		
+
 		expect(getUserAnimeList).toHaveBeenCalledTimes(1);
 		expect(bulkPut).toHaveBeenCalledWith(mockEntries);
 		expect(setCachedProfile).toHaveBeenCalledWith({ name: 'TestUser' });
@@ -65,7 +65,7 @@ describe('sync.svelte.ts', () => {
 		expect(result).toEqual({ success: false, entryCount: 0 });
 		expect(syncStore.isSyncing).toBe(false);
 		expect(syncStore.syncError).toEqual(apiError);
-		
+
 		expect(bulkPut).not.toHaveBeenCalled();
 		expect(setLastSync).not.toHaveBeenCalled();
 	});
@@ -78,15 +78,15 @@ describe('sync.svelte.ts', () => {
 
 		// Start first sync
 		const p1 = syncStore.fullSync();
-		
+
 		// Immediately start second sync while first is running
 		const result2 = await syncStore.fullSync();
-		
+
 		expect(result2).toEqual({ success: false, entryCount: 0 });
-		
+
 		// Wait for first to finish
 		await p1;
-		
+
 		// API should only have been called once
 		expect(getUserAnimeList).toHaveBeenCalledTimes(1);
 	});

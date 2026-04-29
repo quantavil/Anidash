@@ -14,10 +14,7 @@
 {#each EXTERNAL_SITES as site}
 	{@const sortedDomains = mirrorsStore.getSortedDomains(site.name, site.domains)}
 	{@const primaryDomain = sortedDomains[0]}
-	<div
-		class="ext-group"
-		style="--site-color: {site.color};"
-	>
+	<div class="group ext-group" style="--site-color: {site.color};">
 		<!-- Primary Link -->
 		<a
 			href={site.searchUrl(primaryDomain, animeTitle)}
@@ -43,9 +40,11 @@
 				<button class="ext-trigger rounded-r-full">
 					<ChevronDown size={12} />
 				</button>
-				
+
 				<!-- Dropdown Menu -->
-				<div class="glass-dropdown absolute left-0 top-full z-50 mt-2 hidden flex-col group-hover:flex">
+				<div
+					class="glass-dropdown absolute left-0 top-full z-50 mt-2 hidden flex-col group-hover:flex"
+				>
 					<div class="px-2 py-1 mb-1 text-[9px] font-bold uppercase tracking-wider text-text-muted">
 						Alternative Mirrors
 					</div>

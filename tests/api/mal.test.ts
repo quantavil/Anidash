@@ -143,7 +143,7 @@ describe('MAL API Mappers', () => {
 			],
 			isDetail: true
 		});
-		
+
 		// Ensure cachedAt is populated
 		expect(result.cachedAt).toBeGreaterThan(0);
 	});

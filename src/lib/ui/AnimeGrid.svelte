@@ -57,9 +57,7 @@
 </script>
 
 {#if loading}
-	<div
-		class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-	>
+	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		<AnimeCardSkeleton count={12} />
 	</div>
 {:else if entries.length === 0}
@@ -71,9 +69,7 @@
 		<p class="mt-1 text-xs text-text-muted">Try a different filter or add anime from Browse</p>
 	</div>
 {:else}
-	<div
-		class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-	>
+	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		{#each visibleEntries as entry, i (entry.malId)}
 			<AnimeCard {entry} {onComplete} index={i} />
 		{/each}

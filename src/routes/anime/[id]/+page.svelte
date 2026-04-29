@@ -23,7 +23,7 @@
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	
+
 	import ExternalSitesRow from '$lib/ui/ExternalSitesRow.svelte';
 
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
@@ -289,7 +289,12 @@
 						<div class="flex items-center gap-1">
 							<Clock size={12} />
 							{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
-							<span>{formatLocalBroadcast(anime.broadcast.day_of_the_week, anime.broadcast.start_time)}</span>
+							<span
+								>{formatLocalBroadcast(
+									anime.broadcast.day_of_the_week,
+									anime.broadcast.start_time
+								)}</span
+							>
 						</div>
 					{/if}
 				</div>
@@ -468,9 +473,13 @@
 						<div class="flex items-center gap-3">
 							<p class="text-sm text-error">{charactersError}</p>
 							<button
-								onclick={() => { characters = []; loadCharacters(); }}
+								onclick={() => {
+									characters = [];
+									loadCharacters();
+								}}
 								class="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-2"
-							>Retry</button>
+								>Retry</button
+							>
 						</div>
 					{:else if characters.length === 0}
 						<p class="text-sm text-text-muted">No character information available.</p>
@@ -515,9 +524,13 @@
 						<div class="flex items-center gap-3">
 							<p class="text-sm text-error">{recsError}</p>
 							<button
-								onclick={() => { recommendations = []; loadRecommendations(); }}
+								onclick={() => {
+									recommendations = [];
+									loadRecommendations();
+								}}
 								class="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-2"
-							>Retry</button>
+								>Retry</button
+							>
 						</div>
 					{:else}
 						<!-- MAL recommendations (from detail) -->
@@ -703,12 +716,4 @@
 <CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />
 
 <style>
-	.ext-link {
-		@apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-1/50 px-3 py-1.5 text-xs text-text-muted backdrop-blur-sm transition-all duration-200;
-	}
-	.ext-link:hover {
-		color: var(--site-color);
-		border-color: color-mix(in srgb, var(--site-color) 30%, transparent);
-		box-shadow: 0 0 12px color-mix(in srgb, var(--site-color) 15%, transparent);
-	}
 </style>

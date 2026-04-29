@@ -227,11 +227,13 @@ export async function updateAnimeStatus(
 	if (update.is_rewatching !== undefined) params.set('is_rewatching', String(update.is_rewatching));
 
 	const url = `${MAL_API_BASE}/anime/${id}/my_list_status`;
-	const fetchResult = await malLimiter.enqueue(() => authFetch(url, {
-		method: 'PATCH',
-		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-		body: params.toString()
-	}));
+	const fetchResult = await malLimiter.enqueue(() =>
+		authFetch(url, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: params.toString()
+		})
+	);
 
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
 
@@ -252,9 +254,11 @@ export async function updateAnimeStatus(
 
 export async function deleteAnimeStatus(id: number): Promise<Result<void>> {
 	const url = `${MAL_API_BASE}/anime/${id}/my_list_status`;
-	const fetchResult = await malLimiter.enqueue(() => authFetch(url, {
-		method: 'DELETE'
-	}));
+	const fetchResult = await malLimiter.enqueue(() =>
+		authFetch(url, {
+			method: 'DELETE'
+		})
+	);
 
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
 

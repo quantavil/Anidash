@@ -332,15 +332,11 @@
 	<!-- Results -->
 	<div class="mt-6">
 		{#if loading}
-			<div
-				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-			>
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 				<AnimeCardSkeleton count={10} />
 			</div>
 		{:else if results.length > 0}
-			<div
-				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-			>
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 				{#each results as anime (anime.malId)}
 					<SearchResultCard {anime} />
 				{/each}

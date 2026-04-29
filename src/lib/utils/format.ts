@@ -114,20 +114,20 @@ export function formatAnimeStatus(status: string): string {
 /** Converts JST day and time to user's local time and day */
 export function formatLocalBroadcast(dayOfWeek: string, startTime?: string): string {
 	if (!startTime) return `${capitalize(dayOfWeek)}s`;
-	
+
 	const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 	const jstDayIndex = days.indexOf(dayOfWeek.toLowerCase());
-	
+
 	if (jstDayIndex === -1) return `${capitalize(dayOfWeek)}s at ${startTime} JST`;
 
 	const [hours, minutes] = startTime.split(':').map(Number);
-	
+
 	// 2023-01-01 was a Sunday. We use this as a reference date in UTC.
 	// JST is UTC+9. To get UTC time, subtract 9 from JST hours.
 	const refDate = new Date(Date.UTC(2023, 0, 1 + jstDayIndex, hours - 9, minutes));
-	
+
 	const localDay = refDate.toLocaleDateString(undefined, { weekday: 'long' });
 	const localTime = refDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-	
+
 	return `${localDay}s at ${localTime}`;
 }

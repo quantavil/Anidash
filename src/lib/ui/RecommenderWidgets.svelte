@@ -89,7 +89,7 @@
 	gradientClass,
 	loadingIcon: LoadingIcon
 }: any)}
-	<button onclick={action} disabled={isLoading} class="glass-widget">
+	<button onclick={action} disabled={isLoading} class="group glass-widget">
 		<!-- Background gradient -->
 		<div
 			class="absolute inset-0 bg-gradient-to-br {gradientClass} opacity-5 transition-opacity duration-300 group-hover:opacity-10 pointer-events-none"

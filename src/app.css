@@ -137,3 +137,37 @@ a,
 .glass-icon-wrapper {
 	@apply mb-3 inline-flex rounded-2xl bg-white/5 p-3 sm:p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:bg-white/10 group-hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/5;
 }
+
+/* ── External Links (MAL & Mirrors) ── */
+.ext-group {
+	@apply group relative inline-flex items-stretch rounded-full border border-white/10 bg-surface-1/50 backdrop-blur-sm transition-all duration-200 hover:border-white/20;
+}
+.ext-group:hover {
+	border-color: color-mix(in srgb, var(--site-color) 30%, transparent);
+	box-shadow: 0 0 12px color-mix(in srgb, var(--site-color) 15%, transparent);
+}
+.ext-group:hover .ext-main,
+.ext-group:hover .ext-trigger {
+	color: var(--site-color);
+}
+.ext-main {
+	@apply inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-text-muted transition-colors;
+}
+.ext-trigger {
+	@apply flex h-full items-center px-1.5 text-text-muted transition-colors hover:bg-white/5;
+}
+.ext-mirror {
+	@apply flex items-center justify-between rounded-lg px-2 py-1.5 text-xs text-text-secondary transition-colors;
+}
+.ext-mirror:hover {
+	background-color: color-mix(in srgb, var(--site-color) 15%, transparent);
+	color: white;
+}
+.ext-link {
+	@apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-1/50 px-3 py-1.5 text-xs text-text-muted backdrop-blur-sm transition-all duration-200;
+}
+.ext-link:hover {
+	color: var(--site-color);
+	border-color: color-mix(in srgb, var(--site-color) 30%, transparent);
+	box-shadow: 0 0 12px color-mix(in srgb, var(--site-color) 15%, transparent);
+}

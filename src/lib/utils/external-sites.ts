@@ -3,14 +3,14 @@
 
 export interface ExternalSite {
 	name: string;
-	/** Short label for compact display */
-	label: string;
-	/** Brand color for the icon pill */
+	/** Brand color for hover glow */
 	color: string;
-	/** Favicon URL */
-	icon: string;
-	/** Build search URL from anime title */
-	searchUrl: (title: string) => string;
+	/** Ordered list of domains, primary first */
+	domains: string[];
+	/** Get favicon URL from domain */
+	iconUrl: (domain: string) => string;
+	/** Build search URL from domain and anime title */
+	searchUrl: (domain: string, title: string) => string;
 }
 
 const encode = (t: string) => encodeURIComponent(t);
@@ -18,30 +18,30 @@ const encode = (t: string) => encodeURIComponent(t);
 export const EXTERNAL_SITES: ExternalSite[] = [
 	{
 		name: 'Miruro',
-		label: 'Miruro',
 		color: '#c084fc',
-		icon: 'https://www.miruro.tv/favicon.ico',
-		searchUrl: (title) => `https://www.miruro.tv/search?query=${encode(title)}`
+		domains: ['miruro.tv', 'miruro.online', 'miruro.bz'],
+		iconUrl: (domain) => `https://www.${domain}/favicon.ico`,
+		searchUrl: (domain, title) => `https://www.${domain}/search?query=${encode(title)}`
 	},
 	{
 		name: 'AnimeKai',
-		label: 'AnimeKai',
 		color: '#60a5fa',
-		icon: 'https://animekai.to/favicon.ico',
-		searchUrl: (title) => `https://animekai.to/browser?keyword=${encode(title)}`
+		domains: ['animekai.to', 'animekai.fi', 'animekai.la', 'animekai.gs', 'animekai.fo', 'anikai.to'],
+		iconUrl: (domain) => `https://${domain}/favicon.ico`,
+		searchUrl: (domain, title) => `https://${domain}/browser?keyword=${encode(title)}`
 	},
 	{
 		name: 'Anikoto',
-		label: 'Anikoto',
 		color: '#f472b6',
-		icon: 'https://anikototv.to/favicon.ico',
-		searchUrl: (title) => `https://anikototv.to/filter?keyword=${encode(title)}`
+		domains: ['anikototv.to'],
+		iconUrl: (domain) => `https://${domain}/favicon.ico`,
+		searchUrl: (domain, title) => `https://${domain}/filter?keyword=${encode(title)}`
 	},
 	{
 		name: 'Kaa',
-		label: 'Kaa',
 		color: '#34d399',
-		icon: 'https://kaa.lt/favicon.ico',
-		searchUrl: (title) => `https://kaa.lt/search?q=${encode(title)}`
+		domains: ['kaa.lt'],
+		iconUrl: (domain) => `https://${domain}/favicon.ico`,
+		searchUrl: (domain, title) => `https://${domain}/search?q=${encode(title)}`
 	}
 ];

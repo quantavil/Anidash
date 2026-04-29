@@ -23,6 +23,7 @@
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { EXTERNAL_SITES } from '$lib/utils/external-sites';
 
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
@@ -347,16 +348,38 @@
 					{/if}
 				</div>
 
-				<!-- MAL Link -->
-				<a
-					href="https://myanimelist.net/anime/{malId}"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="mt-3 inline-flex items-center gap-1 text-xs text-text-muted transition-colors hover:text-primary"
-				>
-					<ExternalLink size={12} />
-					View on MyAnimeList
-				</a>
+				<!-- External Links -->
+				<div class="mt-3 flex flex-wrap items-center gap-2">
+					<a
+						href="https://myanimelist.net/anime/{malId}"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-1/50 backdrop-blur-sm px-3 py-1.5 text-xs text-text-muted transition-all duration-200 hover:text-primary hover:border-primary/30 hover:shadow-[0_0_10px_rgba(var(--color-primary),0.15)]"
+					>
+						<ExternalLink size={12} />
+						MyAnimeList
+					</a>
+					{#each EXTERNAL_SITES as site}
+						<a
+							href={site.searchUrl(anime.title)}
+							target="_blank"
+							rel="noopener noreferrer"
+							title="Search on {site.name}"
+							class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-1/50 backdrop-blur-sm px-3 py-1.5 text-xs text-text-muted transition-all duration-200 hover:border-white/20 hover:shadow-lg"
+							style="--site-color: {site.color}"
+							onmouseenter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = site.color; el.style.borderColor = site.color + '4d'; el.style.boxShadow = `0 0 12px ${site.color}26`; }}
+							onmouseleave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = ''; el.style.borderColor = ''; el.style.boxShadow = ''; }}
+						>
+							<img
+								src={site.icon}
+								alt={site.name}
+								class="h-3.5 w-3.5 rounded-sm"
+								onerror={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+							/>
+							{site.label}
+						</a>
+					{/each}
+				</div>
 			</div>
 		</div>
 

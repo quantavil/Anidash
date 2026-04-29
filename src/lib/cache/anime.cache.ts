@@ -84,17 +84,18 @@ export async function purgeStaleAnime(): Promise<number> {
 	const db = await getDB();
 	const tx = db.transaction('anime', 'readwrite');
 	const now = Date.now();
+	const staleThreshold = now - CACHE_TTL_MS;
 	let purged = 0;
 
-	let cursor = await tx.store.openCursor();
+	const index = tx.store.index('by-cachedAt');
+	let cursor = await index.openCursor(IDBKeyRange.upperBound(staleThreshold, true));
+
 	while (cursor) {
-		const record = cursor.value;
-		if (now - record.cachedAt > CACHE_TTL_MS) {
-			await cursor.delete();
-			purged++;
-		}
+		await cursor.delete();
+		purged++;
 		cursor = await cursor.continue();
 	}
 
+	await tx.done;
 	return purged;
 }

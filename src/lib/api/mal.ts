@@ -3,6 +3,7 @@
 // Responses validated through zod schemas.
 
 import { authFetch } from './fetch';
+import { createRateLimiter } from './rate-limit';
 import { MAL_API_BASE, MAL_MIN_INTERVAL_MS } from './config';
 import { ok, err, type Result, zodIssuesToSummaries, type Err } from './result';
 import type { AppError } from './result';
@@ -20,25 +21,17 @@ import {
 } from './schemas/mal.schema';
 import type { UserListRecord, AnimeRecord } from '$lib/cache/db';
 
-// ─── Rate Limiter (serialized via promise chain) ───
+// ─── Rate Limiter ───
 
-let rateLimitQueue = Promise.resolve();
-
-async function malRateLimit(): Promise<void> {
-	rateLimitQueue = rateLimitQueue.then(
-		() => new Promise<void>((resolve) => setTimeout(resolve, MAL_MIN_INTERVAL_MS))
-	);
-	await rateLimitQueue;
-}
+const malLimiter = createRateLimiter(MAL_MIN_INTERVAL_MS);
 
 // ─── Helpers ───
 
 import type { ZodSchema } from 'zod';
 
 async function malGet<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
-	await malRateLimit();
+	const fetchResult = await malLimiter.enqueue(() => authFetch(url));
 
-	const fetchResult = await authFetch(url);
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
 
 	try {
@@ -91,9 +84,8 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 	let url: string | null = `${MAL_API_BASE}/users/@me/animelist?fields=${LIST_FIELDS}&limit=1000`;
 
 	while (url) {
-		await malRateLimit();
-
-		const fetchResult = await authFetch(url);
+		const currentUrl = url;
+		const fetchResult = await malLimiter.enqueue(() => authFetch(currentUrl));
 		if (!fetchResult.ok) return fetchResult as Err<AppError>;
 
 		let data: unknown;
@@ -226,8 +218,6 @@ export async function updateAnimeStatus(
 	id: number,
 	update: MalStatusUpdate
 ): Promise<Result<void>> {
-	await malRateLimit();
-
 	// MAL PATCH expects form-encoded body
 	const params = new URLSearchParams();
 	if (update.status !== undefined) params.set('status', update.status);
@@ -237,11 +227,11 @@ export async function updateAnimeStatus(
 	if (update.is_rewatching !== undefined) params.set('is_rewatching', String(update.is_rewatching));
 
 	const url = `${MAL_API_BASE}/anime/${id}/my_list_status`;
-	const fetchResult = await authFetch(url, {
+	const fetchResult = await malLimiter.enqueue(() => authFetch(url, {
 		method: 'PATCH',
 		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 		body: params.toString()
-	});
+	}));
 
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
 
@@ -261,12 +251,10 @@ export async function updateAnimeStatus(
 // ─── Delete Anime from List ───
 
 export async function deleteAnimeStatus(id: number): Promise<Result<void>> {
-	await malRateLimit();
-
 	const url = `${MAL_API_BASE}/anime/${id}/my_list_status`;
-	const fetchResult = await authFetch(url, {
+	const fetchResult = await malLimiter.enqueue(() => authFetch(url, {
 		method: 'DELETE'
-	});
+	}));
 
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
 

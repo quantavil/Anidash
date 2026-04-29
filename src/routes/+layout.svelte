@@ -28,9 +28,16 @@
 		if (authStore.isAuthenticated && !dataLoaded) {
 			dataLoaded = true;
 
-			userListStore.loadFromCache().then(() => {
-				// Background sync if stale (>5 min) or never synced
-				if (!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000) {
+			Promise.all([
+				userListStore.loadFromCache(),
+				syncStore.init()
+			]).then(() => {
+				// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
+				const hasSyncedThisSession = sessionStorage.getItem('has_synced_this_session');
+				const isStale = !syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
+
+				if (!hasSyncedThisSession || isStale) {
+					sessionStorage.setItem('has_synced_this_session', 'true');
 					syncStore.fullSync().then((result) => {
 						if (result.success) {
 							userListStore.loadFromCache();
@@ -38,7 +45,6 @@
 					});
 				}
 			});
-			syncStore.init();
 			dubStore.init(); // non-blocking load of dub info
 		}
 	});

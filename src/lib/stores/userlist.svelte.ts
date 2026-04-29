@@ -10,7 +10,7 @@ import {
 	getSyncQueue,
 	deleteSyncQueue
 } from '$lib/cache/userlist.cache';
-import { updateAnimeStatus, getAnimeDetail } from '$lib/api/mal';
+import { updateAnimeStatus, getAnimeDetail, deleteAnimeStatus } from '$lib/api/mal';
 import { putAnime } from '$lib/cache/anime.cache';
 import { syncStore } from './sync.svelte.ts';
 import { debounce, type DebouncedFn } from '$lib/utils/debounce';
@@ -230,7 +230,7 @@ function createUserListStore() {
 		await removeEntry(malId);
 
 		// 2. Sync to MAL
-		const result = await import('$lib/api/mal').then((m) => m.deleteAnimeStatus(malId));
+		const result = await deleteAnimeStatus(malId);
 
 		if (!result.ok) {
 			console.warn(`Failed to sync deletion for ${malId} to MAL:`, result.error);
@@ -325,10 +325,15 @@ function createUserListStore() {
 		if (queue.length === 0) return;
 
 		for (const record of queue) {
-			const result = await updateAnimeStatus(
-				record.malId,
-				record.payload as Record<string, unknown>
-			);
+			let result: Result<void>;
+			const payload = record.payload as Record<string, unknown>;
+
+			if (payload._delete) {
+				result = await deleteAnimeStatus(record.malId);
+			} else {
+				result = await updateAnimeStatus(record.malId, payload);
+			}
+
 			if (result.ok) {
 				await deleteSyncQueue(record.malId);
 			} else {

@@ -5,7 +5,7 @@ import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
 
 // ─── Types ───
 
-export interface AnimeRecord {
+export interface BaseAnimeRecord {
 	malId: number;
 	title: string;
 	titleEnglish: string | null;
@@ -19,6 +19,9 @@ export interface AnimeRecord {
 	animeStatus: string;
 	numListUsers: number;
 	numScoringUsers: number;
+}
+
+export interface AnimeRecord extends BaseAnimeRecord {
 	synopsis: string | null;
 	broadcast: { day_of_the_week: string; start_time?: string } | null;
 	relatedAnime: RelatedAnimeRecord[] | null;
@@ -45,20 +48,7 @@ export interface RecommendationRecord {
 
 export type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
 
-export interface UserListRecord {
-	malId: number;
-	title: string;
-	titleEnglish: string | null;
-	mainPicture: { medium: string | null; large: string | null } | null;
-	mean: number | null;
-	numEpisodes: number;
-	genres: { id: number; name: string }[];
-	studios: { id: number; name: string }[];
-	startSeason: { year: number | null; season: string | null } | null;
-	mediaType: string;
-	animeStatus: string;
-	numListUsers: number;
-	numScoringUsers: number;
+export interface UserListRecord extends BaseAnimeRecord {
 	// User status
 	status: AnimeStatus;
 	score: number;

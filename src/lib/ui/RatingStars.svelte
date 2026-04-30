@@ -83,6 +83,8 @@
 			class="relative {interactive ? 'cursor-pointer' : ''}"
 			style="width: {size + 2}px; height: {size}px;"
 			onclick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
 				const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
 				const isRight = e.clientX - rect.left > rect.width / 2;
 				handleClick(i, isRight);

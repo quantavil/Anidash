@@ -22,6 +22,8 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **Integrated Airing Schedules**: Stay ahead of the season with native MAL broadcast times (e.g. "Airs Mondays at 23:30 JST") displayed directly on anime detail pages for accurate airing information.
 - **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
 - **Detailed Search Context**: Search and browse results now explicitly show your list status (Watching, Completed, etc.) and real-time watch progress (e.g. 12/24) directly on the posters.
+- **Type-Safe OAuth**: End-to-end Zod schema validation ensures authentication logic is resilient to unexpected API changes.
+- **Environment-Aware Logging**: Centralized logging utility silences debug warnings in production builds for a cleaner end-user experience.
 
 ## 🏗️ Architecture
 

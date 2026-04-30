@@ -2,6 +2,7 @@
 // Centralized store to hold the mapping of anime that have a dub.
 
 import { getDB } from '$lib/cache/db';
+import { logger } from '$lib/utils/logger';
 
 class DubStore {
 	dubs = $state<Set<number>>(new Set());
@@ -53,7 +54,7 @@ class DubStore {
 					return;
 				}
 			} catch (fetchError) {
-				console.warn('Failed to fetch fresh dub info, falling back to cache:', fetchError);
+				logger.warn('Failed to fetch fresh dub info, falling back to cache:', fetchError);
 
 				// 3. Last resort fallback: use stale cache if available
 				if (cached) {

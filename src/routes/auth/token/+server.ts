@@ -53,8 +53,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			body: params.toString()
 		});
 
-		const data = (await malRes.json()) as any;
-		return new Response(JSON.stringify({ ok: malRes.ok, ...data }), {
+		const data = (await malRes.json()) as unknown;
+		return new Response(JSON.stringify({ ok: malRes.ok, ...(typeof data === 'object' && data !== null ? data : {}) }), {
 			status: malRes.status,
 			headers: { 'Content-Type': 'application/json' }
 		});

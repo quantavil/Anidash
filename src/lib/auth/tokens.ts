@@ -1,7 +1,9 @@
 // ─── Token persistence & refresh ───
 // Tokens live in localStorage. Refresh is proxied through the Worker.
 
-import { ok, err, type Result } from '$lib/api/result';
+import { ok, err, type Result, zodIssuesToSummaries } from '$lib/api/result';
+import { MalTokenResponseSchema } from '$lib/api/schemas/mal.schema';
+import { STORAGE_KEYS } from '$lib/constants';
 
 export interface TokenData {
 	accessToken: string;
@@ -9,14 +11,12 @@ export interface TokenData {
 	expiresAt: number; // epoch ms
 }
 
-const STORAGE_KEY = 'anidash_tokens';
-
 // ─── Storage ───
 
 export const tokens = {
 	get(): TokenData | null {
 		try {
-			const raw = localStorage.getItem(STORAGE_KEY);
+			const raw = localStorage.getItem(STORAGE_KEYS.TOKENS);
 			if (!raw) return null;
 			return JSON.parse(raw) as TokenData;
 		} catch {
@@ -25,11 +25,11 @@ export const tokens = {
 	},
 
 	set(data: TokenData): void {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+		localStorage.setItem(STORAGE_KEYS.TOKENS, JSON.stringify(data));
 	},
 
 	clear(): void {
-		localStorage.removeItem(STORAGE_KEY);
+		localStorage.removeItem(STORAGE_KEYS.TOKENS);
 	},
 
 	/** Get just the access token, or null */
@@ -83,18 +83,32 @@ async function doRefresh(): Promise<Result<void>> {
 			body: JSON.stringify({ refresh_token: data.refreshToken })
 		});
 
-		const body = (await response.json()) as any;
+		const body = (await response.json()) as unknown;
+		const bodyPartial = body as { ok?: boolean; error?: string };
 
-		if (!response.ok || !body.ok) {
+		if (!response.ok || !bodyPartial.ok) {
 			tokens.clear();
-			return err({ type: 'auth', message: body.error || 'Token refresh failed' });
+			return err({ type: 'auth', message: bodyPartial.error || 'Token refresh failed' });
 		}
+
+		// Validate token response
+		const parsed = MalTokenResponseSchema.safeParse(body);
+		if (!parsed.success) {
+			tokens.clear();
+			return err({
+				type: 'validation',
+				message: 'Invalid token response from server',
+				issues: zodIssuesToSummaries(parsed.error.issues)
+			});
+		}
+
+		const tokenData = parsed.data;
 
 		// MAL may or may not return a new refresh_token
 		tokens.set({
-			accessToken: body.access_token,
-			refreshToken: body.refresh_token ?? data.refreshToken,
-			expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000
+			accessToken: tokenData.access_token,
+			refreshToken: tokenData.refresh_token ?? data.refreshToken,
+			expiresAt: Date.now() + tokenData.expires_in * 1000
 		});
 
 		return ok(undefined);

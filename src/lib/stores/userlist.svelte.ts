@@ -17,6 +17,7 @@ import { debounce, type DebouncedFn } from '$lib/utils/debounce';
 import { ok, err, type Result } from '$lib/api/result';
 import type { AppError } from '$lib/api/result';
 import type { UserListRecord, AnimeStatus } from '$lib/cache/db';
+import { logger } from '$lib/utils/logger';
 
 // ─── Store ───
 
@@ -233,7 +234,7 @@ function createUserListStore() {
 		const result = await deleteAnimeStatus(malId);
 
 		if (!result.ok) {
-			console.warn(`Failed to sync deletion for ${malId} to MAL:`, result.error);
+			logger.warn(`Failed to sync deletion for ${malId} to MAL:`, result.error);
 			// Queue for retry on next sync flush
 			await putSyncQueue({ malId, payload: { _delete: true }, timestamp: Date.now() });
 		}

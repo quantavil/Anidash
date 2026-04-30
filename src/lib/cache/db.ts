@@ -2,6 +2,7 @@
 // Single source of truth for all IDB access patterns.
 
 import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
+import { logger } from '$lib/utils/logger';
 
 // ─── Types ───
 
@@ -137,10 +138,10 @@ export function getDB(): Promise<IDBPDatabase<AniDashDB>> {
 				}
 			},
 			blocked() {
-				console.warn('AniDash DB upgrade blocked — close other tabs');
+				logger.warn('AniDash DB upgrade blocked — close other tabs');
 			},
 			blocking() {
-				console.warn('AniDash DB blocking — this tab is blocking an upgrade');
+				logger.warn('AniDash DB blocking — this tab is blocking an upgrade');
 			},
 			terminated() {
 				console.error('AniDash DB connection terminated unexpectedly');

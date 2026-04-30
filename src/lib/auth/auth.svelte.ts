@@ -9,8 +9,9 @@ import { MAL_API_BASE } from '$lib/api/config';
 import { ok, err, type Result } from '$lib/api/result';
 import { MalUserSchema, MalTokenResponseSchema, type MalUser } from '$lib/api/schemas/mal.schema';
 import { zodIssuesToSummaries } from '$lib/api/result';
+import { STORAGE_KEYS } from '$lib/constants';
+import { logger } from '$lib/utils/logger';
 
-const PKCE_STORAGE_KEY = 'anidash_pkce_verifier';
 const AUTH_ROUTES = ['/login', '/auth/callback'];
 
 function createAuthStore() {
@@ -46,7 +47,7 @@ function createAuthStore() {
 					user = retry.value;
 				} else {
 					// Refresh worked but profile fetch failed — keep session, try again later
-					console.warn('Profile fetch failed after refresh:', retry.error);
+					logger.warn('Profile fetch failed after refresh:', retry.error);
 				}
 			} else {
 				// Refresh failed — clear tokens, force re-login
@@ -92,7 +93,7 @@ function createAuthStore() {
 
 		try {
 			const { verifier, challenge } = await generatePKCE();
-			sessionStorage.setItem(PKCE_STORAGE_KEY, verifier);
+			sessionStorage.setItem(STORAGE_KEYS.PKCE_VERIFIER, verifier);
 
 			const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
 			if (!clientId) {
@@ -124,7 +125,7 @@ function createAuthStore() {
 			isExchanging = true;
 			error = null;
 
-			const verifier = sessionStorage.getItem(PKCE_STORAGE_KEY);
+			const verifier = sessionStorage.getItem(STORAGE_KEYS.PKCE_VERIFIER);
 			if (!verifier) {
 				isExchanging = false;
 				return err({
@@ -149,14 +150,15 @@ function createAuthStore() {
 					})
 				});
 
-				const body = (await response.json()) as any;
+				const body = (await response.json()) as unknown;
+				const bodyPartial = body as { ok?: boolean; error?: string };
 
-				if (!response.ok || !body.ok) {
+				if (!response.ok || !bodyPartial.ok) {
 					isExchanging = false;
 					return err({
 						type: 'api',
 						status: response.status,
-						message: body.error || 'Token exchange failed'
+						message: bodyPartial.error || 'Token exchange failed'
 					});
 				}
 
@@ -179,7 +181,7 @@ function createAuthStore() {
 				});
 
 				// Clean up PKCE
-				sessionStorage.removeItem(PKCE_STORAGE_KEY);
+				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
 
 				// Fetch user profile
 				const userResult = await fetchUserProfile();

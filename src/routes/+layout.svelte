@@ -17,6 +17,7 @@
 	import { deleteDB } from '$lib/cache/db';
 	import { tokens } from '$lib/auth/tokens';
 	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
+	import { STORAGE_KEYS } from '$lib/constants';
 
 	let { children } = $props();
 
@@ -30,11 +31,11 @@
 
 			Promise.all([userListStore.loadFromCache(), syncStore.init()]).then(() => {
 				// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
-				const hasSyncedThisSession = sessionStorage.getItem('has_synced_this_session');
+				const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
 				const isStale = !syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
 
 				if (!hasSyncedThisSession || isStale) {
-					sessionStorage.setItem('has_synced_this_session', 'true');
+					sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
 					syncStore.fullSync().then((result) => {
 						if (result.success) {
 							userListStore.loadFromCache();
@@ -60,10 +61,10 @@
 		if (authStore.isLoading) return;
 
 		if (!authStore.isAuthenticated) {
-			const hasSeenPrompt = sessionStorage.getItem('seen_login_prompt');
+			const hasSeenPrompt = sessionStorage.getItem(STORAGE_KEYS.SEEN_LOGIN_PROMPT);
 			if (!hasSeenPrompt && !authStore.isAuthRoute($page.url.pathname)) {
 				showLoginPrompt = true;
-				sessionStorage.setItem('seen_login_prompt', 'true');
+				sessionStorage.setItem(STORAGE_KEYS.SEEN_LOGIN_PROMPT, 'true');
 			}
 		}
 	});

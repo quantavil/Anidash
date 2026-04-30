@@ -7,9 +7,29 @@
 
 	function handleMirrorSelect(e: MouseEvent, siteName: string, domain: string) {
 		mirrorsStore.setPreferredDomain(siteName, domain);
+		openDropdowns = {};
 		// It bubbles to the front immediately for the next render
 	}
+
+	let openDropdowns = $state<Record<string, boolean>>({});
+
+	function toggleDropdown(siteName: string) {
+		const isOpen = openDropdowns[siteName];
+		openDropdowns = {}; // close all others
+		if (!isOpen) {
+			openDropdowns[siteName] = true;
+		}
+	}
+
+	function handleWindowClick(e: MouseEvent) {
+		const target = e.target as HTMLElement;
+		if (!target.closest('.ext-group')) {
+			openDropdowns = {};
+		}
+	}
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 {#each EXTERNAL_SITES as site}
 	{@const sortedDomains = mirrorsStore.getSortedDomains(site.name, site.domains)}
@@ -37,13 +57,19 @@
 		<!-- Dropdown Trigger for Mirrors -->
 		{#if site.domains.length > 1}
 			<div class="relative flex items-center border-l border-white/10">
-				<button class="ext-trigger rounded-r-full">
+				<button 
+					class="ext-trigger rounded-r-full"
+					onclick={(e) => {
+						e.preventDefault();
+						toggleDropdown(site.name);
+					}}
+				>
 					<ChevronDown size={12} />
 				</button>
 
 				<!-- Dropdown Menu -->
 				<div
-					class="glass-dropdown absolute left-0 top-full z-50 mt-2 hidden flex-col group-hover:flex"
+					class="glass-dropdown absolute left-0 top-full z-50 mt-2 flex-col {openDropdowns[site.name] ? 'flex' : 'hidden lg:group-hover:flex'}"
 				>
 					<div class="px-2 py-1 mb-1 text-[9px] font-bold uppercase tracking-wider text-text-muted">
 						Alternative Mirrors

@@ -37,6 +37,7 @@
 			<ImageWithFallback
 				src={imageUrl}
 				alt={entry.title}
+				{index}
 				class="h-full w-full transition-transform duration-700 ease-spring group-hover:scale-105"
 			/>
 

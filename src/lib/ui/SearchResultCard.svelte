@@ -13,7 +13,7 @@
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 
-	let { anime }: { anime: DisplayAnime } = $props();
+	let { anime, index = 0 }: { anime: DisplayAnime; index?: number } = $props();
 
 	const listEntry = $derived(userListStore.getEntry(anime.malId));
 	const inList = $derived(listEntry !== undefined);
@@ -28,6 +28,7 @@
 		<ImageWithFallback
 			src={anime.mainPicture}
 			alt={anime.title}
+			{index}
 			class="h-full w-full transition-transform duration-300 group-hover:scale-105"
 		/>
 

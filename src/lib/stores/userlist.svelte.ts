@@ -69,14 +69,7 @@ function createUserListStore() {
 		try {
 			const cached = await getAllEntries();
 			const newEntries: Record<number, UserListRecord> = {};
-			const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-			const now = Date.now();
 			for (const e of cached) {
-				if (e.updatedAt && now - new Date(e.updatedAt).getTime() > SEVEN_DAYS_MS) {
-					// Purge stale entry from cache
-					await removeEntry(e.malId);
-					continue;
-				}
 				newEntries[e.malId] = e;
 			}
 			entries = newEntries;

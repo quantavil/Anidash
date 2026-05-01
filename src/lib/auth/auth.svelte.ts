@@ -92,8 +92,10 @@ function createAuthStore() {
 		error = null;
 
 		try {
-			const { verifier, challenge } = await generatePKCE();
-			sessionStorage.setItem(STORAGE_KEYS.PKCE_VERIFIER, verifier);
+			const { verifier, challenge, state } = await generatePKCE();
+			const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes TTL
+			
+			sessionStorage.setItem(STORAGE_KEYS.PKCE_VERIFIER, JSON.stringify({ verifier, state, expiresAt }));
 
 			const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
 			if (!clientId) {
@@ -106,33 +108,58 @@ function createAuthStore() {
 				response_type: 'code',
 				client_id: clientId,
 				code_challenge: challenge,
+				state,
 				redirect_uri: redirectUri
 			});
 
 			window.location.href = `https://myanimelist.net/v1/oauth2/authorize?${params}`;
 		} catch (e) {
 			error = 'Failed to initiate login';
-			console.error('Login error:', e);
+			logger.error('Login error:', e);
 		}
 	}
 
 	let exchangePromise: Promise<Result<void>> | null = null;
 
-	async function handleCallback(code: string): Promise<Result<void>> {
+	async function handleCallback(code: string, returnedState: string): Promise<Result<void>> {
 		if (exchangePromise) return exchangePromise;
 
 		exchangePromise = (async () => {
 			isExchanging = true;
 			error = null;
 
-			const verifier = sessionStorage.getItem(STORAGE_KEYS.PKCE_VERIFIER);
-			if (!verifier) {
+			const storedData = sessionStorage.getItem(STORAGE_KEYS.PKCE_VERIFIER);
+			if (!storedData) {
 				isExchanging = false;
 				return err({
 					type: 'auth',
-					message: 'Missing PKCE verifier — please try logging in again'
+					message: 'Missing login session data — please try logging in again'
 				});
 			}
+
+			let verifier, state, expiresAt;
+			try {
+				({ verifier, state, expiresAt } = JSON.parse(storedData));
+			} catch (e) {
+				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
+				isExchanging = false;
+				return err({ type: 'auth', message: 'Corrupted login session data' });
+			}
+
+			if (Date.now() > expiresAt) {
+				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
+				isExchanging = false;
+				return err({ type: 'auth', message: 'Login session expired — please try again' });
+			}
+
+			if (state !== returnedState) {
+				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
+				isExchanging = false;
+				return err({ type: 'auth', message: 'CSRF token mismatch' });
+			}
+
+			// Clean up PKCE early for security
+			sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
 
 			// Use default local worker if not configured to prevent crashes in local dev
 			const workerUrl = import.meta.env.VITE_WORKER_URL || '';
@@ -179,9 +206,6 @@ function createAuthStore() {
 					refreshToken: tokenData.refresh_token ?? '',
 					expiresAt: Date.now() + tokenData.expires_in * 1000
 				});
-
-				// Clean up PKCE
-				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
 
 				// Fetch user profile
 				const userResult = await fetchUserProfile();

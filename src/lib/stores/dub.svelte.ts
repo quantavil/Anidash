@@ -65,7 +65,7 @@ class DubStore {
 				}
 			}
 		} catch (e) {
-			console.error('Critical failure in DubStore init:', e);
+			logger.error('Critical failure in DubStore init:', e);
 		} finally {
 			this.#loading = false;
 		}

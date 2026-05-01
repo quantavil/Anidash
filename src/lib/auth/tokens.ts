@@ -1,5 +1,7 @@
 // ─── Token persistence & refresh ───
 // Tokens live in localStorage. Refresh is proxied through the Worker.
+// Note: Storing tokens in localStorage exposes them to Cross-Site Scripting (XSS) attacks.
+// Ensure strong Content-Security-Policy (CSP) headers and sanitize all user input.
 
 import { ok, err, type Result, zodIssuesToSummaries } from '$lib/api/result';
 import { MalTokenResponseSchema } from '$lib/api/schemas/mal.schema';

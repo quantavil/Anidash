@@ -45,7 +45,7 @@
 	}
 </script>
 
-<div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="tablist">
+<div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Anime list status tabs">
 	{#each tabs as tab}
 		{@const isActive = currentTab === tab.key}
 		<button

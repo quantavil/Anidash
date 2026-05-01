@@ -12,7 +12,7 @@
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-surface-0 px-4">
-	<div class="text-center">
+	<div class="text-center glass-card backdrop-blur p-10 max-w-md w-full">
 		<div class="mb-4 text-6xl">
 			{status === 404 ? '🔍' : '💥'}
 		</div>

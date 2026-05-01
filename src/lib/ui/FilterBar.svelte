@@ -94,6 +94,7 @@
 		/>
 		<input
 			type="text"
+			aria-label="Search anime list"
 			placeholder="Search your list…"
 			value={currentQuery}
 			oninput={handleSearch}

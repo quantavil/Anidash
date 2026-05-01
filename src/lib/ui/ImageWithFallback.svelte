@@ -1,26 +1,25 @@
 <script lang="ts">
+	import { Film, User } from 'lucide-svelte';
+
 	let {
 		src,
 		alt = '',
 		aspectRatio = '3/4',
 		fallbackIcon = 'film',
+		index,
 		class: className = ''
 	}: {
 		src: string | null | undefined;
 		alt?: string;
 		aspectRatio?: string;
 		fallbackIcon?: 'film' | 'user';
+		index?: number;
 		class?: string;
 	} = $props();
 
 	let loaded = $state(false);
 	let error = $state(false);
 	let imgEl: HTMLImageElement | null = $state(null);
-
-	const ICON_MAP = {
-		film: '🎬',
-		user: '👤'
-	};
 
 	$effect(() => {
 		// Reset state when src changes
@@ -35,7 +34,7 @@
 			bind:this={imgEl}
 			{src}
 			{alt}
-			loading="lazy"
+			loading={index !== undefined && index < 5 ? 'eager' : 'lazy'}
 			decoding="async"
 			onload={() => (loaded = true)}
 			onerror={() => (error = true)}
@@ -48,8 +47,12 @@
 			<div class="absolute inset-0 animate-pulse bg-surface-2"></div>
 		{/if}
 	{:else}
-		<div class="flex h-full w-full items-center justify-center">
-			<span class="text-2xl opacity-30">{ICON_MAP[fallbackIcon]}</span>
+		<div class="flex h-full w-full items-center justify-center text-text-muted/30">
+			{#if fallbackIcon === 'user'}
+				<User size={32} />
+			{:else}
+				<Film size={32} />
+			{/if}
 		</div>
 	{/if}
 </div>

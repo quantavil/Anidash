@@ -6,6 +6,7 @@
 
 	onMount(async () => {
 		const code = $page.url.searchParams.get('code');
+		const state = $page.url.searchParams.get('state');
 		const error = $page.url.searchParams.get('error');
 
 		if (error) {
@@ -14,12 +15,12 @@
 			return;
 		}
 
-		if (!code) {
-			goto('/login?error=no_code');
+		if (!code || !state) {
+			goto('/login?error=no_code_or_state');
 			return;
 		}
 
-		const exchangeResult = await authStore.handleCallback(code);
+		const exchangeResult = await authStore.handleCallback(code, state);
 
 		if (exchangeResult.ok) {
 			goto('/');

@@ -80,7 +80,7 @@ describe('userlist.svelte.ts state', () => {
 
 	it('should process persistent queue sequentially on flushPersistentQueue', async () => {
 		vi.mocked(getSyncQueue).mockResolvedValueOnce([
-			{ malId: 5, payload: { status: 'completed' }, timestamp: 1234 }
+			{ malId: 5, payload: { status: 'completed' }, timestamp: Date.now() }
 		]);
 
 		await userListStore.flushPersistentQueue();

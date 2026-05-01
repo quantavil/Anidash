@@ -4,7 +4,7 @@
 </script>
 
 {#each Array(count) as _, i}
-	<div class="animate-pulse rounded-xl border border-border bg-surface-1 p-3">
+	<div class="animate-pulse glass-card p-3">
 		<!-- Image placeholder -->
 		<div class="aspect-[3/4] w-full rounded-lg bg-surface-2"></div>
 		<!-- Title -->

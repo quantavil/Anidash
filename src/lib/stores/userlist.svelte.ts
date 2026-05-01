@@ -69,12 +69,19 @@ function createUserListStore() {
 		try {
 			const cached = await getAllEntries();
 			const newEntries: Record<number, UserListRecord> = {};
+			const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+			const now = Date.now();
 			for (const e of cached) {
+				if (e.updatedAt && now - new Date(e.updatedAt).getTime() > SEVEN_DAYS_MS) {
+					// Purge stale entry from cache
+					await removeEntry(e.malId);
+					continue;
+				}
 				newEntries[e.malId] = e;
 			}
 			entries = newEntries;
 		} catch (e) {
-			console.error('Failed to load list from cache:', e);
+			logger.error('Failed to load list from cache:', e);
 		}
 		loading = false;
 		initialized = true;
@@ -105,7 +112,7 @@ function createUserListStore() {
 		entries[malId] = updated;
 
 		// 2. Update IDB
-		putEntry($state.snapshot(updated)).catch(console.error);
+		putEntry($state.snapshot(updated)).catch(logger.error);
 
 		// 3. Debounced MAL sync
 		cancelPendingSync(malId);
@@ -325,7 +332,17 @@ function createUserListStore() {
 		const queue = await getSyncQueue();
 		if (queue.length === 0) return;
 
+		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+		const now = Date.now();
+		let retryDelay = 1000; // start with 1s backoff
+
 		for (const record of queue) {
+			// TTL Check: purge if older than 7 days
+			if (now - record.timestamp > SEVEN_DAYS_MS) {
+				await deleteSyncQueue(record.malId);
+				continue;
+			}
+
 			let result: Result<void>;
 			const payload = record.payload as Record<string, unknown>;
 
@@ -337,14 +354,18 @@ function createUserListStore() {
 
 			if (result.ok) {
 				await deleteSyncQueue(record.malId);
+				retryDelay = 1000; // Reset backoff on success
 			} else {
-				// Drop the payload if it's a persistent bad request, else break
+				// Drop the payload if it's a persistent bad request
 				if (
 					result.error?.type === 'api' &&
 					(result.error.status === 400 || result.error.status === 404)
 				) {
 					await deleteSyncQueue(record.malId);
 				} else {
+					// Exponential backoff before next attempt/break
+					await new Promise((r) => setTimeout(r, retryDelay));
+					retryDelay *= 2; // Double the delay
 					break; // Stop flushing if rate limited or network is still down
 				}
 			}
@@ -353,7 +374,7 @@ function createUserListStore() {
 
 	if (typeof window !== 'undefined') {
 		window.addEventListener('online', () => {
-			flushPersistentQueue().catch(console.error);
+			flushPersistentQueue().catch(logger.error);
 		});
 	}
 

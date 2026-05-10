@@ -76,28 +76,33 @@ export function formatStatus(status: string): string {
 	return STATUS_LABELS[status] ?? status;
 }
 
-export const STATUS_COLORS: Record<string, string> = {
-	watching: 'bg-primary/15 text-primary border-primary/30',
-	completed: 'bg-success/15 text-success border-success/30',
-	on_hold: 'bg-warning/15 text-warning border-warning/30',
-	dropped: 'bg-error/15 text-error border-error/30',
-	plan_to_watch: 'bg-info/15 text-info border-info/30'
-};
-
-export const DOT_COLORS: Record<string, string> = {
-	watching: 'bg-primary',
-	completed: 'bg-success',
-	on_hold: 'bg-warning',
-	dropped: 'bg-error',
-	plan_to_watch: 'bg-info'
-};
-
-export const STATUS_BG_COLORS: Record<string, string> = {
-	watching: 'bg-primary/90',
-	completed: 'bg-success/90',
-	on_hold: 'bg-warning/90',
-	dropped: 'bg-error/90',
-	plan_to_watch: 'bg-info/90'
+type StatusVariant = 'badge' | 'dot' | 'solid';
+export const STATUS_COLORS: Record<string, Record<StatusVariant, string>> = {
+	watching: {
+		badge: 'bg-primary/15 text-primary border-primary/30',
+		dot: 'bg-primary',
+		solid: 'bg-primary/90'
+	},
+	completed: {
+		badge: 'bg-success/15 text-success border-success/30',
+		dot: 'bg-success',
+		solid: 'bg-success/90'
+	},
+	on_hold: {
+		badge: 'bg-warning/15 text-warning border-warning/30',
+		dot: 'bg-warning',
+		solid: 'bg-warning/90'
+	},
+	dropped: {
+		badge: 'bg-error/15 text-error border-error/30',
+		dot: 'bg-error',
+		solid: 'bg-error/90'
+	},
+	plan_to_watch: {
+		badge: 'bg-info/15 text-info border-info/30',
+		dot: 'bg-info',
+		solid: 'bg-info/90'
+	}
 };
 
 /** Anime airing status ("currently_airing" → "Currently Airing") */

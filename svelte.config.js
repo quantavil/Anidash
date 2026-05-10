@@ -9,6 +9,8 @@ const config = {
 		csp: {
 			directives: {
 				'script-src': ['self'],
+				'connect-src': ['self', 'https://api.myanimelist.net', 'https://api.jikan.moe', 'https://cdn.myanimelist.net', 'https://raw.githubusercontent.com'],
+				'img-src': ['self', 'data:', 'https://cdn.myanimelist.net', 'https://img.youtube.com'],
 				'object-src': ['none'],
 				'base-uri': ['none']
 			}

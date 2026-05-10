@@ -6,7 +6,7 @@
 		formatMediaType,
 		formatNumberShort,
 		formatStatus,
-		STATUS_BG_COLORS
+		STATUS_COLORS
 	} from '$lib/utils/format';
 	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
@@ -51,7 +51,7 @@
 			<div
 				class={[
 					'absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-md',
-					STATUS_BG_COLORS[listEntry.status]
+					STATUS_COLORS[listEntry.status]?.solid
 				]}
 			>
 				{formatStatus(listEntry.status)}

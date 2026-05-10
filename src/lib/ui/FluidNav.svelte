@@ -108,6 +108,7 @@
 					onclick={handleLogout}
 					class="text-text-muted transition-colors hover:text-error {isMobile ? '' : 'ml-1'}"
 					title="Logout"
+					aria-label="Logout"
 				>
 					<LogOut size={isMobile ? 14 : 16} />
 				</button>

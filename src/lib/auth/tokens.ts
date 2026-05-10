@@ -86,9 +86,9 @@ async function doRefresh(): Promise<Result<void>> {
 		});
 
 		const body = (await response.json()) as unknown;
-		const bodyPartial = body as { ok?: boolean; error?: string };
+		const bodyPartial = body as { error?: string };
 
-		if (!response.ok || !bodyPartial.ok) {
+		if (!response.ok) {
 			tokens.clear();
 			return err({ type: 'auth', message: bodyPartial.error || 'Token refresh failed' });
 		}

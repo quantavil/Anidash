@@ -24,18 +24,11 @@ export const EXTERNAL_SITES: ExternalSite[] = [
 		searchUrl: (domain, title) => `https://www.${domain}/search?query=${encode(title)}`
 	},
 	{
-		name: 'AnimeKai',
+		name: 'ReAnime',
 		color: '#60a5fa',
-		domains: [
-			'animekai.to',
-			'animekai.fi',
-			'animekai.la',
-			'animekai.gs',
-			'animekai.fo',
-			'anikai.to'
-		],
+		domains: ['reanime.to'],
 		iconUrl: (domain) => `https://${domain}/favicon.ico`,
-		searchUrl: (domain, title) => `https://${domain}/browser?keyword=${encode(title)}`
+		searchUrl: (domain, title) => `https://${domain}/search?q=${encode(title)}`
 	},
 	{
 		name: 'Anikoto',

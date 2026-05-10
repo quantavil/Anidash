@@ -223,6 +223,7 @@ function createUserListStore() {
 	// ─── Remove from List ───
 
 	async function removeFromList(malId: number): Promise<Result<void>> {
+		cancelPendingSync(malId);
 		const entry = entries[malId];
 		if (!entry) return err({ type: 'cache', message: 'Entry not found' });
 
@@ -371,6 +372,11 @@ function createUserListStore() {
 		});
 	}
 
+	function clear(): void {
+		entries = {};
+		initialized = false;
+	}
+
 	return {
 		get entries() {
 			return entries;
@@ -406,6 +412,7 @@ function createUserListStore() {
 			return initialized;
 		},
 
+		clear,
 		getEntry,
 		loadFromCache,
 		syncFromRemote,

@@ -64,11 +64,10 @@ export async function getUserProfile(): Promise<Result<MalUser>> {
 
 // ─── User Anime List ───
 
-const LIST_FIELDS = [
-	'list_status{status,score,num_episodes_watched,updated_at}',
-	'num_episodes',
-	'mean',
+const BASE_FIELDS = [
 	'main_picture',
+	'mean',
+	'num_episodes',
 	'genres',
 	'start_season',
 	'media_type',
@@ -77,6 +76,11 @@ const LIST_FIELDS = [
 	'num_list_users',
 	'num_scoring_users',
 	'alternative_titles'
+];
+
+const LIST_FIELDS = [
+	'list_status{status,score,num_episodes_watched,updated_at}',
+	...BASE_FIELDS
 ].join(',');
 
 export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
@@ -280,17 +284,7 @@ export async function deleteAnimeStatus(id: number): Promise<Result<void>> {
 const SEARCH_FIELDS = [
 	'id',
 	'title',
-	'alternative_titles',
-	'main_picture',
-	'mean',
-	'num_episodes',
-	'genres',
-	'start_season',
-	'media_type',
-	'status',
-	'studios',
-	'num_list_users',
-	'num_scoring_users'
+	...BASE_FIELDS
 ].join(',');
 
 export async function searchAnime(

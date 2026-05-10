@@ -144,7 +144,7 @@ export function getDB(): Promise<IDBPDatabase<AniDashDB>> {
 				logger.warn('AniDash DB blocking — this tab is blocking an upgrade');
 			},
 			terminated() {
-				console.error('AniDash DB connection terminated unexpectedly');
+				logger.error('AniDash DB connection terminated unexpectedly');
 				dbPromise = null;
 			}
 		});

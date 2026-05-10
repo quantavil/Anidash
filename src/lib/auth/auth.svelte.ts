@@ -178,9 +178,9 @@ function createAuthStore() {
 				});
 
 				const body = (await response.json()) as unknown;
-				const bodyPartial = body as { ok?: boolean; error?: string };
+				const bodyPartial = body as { error?: string };
 
-				if (!response.ok || !bodyPartial.ok) {
+				if (!response.ok) {
 					isExchanging = false;
 					return err({
 						type: 'api',
@@ -235,6 +235,11 @@ function createAuthStore() {
 		tokens.clear();
 		user = null;
 		error = null;
+
+		try {
+			const { userListStore } = await import('$lib/stores/userlist.svelte');
+			userListStore.clear();
+		} catch {}
 
 		// Clear IndexedDB
 		try {

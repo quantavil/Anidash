@@ -25,8 +25,6 @@
 	$effect(() => {
 		if (resetKey !== undefined) {
 			resetKey;
-		} else {
-			entries;
 		}
 		untrack(() => {
 			limit = PAGE_SIZE;

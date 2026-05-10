@@ -57,7 +57,6 @@ export type MalUser = z.infer<typeof MalUserSchema>;
 // ─── Token Response ───
 
 export const MalTokenResponseSchema = z.object({
-	ok: z.literal(true),
 	token_type: z.string(),
 	expires_in: z.number(),
 	access_token: z.string(),

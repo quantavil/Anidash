@@ -59,6 +59,7 @@
 			<div class="relative flex items-center border-l border-white/10">
 				<button 
 					class="ext-trigger rounded-r-full"
+					aria-label="Toggle mirrors for {site.name}"
 					onclick={(e) => {
 						e.preventDefault();
 						toggleDropdown(site.name);
@@ -79,6 +80,7 @@
 							href={site.searchUrl(domain, animeTitle)}
 							target="_blank"
 							rel="noopener noreferrer"
+							aria-label="Search {site.name} on {domain}"
 							onclick={(e) => handleMirrorSelect(e, site.name, domain)}
 							class="ext-mirror"
 						>

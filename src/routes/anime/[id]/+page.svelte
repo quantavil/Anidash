@@ -70,12 +70,14 @@
 
 	// ─── Load Anime Detail ───
 
-	async function loadAnime(id: number) {
+	async function loadAnime(id: number, isAborted?: () => boolean) {
 		loading = true;
 		error = null;
 
 		// Try cache first (stale-while-revalidate)
 		const cached = await getAnimeAllowStale(id);
+		if (isAborted?.()) return;
+
 		if (cached) {
 			anime = cached;
 			loading = false;
@@ -83,6 +85,8 @@
 
 		// Fetch fresh data
 		const result = await getAnimeDetail(id);
+		if (isAborted?.()) return;
+
 		if (result.ok) {
 			anime = result.value;
 			await putAnime(result.value);
@@ -149,14 +153,16 @@
 
 	// Load anime when route changes (handles both initial mount and navigation)
 	$effect(() => {
+		let aborted = false;
 		const id = Number($page.params.id);
 		if (id && id !== anime?.malId) {
 			anime = null;
 			characters = [];
 			recommendations = [];
 			activeTab = 'overview';
-			loadAnime(id);
+			loadAnime(id, () => aborted);
 		}
+		return () => { aborted = true; };
 	});
 
 	const TABS: { key: TabKey; label: string }[] = [

@@ -2,6 +2,8 @@
 	import type { DisplayAnime } from '$lib/utils/types';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { authStore } from '$lib/auth/auth.svelte';
+	import { toast } from 'svelte-sonner';
 	import {
 		formatMediaType,
 		formatNumberShort,
@@ -107,6 +109,11 @@
 				onclick={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
+					if (!authStore.isAuthenticated) {
+						toast.info('Please login to add to your list');
+						authStore.login();
+						return;
+					}
 					userListStore.addToList(
 						anime.malId,
 						'plan_to_watch',

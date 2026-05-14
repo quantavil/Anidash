@@ -18,7 +18,7 @@
 	const query = $derived(getUrlParam($page.url, 'q', ''));
 	const filterType = $derived(getUrlParam($page.url, 'type', ''));
 	const filterGenre = $derived(getUrlParam($page.url, 'genre', ''));
-	const filterSort = $derived(getUrlParam($page.url, 'sort', 'score'));
+	const filterSort = $derived(getUrlParam($page.url, 'sort', query ? 'relevance' : 'score'));
 
 	// ─── State ───
 
@@ -45,6 +45,7 @@
 	];
 
 	const SORTS = [
+		{ value: 'relevance', label: 'Relevance' },
 		{ value: 'score', label: 'Rating' },
 		{ value: 'popularity', label: 'Popularity' },
 		{ value: 'title', label: 'Title A-Z' },
@@ -65,6 +66,11 @@
 		if (page === 1) loading = true;
 		else loadingMore = true;
 
+		// Ensure dubs are loaded if filtering is enabled
+		if (dubStore.dubMode) {
+			await dubStore.init();
+		}
+
 		const result = await searchAnime({
 			q: query || undefined,
 			type: filterType || undefined,
@@ -76,8 +82,10 @@
 						? 'title'
 						: filterSort === 'start_date'
 							? 'start_date'
-							: 'score',
-			sort: filterSort === 'title' ? 'asc' : 'desc',
+							: filterSort === 'score'
+								? 'score'
+								: undefined,
+			sort: filterSort === 'relevance' ? undefined : filterSort === 'title' ? 'asc' : 'desc',
 			page,
 			limit: 25,
 			sfw: true
@@ -292,7 +300,7 @@
 								setUrlParams($page.url, [
 									{ key: 'type', value: '' },
 									{ key: 'genre', value: '' },
-									{ key: 'sort', value: 'score' }
+									{ key: 'sort', value: '' }
 								]),
 								{ keepFocus: true, noScroll: true }
 							);

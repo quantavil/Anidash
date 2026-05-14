@@ -46,7 +46,6 @@
 				import('$lib/utils/logger').then(({ logger }) => logger.error('Data loading failed:', e));
 				dataLoaded = false;
 			});
-			dubStore.init(); // non-blocking load of dub info
 		} else if (!authStore.isAuthenticated && dataLoaded) {
 			dataLoaded = false;
 		}
@@ -55,6 +54,7 @@
 	onMount(async () => {
 		await authStore.init();
 		settingsStore.init();
+		dubStore.init(); // Initialize dubs for everyone
 		initialized = true;
 	});
 

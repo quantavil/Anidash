@@ -15,7 +15,8 @@
 		formatMediaType,
 		formatAnimeStatus,
 		formatSeason,
-		formatLocalBroadcast
+		formatLocalBroadcast,
+		formatNumberShort
 	} from '$lib/utils/format';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
@@ -237,44 +238,49 @@
 				<div
 					class="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-sm text-text-secondary scrollbar-none max-w-full"
 				>
-					{#if anime.mean}
-						<div
-							class="flex items-center gap-1 shrink-0"
-							title={anime.numScoringUsers
-								? anime.numScoringUsers.toLocaleString() + ' users scored this'
-								: ''}
-						>
-							<Star size={16} class="text-warning" fill="currentColor" />
-							<span class="font-semibold text-text-primary">{anime.mean.toFixed(1)}</span>
-						</div>
-						<span class="text-white/20 shrink-0">&bull;</span>
-					{/if}
-					{#if anime.mediaType}
-						<div class="flex items-center gap-1 shrink-0">
-							<Tv size={14} class="text-text-muted" />
-							{formatMediaType(anime.mediaType)}
-						</div>
-						<span class="text-white/20 shrink-0">&bull;</span>
-					{/if}
-					{#if anime.numEpisodes > 0}
-						<div class="flex items-center gap-1 shrink-0">
-							<Film size={14} class="text-text-muted" />
-							{anime.numEpisodes} eps
-						</div>
-						<span class="text-white/20 shrink-0">&bull;</span>
-					{/if}
-					{#if anime.animeStatus}
-						<span class="{STATUS_COLORS[anime.animeStatus] ?? 'text-text-muted'} shrink-0">
-							{formatAnimeStatus(anime.animeStatus)}
-						</span>
-						<span class="text-white/20 shrink-0">&bull;</span>
-					{/if}
-					{#if anime.startSeason}
-						<div class="flex items-center gap-1 shrink-0 text-text-muted">
-							<Calendar size={12} />
-							{formatSeason(anime.startSeason.year, anime.startSeason.season)}
-						</div>
-					{/if}
+					{#each [anime.mean ? 'mean' : null, anime.numListUsers ? 'users' : null, anime.mediaType ? 'mediaType' : null, anime.numEpisodes > 0 ? 'episodes' : null, anime.animeStatus ? 'status' : null, anime.startSeason ? 'season' : null].filter(Boolean) as stat, index}
+						{#if index > 0}
+							<span class="text-white/20 shrink-0">&bull;</span>
+						{/if}
+
+						{#if stat === 'mean'}
+							<div
+								class="flex items-center gap-1 shrink-0"
+								title={anime.numScoringUsers
+									? anime.numScoringUsers.toLocaleString() + ' users scored this'
+									: ''}
+							>
+								<Star size={16} class="text-warning" fill="currentColor" />
+								<span class="font-semibold text-text-primary">{anime.mean?.toFixed(1)}</span>
+							</div>
+						{:else if stat === 'users'}
+							<div class="flex items-center gap-1 shrink-0">
+								<Users size={14} class="text-text-muted" />
+								<span class="font-semibold text-text-primary"
+									>{formatNumberShort(anime.numListUsers ?? 0)}</span
+								>
+							</div>
+						{:else if stat === 'mediaType'}
+							<div class="flex items-center gap-1 shrink-0">
+								<Tv size={14} class="text-text-muted" />
+								{formatMediaType(anime.mediaType ?? '')}
+							</div>
+						{:else if stat === 'episodes'}
+							<div class="flex items-center gap-1 shrink-0">
+								<Film size={14} class="text-text-muted" />
+								{anime.numEpisodes} eps
+							</div>
+						{:else if stat === 'status'}
+							<span class="{STATUS_COLORS[anime.animeStatus ?? ''] ?? 'text-text-muted'} shrink-0">
+								{formatAnimeStatus(anime.animeStatus ?? '')}
+							</span>
+						{:else if stat === 'season'}
+							<div class="flex items-center gap-1 shrink-0 text-text-muted">
+								<Calendar size={12} />
+								{formatSeason(anime.startSeason?.year ?? 0, anime.startSeason?.season ?? '')}
+							</div>
+						{/if}
+					{/each}
 				</div>
 
 				<!-- Studios & Broadcast row (can stay below or be removed if too dense, but let's keep it tight) -->

@@ -358,18 +358,20 @@
 				</div>
 
 				<!-- External Links -->
-				<div class="mt-3 flex flex-wrap items-center gap-2">
+				<div class="mt-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-none">
 					<a
 						href="https://myanimelist.net/anime/{malId}"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="ext-link"
+						class="ext-link shrink-0"
 						style="--site-color: var(--color-primary)"
 					>
 						<ExternalLink size={12} />
 						<span class="font-bold tracking-wide">MAL</span>
 					</a>
-					<ExternalSitesRow animeTitle={anime.title} />
+					<div class="flex items-center gap-2 shrink-0">
+						<ExternalSitesRow animeTitle={anime.title} />
+					</div>
 				</div>
 			</div>
 		</div>

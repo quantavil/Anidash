@@ -5,7 +5,6 @@
 	import { getCharacters, getRecommendations } from '$lib/api/jikan';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { authStore } from '$lib/auth/auth.svelte';
 	import type { AnimeRecord } from '$lib/cache/db';
 	import type {
 		JikanCharacterEntry,
@@ -14,14 +13,11 @@
 
 	import {
 		formatMediaType,
-		formatNumberShort,
 		formatAnimeStatus,
-		formatStatus,
 		formatSeason,
 		formatLocalBroadcast
 	} from '$lib/utils/format';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
-	import { toast } from 'svelte-sonner';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
 	import ExternalSitesRow from '$lib/ui/ExternalSitesRow.svelte';
@@ -162,7 +158,9 @@
 			activeTab = 'overview';
 			loadAnime(id, () => aborted);
 		}
-		return () => { aborted = true; };
+		return () => {
+			aborted = true;
+		};
 	});
 
 	const TABS: { key: TabKey; label: string }[] = [
@@ -236,10 +234,12 @@
 				</div>
 
 				<!-- Quick stats row -->
-				<div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
+				<div
+					class="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-sm text-text-secondary scrollbar-none max-w-full"
+				>
 					{#if anime.mean}
 						<div
-							class="flex items-center gap-1"
+							class="flex items-center gap-1 shrink-0"
 							title={anime.numScoringUsers
 								? anime.numScoringUsers.toLocaleString() + ' users scored this'
 								: ''}
@@ -247,52 +247,51 @@
 							<Star size={16} class="text-warning" fill="currentColor" />
 							<span class="font-semibold text-text-primary">{anime.mean.toFixed(1)}</span>
 						</div>
-					{/if}
-					{#if anime.numListUsers && anime.numListUsers > 0}
-						<div class="flex items-center gap-1">
-							<Users size={14} class="text-text-muted" />
-							<span
-								><span class="text-text-primary font-medium"
-									>{formatNumberShort(anime.numListUsers)}</span
-								> members</span
-							>
-						</div>
+						<span class="text-white/20 shrink-0">&bull;</span>
 					{/if}
 					{#if anime.mediaType}
-						<div class="flex items-center gap-1">
+						<div class="flex items-center gap-1 shrink-0">
 							<Tv size={14} class="text-text-muted" />
 							{formatMediaType(anime.mediaType)}
 						</div>
+						<span class="text-white/20 shrink-0">&bull;</span>
 					{/if}
 					{#if anime.numEpisodes > 0}
-						<div class="flex items-center gap-1">
+						<div class="flex items-center gap-1 shrink-0">
 							<Film size={14} class="text-text-muted" />
-							{anime.numEpisodes} episodes
+							{anime.numEpisodes} eps
 						</div>
+						<span class="text-white/20 shrink-0">&bull;</span>
 					{/if}
 					{#if anime.animeStatus}
-						<span class={STATUS_COLORS[anime.animeStatus] ?? 'text-text-muted'}>
+						<span class="{STATUS_COLORS[anime.animeStatus] ?? 'text-text-muted'} shrink-0">
 							{formatAnimeStatus(anime.animeStatus)}
 						</span>
+						<span class="text-white/20 shrink-0">&bull;</span>
 					{/if}
-				</div>
-
-				<!-- Season + Studios -->
-				<div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
 					{#if anime.startSeason}
-						<div class="flex items-center gap-1">
+						<div class="flex items-center gap-1 shrink-0 text-text-muted">
 							<Calendar size={12} />
 							{formatSeason(anime.startSeason.year, anime.startSeason.season)}
 						</div>
 					{/if}
+				</div>
+
+				<!-- Studios & Broadcast row (can stay below or be removed if too dense, but let's keep it tight) -->
+				<div
+					class="mt-1 flex items-center gap-3 text-xs text-text-muted overflow-x-auto whitespace-nowrap scrollbar-none max-w-full"
+				>
 					{#if anime.studios.length > 0}
-						<div class="flex items-center gap-1">
+						<div class="flex items-center gap-1 shrink-0">
 							<Users size={12} />
 							{anime.studios.map((s) => s.name).join(', ')}
 						</div>
 					{/if}
 					{#if anime.broadcast?.day_of_the_week}
-						<div class="flex items-center gap-1">
+						{#if anime.studios.length > 0}
+							<span class="text-white/20 shrink-0">&bull;</span>
+						{/if}
+						<div class="flex items-center gap-1 shrink-0">
 							<Clock size={12} />
 							{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
 							<span

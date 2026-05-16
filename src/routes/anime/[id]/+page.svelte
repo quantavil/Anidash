@@ -320,24 +320,18 @@
 				{/if}
 
 				<!-- ─── User List Controls ─── -->
-				<div
-					class="mt-5 rounded-2xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-5 shadow-xl"
-				>
+				<div class="mt-5 rounded-xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-4 shadow-xl">
 					{#if inList && listEntry}
-						<div class="flex flex-wrap items-center gap-4">
+						<div class="flex items-center justify-between gap-4 overflow-x-auto scrollbar-none">
 							<!-- Status -->
-							<div>
-								<p class="mb-1 text-[10px] font-medium uppercase tracking-wider text-text-muted">
-									Status
-								</p>
+							<div class="shrink-0 flex flex-col items-center">
+								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">Status</p>
 								<StatusBadge {malId} status={listEntry.status} />
 							</div>
 
 							<!-- Progress -->
-							<div>
-								<p class="mb-1 text-[10px] font-medium uppercase tracking-wider text-text-muted">
-									Progress
-								</p>
+							<div class="shrink-0 flex flex-col items-center">
+								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">Progress</p>
 								<EpisodeCounter
 									{malId}
 									watched={listEntry.numWatchedEpisodes}
@@ -347,17 +341,15 @@
 							</div>
 
 							<!-- Score -->
-							<div>
-								<p class="mb-1 text-[10px] font-medium uppercase tracking-wider text-text-muted">
-									Your Score
-								</p>
-								<RatingStars {malId} score={listEntry.score} size={16} />
+							<div class="shrink-0 flex flex-col items-center">
+								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">Score</p>
+								<RatingStars {malId} score={listEntry.score} size={14} />
 							</div>
 						</div>
 					{:else}
 						<button
 							onclick={() => (showAddModal = true)}
-							class="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+							class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
 						>
 							<Plus size={16} />
 							Add to My List

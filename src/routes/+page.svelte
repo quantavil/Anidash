@@ -59,11 +59,25 @@
 {#if !authStore.isAuthenticated}
 	<div class="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
 		<div class="mb-6 rounded-full bg-surface-2 p-6 shadow-xl shadow-black/20 border border-white/5">
-			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 Z"></path></svg>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="48"
+				height="48"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				class="text-primary"
+				><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 Z"
+				></path></svg
+			>
 		</div>
 		<h1 class="text-3xl font-bold text-text-primary mb-3">Track Your Anime</h1>
 		<p class="text-text-secondary max-w-md mb-8">
-			AniDash connects securely with your MyAnimeList account to provide a fast, beautiful, and offline-capable dashboard.
+			AniDash connects securely with your MyAnimeList account to provide a fast, beautiful, and
+			offline-capable dashboard.
 		</p>
 		<button
 			onclick={() => authStore.login()}

@@ -29,23 +29,26 @@
 		if (authStore.isAuthenticated && !dataLoaded) {
 			dataLoaded = true;
 
-			Promise.all([userListStore.loadFromCache(), syncStore.init()]).then(() => {
-				// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
-				const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
-				const isStale = !syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
+			Promise.all([userListStore.loadFromCache(), syncStore.init()])
+				.then(() => {
+					// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
+					const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
+					const isStale =
+						!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
 
-				if (!hasSyncedThisSession || isStale) {
-					sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
-					syncStore.fullSync().then((result) => {
-						if (result.success) {
-							userListStore.loadFromCache();
-						}
-					});
-				}
-			}).catch((e) => {
-				import('$lib/utils/logger').then(({ logger }) => logger.error('Data loading failed:', e));
-				dataLoaded = false;
-			});
+					if (!hasSyncedThisSession || isStale) {
+						sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
+						syncStore.fullSync().then((result) => {
+							if (result.success) {
+								userListStore.loadFromCache();
+							}
+						});
+					}
+				})
+				.catch((e) => {
+					import('$lib/utils/logger').then(({ logger }) => logger.error('Data loading failed:', e));
+					dataLoaded = false;
+				});
 		} else if (!authStore.isAuthenticated && dataLoaded) {
 			dataLoaded = false;
 		}

@@ -320,18 +320,24 @@
 				{/if}
 
 				<!-- ─── User List Controls ─── -->
-				<div class="mt-5 rounded-xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-4 shadow-xl">
+				<div
+					class="mt-5 rounded-xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-4 shadow-xl"
+				>
 					{#if inList && listEntry}
 						<div class="flex items-center justify-between gap-4 overflow-x-auto scrollbar-none">
 							<!-- Status -->
 							<div class="shrink-0 flex flex-col items-center">
-								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">Status</p>
+								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">
+									Status
+								</p>
 								<StatusBadge {malId} status={listEntry.status} />
 							</div>
 
 							<!-- Progress -->
 							<div class="shrink-0 flex flex-col items-center">
-								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">Progress</p>
+								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">
+									Progress
+								</p>
 								<EpisodeCounter
 									{malId}
 									watched={listEntry.numWatchedEpisodes}
@@ -342,7 +348,9 @@
 
 							<!-- Score -->
 							<div class="shrink-0 flex flex-col items-center">
-								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">Score</p>
+								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">
+									Score
+								</p>
 								<RatingStars {malId} score={listEntry.score} size={14} />
 							</div>
 						</div>
@@ -358,7 +366,7 @@
 				</div>
 
 				<!-- External Links -->
-				<div class="mt-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-none">
+				<div class="mt-4 flex flex-wrap items-center gap-2">
 					<a
 						href="https://myanimelist.net/anime/{malId}"
 						target="_blank"
@@ -369,9 +377,7 @@
 						<ExternalLink size={12} />
 						<span class="font-bold tracking-wide">MAL</span>
 					</a>
-					<div class="flex items-center gap-2 shrink-0">
-						<ExternalSitesRow animeTitle={anime.title} />
-					</div>
+					<ExternalSitesRow animeTitle={anime.title} />
 				</div>
 			</div>
 		</div>

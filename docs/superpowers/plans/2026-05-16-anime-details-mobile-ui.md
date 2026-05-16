@@ -13,6 +13,7 @@
 ### Task 1: Fix Mobile Header Background Opacity
 
 **Files:**
+
 - Modify: `src/lib/ui/FluidNav.svelte`
 
 - [ ] **Step 1: Update header classes**
@@ -36,6 +37,7 @@ git commit -m "style(ui): increase mobile header background opacity"
 ### Task 2: Refactor Metadata Layout
 
 **Files:**
+
 - Modify: `src/routes/anime/[id]/+page.svelte`
 
 - [ ] **Step 1: Combine metadata into a scrolling row**
@@ -44,9 +46,16 @@ Find the "Quick stats row" and the "Season + Studios" blocks. Combine them into 
 
 ```svelte
 <!-- Quick stats row -->
-<div class="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-sm text-text-secondary scrollbar-none max-w-full">
+<div
+	class="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-sm text-text-secondary scrollbar-none max-w-full"
+>
 	{#if anime.mean}
-		<div class="flex items-center gap-1 shrink-0" title={anime.numScoringUsers ? anime.numScoringUsers.toLocaleString() + ' users scored this' : ''}>
+		<div
+			class="flex items-center gap-1 shrink-0"
+			title={anime.numScoringUsers
+				? anime.numScoringUsers.toLocaleString() + ' users scored this'
+				: ''}
+		>
 			<Star size={16} class="text-warning" fill="currentColor" />
 			<span class="font-semibold text-text-primary">{anime.mean.toFixed(1)}</span>
 		</div>
@@ -81,7 +90,9 @@ Find the "Quick stats row" and the "Season + Studios" blocks. Combine them into 
 </div>
 
 <!-- Studios & Broadcast row (can stay below or be removed if too dense, but let's keep it tight) -->
-<div class="mt-1 flex items-center gap-3 text-xs text-text-muted overflow-x-auto whitespace-nowrap scrollbar-none">
+<div
+	class="mt-1 flex items-center gap-3 text-xs text-text-muted overflow-x-auto whitespace-nowrap scrollbar-none"
+>
 	{#if anime.studios.length > 0}
 		<div class="flex items-center gap-1 shrink-0">
 			<Users size={12} />
@@ -95,7 +106,9 @@ Find the "Quick stats row" and the "Season + Studios" blocks. Combine them into 
 		<div class="flex items-center gap-1 shrink-0">
 			<Clock size={12} />
 			{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
-			<span>{formatLocalBroadcast(anime.broadcast.day_of_the_week, anime.broadcast.start_time)}</span>
+			<span
+				>{formatLocalBroadcast(anime.broadcast.day_of_the_week, anime.broadcast.start_time)}</span
+			>
 		</div>
 	{/if}
 </div>
@@ -111,6 +124,7 @@ git commit -m "style(anime): compress metadata layout on mobile"
 ### Task 3: Refactor Tracking Card
 
 **Files:**
+
 - Modify: `src/routes/anime/[id]/+page.svelte`
 
 - [ ] **Step 1: Update User List Controls layout**
@@ -167,6 +181,7 @@ git commit -m "style(anime): refactor tracking card for mobile"
 ### Task 4: Fix Action Buttons Wrapping
 
 **Files:**
+
 - Modify: `src/routes/anime/[id]/+page.svelte`
 
 - [ ] **Step 1: Wrap external links in a scrolling container**

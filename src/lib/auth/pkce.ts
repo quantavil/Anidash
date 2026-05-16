@@ -13,7 +13,11 @@ export function generateVerifier(): string {
 }
 
 /** Generate both verifier and challenge (MAL ONLY supports plain) and CSRF state */
-export async function generatePKCE(): Promise<{ verifier: string; challenge: string; state: string }> {
+export async function generatePKCE(): Promise<{
+	verifier: string;
+	challenge: string;
+	state: string;
+}> {
 	const verifier = generateVerifier();
 	const state = generateVerifier(); // We can reuse the same secure random function for state
 	// plain PKCE

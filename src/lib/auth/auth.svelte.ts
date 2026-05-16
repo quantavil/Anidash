@@ -94,8 +94,11 @@ function createAuthStore() {
 		try {
 			const { verifier, challenge, state } = await generatePKCE();
 			const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes TTL
-			
-			sessionStorage.setItem(STORAGE_KEYS.PKCE_VERIFIER, JSON.stringify({ verifier, state, expiresAt }));
+
+			sessionStorage.setItem(
+				STORAGE_KEYS.PKCE_VERIFIER,
+				JSON.stringify({ verifier, state, expiresAt })
+			);
 
 			const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
 			if (!clientId) {

@@ -281,11 +281,7 @@ export async function deleteAnimeStatus(id: number): Promise<Result<void>> {
 
 // ─── Search ───
 
-const SEARCH_FIELDS = [
-	'id',
-	'title',
-	...BASE_FIELDS
-].join(',');
+const SEARCH_FIELDS = ['id', 'title', ...BASE_FIELDS].join(',');
 
 export async function searchAnime(
 	query: string,

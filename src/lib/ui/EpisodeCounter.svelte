@@ -33,15 +33,6 @@
 </script>
 
 <div class="flex items-center gap-2" onclick={(e) => e.stopPropagation()} role="presentation">
-	<!-- Progress bar -->
-	<div class="relative h-2 w-16 overflow-hidden rounded-full bg-white/8 sm:w-20">
-		<div
-			class="absolute inset-y-0 left-0 rounded-full transition-all duration-300
-        {isComplete ? 'bg-success' : 'bg-primary'}"
-			style="width: {pct}%"
-		></div>
-	</div>
-
 	<!-- Episode count -->
 	<span class="min-w-[3rem] text-xs font-medium tabular-nums text-text-secondary">
 		{watched}/{unknown ? '?' : total}

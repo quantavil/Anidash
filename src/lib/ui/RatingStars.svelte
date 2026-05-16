@@ -19,30 +19,24 @@
 	let hoveredScore = $state<number | null>(null);
 	const displayScore = $derived(hoveredScore ?? score);
 
-	/** How much of star `i` (0-indexed) should be filled: 0, 0.5, or 1 */
+	/** How much of star `i` (0-indexed) should be filled: 0 or 1 */
 	function starFill(i: number): number {
 		const s = displayScore;
-		if (s === 0) return 0;
-		const starLow = i * 2 + 1; // odd boundary
-		const starHigh = i * 2 + 2; // even boundary
-		if (s >= starHigh) return 1;
-		if (s >= starLow) return 0.5;
+		if (s > i) return 1;
 		return 0;
 	}
 
-	function handleClick(starIndex: number, isRightHalf: boolean) {
+	function handleClick(starIndex: number) {
 		if (!interactive) return;
-		const newScore = isRightHalf ? (starIndex + 1) * 2 : starIndex * 2 + 1;
+		const newScore = starIndex + 1;
 		// Toggle: if clicking the same score, set to 0 (unrate)
 		const finalScore = newScore === score ? 0 : newScore;
 		userListStore.setScore(malId, finalScore);
 	}
 
-	function handleMouseMove(starIndex: number, event: MouseEvent, starEl: HTMLElement) {
+	function handleMouseMove(starIndex: number) {
 		if (!interactive) return;
-		const rect = starEl.getBoundingClientRect();
-		const isRightHalf = event.clientX - rect.left > rect.width / 2;
-		hoveredScore = isRightHalf ? (starIndex + 1) * 2 : starIndex * 2 + 1;
+		hoveredScore = starIndex + 1;
 	}
 
 	function handleMouseLeave() {
@@ -75,7 +69,7 @@
 	onclick={(e) => e.stopPropagation()}
 	onkeydown={handleKeyDown}
 >
-	{#each Array(5) as _, i}
+	{#each Array(10) as _, i}
 		{@const fill = starFill(i)}
 		<div
 			role="button"
@@ -85,17 +79,15 @@
 			onclick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
-				const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-				const isRight = e.clientX - rect.left > rect.width / 2;
-				handleClick(i, isRight);
+				handleClick(i);
 			}}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					handleClick(i, true);
+					handleClick(i);
 				}
 			}}
-			onmousemove={(e) => handleMouseMove(i, e, e.currentTarget as HTMLElement)}
+			onmousemove={() => handleMouseMove(i)}
 		>
 			<!-- Empty star -->
 			<Star {size} class="absolute inset-0 text-surface-3" fill="none" stroke-width={1.5} />

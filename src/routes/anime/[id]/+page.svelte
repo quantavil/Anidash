@@ -32,6 +32,7 @@
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import AnimeDetailSkeleton from '$lib/ui/skeletons/AnimeDetailSkeleton.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
+	import ProgressLine from '$lib/ui/ProgressLine.svelte';
 
 	const malId = $derived(Number($page.params.id));
 
@@ -203,6 +204,9 @@
 					alt={anime.title}
 					class="w-full sm:w-[200px] h-full"
 				/>
+				{#if listEntry}
+					<ProgressLine watched={listEntry.numWatchedEpisodes} total={listEntry.numEpisodes} />
+				{/if}
 				{#if dubStore.hasDub(anime.malId)}
 					<div
 						class="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/95 text-white backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/20"
@@ -320,32 +324,35 @@
 					class="mt-5 rounded-xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-4 shadow-xl"
 				>
 					{#if inList && listEntry}
-						<div class="flex items-center justify-between gap-4 overflow-x-auto scrollbar-none">
-							<!-- Status -->
-							<div class="shrink-0 flex flex-col items-center">
-								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-									Status
-								</p>
-								<StatusBadge {malId} status={listEntry.status} />
+						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+							<!-- Top Lane: Status & Progress -->
+							<div class="flex items-center justify-around sm:justify-start sm:gap-8">
+								<!-- Status -->
+								<div class="shrink-0 flex flex-col items-center sm:items-start">
+									<p class="mb-1.5 text-[9px] font-medium uppercase tracking-wider text-text-muted">
+										Status
+									</p>
+									<StatusBadge {malId} status={listEntry.status} />
+								</div>
+
+								<!-- Progress -->
+								<div class="shrink-0 flex flex-col items-center sm:items-start">
+									<p class="mb-1.5 text-[9px] font-medium uppercase tracking-wider text-text-muted">
+										Progress
+									</p>
+									<EpisodeCounter
+										{malId}
+										watched={listEntry.numWatchedEpisodes}
+										total={listEntry.numEpisodes}
+										onComplete={handleCompletePrompt}
+									/>
+								</div>
 							</div>
 
-							<!-- Progress -->
-							<div class="shrink-0 flex flex-col items-center">
-								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-									Progress
-								</p>
-								<EpisodeCounter
-									{malId}
-									watched={listEntry.numWatchedEpisodes}
-									total={listEntry.numEpisodes}
-									onComplete={handleCompletePrompt}
-								/>
-							</div>
-
-							<!-- Score -->
-							<div class="shrink-0 flex flex-col items-center">
-								<p class="mb-1 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-									Score
+							<!-- Bottom Lane: Score -->
+							<div class="shrink-0 flex flex-col items-center sm:items-end w-full sm:w-auto mt-1 sm:mt-0 pt-4 sm:pt-0 border-t border-white/5 sm:border-0">
+								<p class="mb-2 text-[9px] font-medium uppercase tracking-wider text-text-muted">
+									Your Score
 								</p>
 								<RatingStars {malId} score={listEntry.score} size={14} />
 							</div>

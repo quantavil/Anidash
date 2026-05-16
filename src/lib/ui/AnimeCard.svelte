@@ -1,12 +1,13 @@
 <script lang="ts">
 	import type { UserListRecord } from '$lib/cache/db';
 	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
-	import { Star, Mic } from 'lucide-svelte';
+	import { Star, Mic, Plus, Minus, Check } from 'lucide-svelte';
 	import StatusBadge from './StatusBadge.svelte';
-	import EpisodeCounter from './EpisodeCounter.svelte';
+	import ProgressLine from './ProgressLine.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { userListStore } from '$lib/stores/userlist.svelte';
 
 	let {
 		entry,
@@ -27,6 +28,19 @@
 	const isComplete = $derived(
 		!unknown && entry.numWatchedEpisodes >= entry.numEpisodes && entry.numEpisodes > 0
 	);
+
+	function increment() {
+		const result = userListStore.incrementEpisode(entry.malId);
+		if (result && result.watched >= result.total && result.total > 0) {
+			onComplete?.(entry.malId);
+		}
+	}
+
+	function decrement() {
+		if (entry.numWatchedEpisodes > 0) {
+			userListStore.setEpisodeCount(entry.malId, entry.numWatchedEpisodes - 1);
+		}
+	}
 </script>
 
 <div
@@ -50,27 +64,7 @@
 			/>
 
 			<!-- Progress Line -->
-			<div class="absolute bottom-0 left-0 h-0.5 w-full bg-white/10 z-20">
-				<div
-					class="h-full transition-all duration-700 ease-spring {isComplete
-						? 'bg-success'
-						: 'bg-gradient-to-r from-primary to-cyan-400'}"
-					style="width: {progressPct}%"
-				></div>
-			</div>
-
-			<!-- Numerical Progress Overlay -->
-			<div
-				class="glass-badge absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-bold z-10 {dubStore.hasDub(
-					entry.malId
-				)
-					? 'ml-8'
-					: ''}"
-			>
-				<span class="text-text-primary">{entry.numWatchedEpisodes}</span>
-				<span class="mx-0.5 opacity-40">/</span>
-				<span class="text-text-secondary">{unknown ? '?' : entry.numEpisodes}</span>
-			</div>
+			<ProgressLine watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
 
 			<!-- Status badge overlay -->
 			<div class="absolute left-2 top-2 z-10">
@@ -127,6 +121,35 @@
 				{#if entry.startSeason?.year && entry.startSeason?.season}
 					<span>· {entry.startSeason.year}</span>
 				{/if}
+			</div>
+
+			<!-- Progress Controls -->
+			<div class="mt-auto pt-2 flex items-center justify-between" onclick={(e) => e.stopPropagation()} role="presentation">
+				<div class="text-[11px] font-medium tabular-nums text-text-secondary">
+					<span class="text-text-primary font-bold">{entry.numWatchedEpisodes}</span> / {unknown ? '?' : entry.numEpisodes} <span class="text-text-muted text-[9px] ml-0.5 uppercase tracking-wider">ep</span>
+				</div>
+				<div class="flex items-center gap-1.5">
+					<button
+						onclick={(e) => { e.preventDefault(); decrement(); }}
+						disabled={entry.numWatchedEpisodes <= 0}
+						class="flex h-6 w-6 items-center justify-center rounded bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-colors"
+						title="Decrease episode"
+					>
+						<Minus size={14} strokeWidth={2.5} />
+					</button>
+					<button
+						onclick={(e) => { e.preventDefault(); increment(); }}
+						disabled={isComplete}
+						class="flex h-6 w-6 items-center justify-center rounded bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-colors"
+						title="Increase episode"
+					>
+						{#if isComplete}
+							<Check size={14} strokeWidth={2.5} class="text-success" />
+						{:else}
+							<Plus size={14} strokeWidth={2.5} />
+						{/if}
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>

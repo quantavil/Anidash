@@ -19,6 +19,14 @@
 	} = $props();
 
 	const imageUrl = $derived(entry.mainPicture?.large ?? entry.mainPicture?.medium ?? null);
+
+	const unknown = $derived(entry.numEpisodes === 0);
+	const progressPct = $derived(
+		unknown ? 0 : Math.min((entry.numWatchedEpisodes / entry.numEpisodes) * 100, 100)
+	);
+	const isComplete = $derived(
+		!unknown && entry.numWatchedEpisodes >= entry.numEpisodes && entry.numEpisodes > 0
+	);
 </script>
 
 <div
@@ -33,13 +41,36 @@
 			aria-label="View {entry.title} details"
 		></a>
 		<!-- Cover Image -->
-		<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-2 border-b border-border">
+		<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-2 border-b border-white/5">
 			<ImageWithFallback
 				src={imageUrl}
 				alt={entry.title}
 				{index}
 				class="h-full w-full transition-transform duration-700 ease-spring group-hover:scale-105"
 			/>
+
+			<!-- Progress Line -->
+			<div class="absolute bottom-0 left-0 h-0.5 w-full bg-white/10 z-20">
+				<div
+					class="h-full transition-all duration-700 ease-spring {isComplete
+						? 'bg-success'
+						: 'bg-gradient-to-r from-primary to-cyan-400'}"
+					style="width: {progressPct}%"
+				></div>
+			</div>
+
+			<!-- Numerical Progress Overlay -->
+			<div
+				class="glass-badge absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-bold z-10 {dubStore.hasDub(
+					entry.malId
+				)
+					? 'ml-8'
+					: ''}"
+			>
+				<span class="text-text-primary">{entry.numWatchedEpisodes}</span>
+				<span class="mx-0.5 opacity-40">/</span>
+				<span class="text-text-secondary">{unknown ? '?' : entry.numEpisodes}</span>
+			</div>
 
 			<!-- Status badge overlay -->
 			<div class="absolute left-2 top-2 z-10">
@@ -96,16 +127,6 @@
 				{#if entry.startSeason?.year && entry.startSeason?.season}
 					<span>· {entry.startSeason.year}</span>
 				{/if}
-			</div>
-
-			<!-- Progress -->
-			<div class="relative z-10 mt-auto pt-1">
-				<EpisodeCounter
-					malId={entry.malId}
-					watched={entry.numWatchedEpisodes}
-					total={entry.numEpisodes}
-					{onComplete}
-				/>
 			</div>
 		</div>
 	</div>

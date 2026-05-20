@@ -56,15 +56,106 @@ export function isExpired(): boolean {
 	return Date.now() >= data.expiresAt;
 }
 
-// Mutex: prevent concurrent refresh calls
+// ─── Cross-Tab Refresh Coordination ───
+// MAL rotates refresh tokens on exchange. If two tabs refresh concurrently,
+// the second request uses an invalidated token and logs the user out.
+// We use a localStorage-based lock to coordinate across tabs.
+
+const LOCK_TTL_MS = 15_000; // 15 seconds — max time a refresh should take
 let refreshPromise: Promise<Result<void>> | null = null;
+
+interface RefreshLock {
+	ts: number;     // when the lock was acquired
+	tabId: string;  // unique tab identifier
+}
+
+const TAB_ID = typeof crypto !== 'undefined'
+	? crypto.randomUUID()
+	: Math.random().toString(36).slice(2);
+
+function getRefreshLock(): RefreshLock | null {
+	try {
+		const raw = localStorage.getItem(STORAGE_KEYS.REFRESH_LOCK);
+		if (!raw) return null;
+		return JSON.parse(raw) as RefreshLock;
+	} catch {
+		return null;
+	}
+}
+
+function acquireLock(): boolean {
+	const existing = getRefreshLock();
+	// If another tab holds a fresh lock, don't compete
+	if (existing && existing.tabId !== TAB_ID && Date.now() - existing.ts < LOCK_TTL_MS) {
+		return false;
+	}
+	localStorage.setItem(
+		STORAGE_KEYS.REFRESH_LOCK,
+		JSON.stringify({ ts: Date.now(), tabId: TAB_ID })
+	);
+	return true;
+}
+
+function releaseLock(): void {
+	const existing = getRefreshLock();
+	// Only release our own lock
+	if (existing?.tabId === TAB_ID) {
+		localStorage.removeItem(STORAGE_KEYS.REFRESH_LOCK);
+	}
+}
+
+/** Wait for another tab to finish refreshing (polls localStorage for new tokens). */
+async function waitForOtherTabRefresh(originalExpiresAt: number): Promise<Result<void>> {
+	const maxWait = LOCK_TTL_MS;
+	const pollInterval = 200;
+	let waited = 0;
+
+	while (waited < maxWait) {
+		await new Promise((r) => setTimeout(r, pollInterval));
+		waited += pollInterval;
+
+		// Check if tokens were updated by the other tab
+		const current = tokens.get();
+		if (current && current.expiresAt > originalExpiresAt) {
+			return ok(undefined); // Other tab refreshed successfully
+		}
+
+		// Check if the lock was released (other tab finished)
+		const lock = getRefreshLock();
+		if (!lock || Date.now() - lock.ts >= LOCK_TTL_MS) {
+			break; // Lock expired or released — we can try ourselves
+		}
+	}
+
+	// Other tab may have failed; try refreshing ourselves
+	return doRefresh();
+}
 
 /** Refresh the access token via the Worker proxy. Deduplicates concurrent calls. */
 export async function refreshTokens(): Promise<Result<void>> {
-	// If a refresh is already in flight, wait for it
+	// If a refresh is already in flight in this tab, wait for it
 	if (refreshPromise) return refreshPromise;
 
-	refreshPromise = doRefresh();
+	const currentTokens = tokens.get();
+	const originalExpiresAt = currentTokens?.expiresAt ?? 0;
+
+	// Try to acquire the cross-tab lock
+	if (!acquireLock()) {
+		// Another tab is refreshing — wait for it
+		refreshPromise = waitForOtherTabRefresh(originalExpiresAt);
+		const result = await refreshPromise;
+		refreshPromise = null;
+		return result;
+	}
+
+	// Check if tokens were ALREADY refreshed (by another tab between needsRefresh() and now)
+	const freshCheck = tokens.get();
+	if (freshCheck && freshCheck.expiresAt > originalExpiresAt) {
+		releaseLock();
+		return ok(undefined);
+	}
+
+	refreshPromise = doRefresh().finally(() => releaseLock());
 	const result = await refreshPromise;
 	refreshPromise = null;
 	return result;

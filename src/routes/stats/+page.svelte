@@ -48,8 +48,8 @@
 		// Genre distribution
 		const genreDist: Record<string, number> = {};
 		entries.forEach((e) => {
-			(e.genres ?? []).forEach((g: any) => {
-				const name = typeof g === 'string' ? g : g.name;
+			(e.genres ?? []).forEach((g) => {
+				const name = g.name;
 				if (name) genreDist[name] = (genreDist[name] || 0) + 1;
 			});
 		});

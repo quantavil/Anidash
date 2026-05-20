@@ -20,7 +20,8 @@ anidash/
 │ ├── api/ # Cloudflare Pages Functions proxying MAL API
 │ └── auth/ # OAuth token exchange routes
 ├── package.json
-└── vite.config.ts
+├── vite.config.ts
+└── audit-report.md # Codebase audit report for design issues, bugs, and redundancies
 
 ## APIs & Fallbacks
 

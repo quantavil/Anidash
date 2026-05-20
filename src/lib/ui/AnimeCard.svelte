@@ -29,8 +29,17 @@
 		!unknown && entry.numWatchedEpisodes >= entry.numEpisodes && entry.numEpisodes > 0
 	);
 
+	// Visual feedback: pulse key changes on each episode update
+	let epPulse = $state(false);
+
+	function triggerPulse() {
+		epPulse = true;
+		setTimeout(() => (epPulse = false), 400);
+	}
+
 	function increment() {
 		const result = userListStore.incrementEpisode(entry.malId);
+		triggerPulse();
 		if (result && result.watched >= result.total && result.total > 0) {
 			onComplete?.(entry.malId);
 		}
@@ -39,6 +48,7 @@
 	function decrement() {
 		if (entry.numWatchedEpisodes > 0) {
 			userListStore.setEpisodeCount(entry.malId, entry.numWatchedEpisodes - 1);
+			triggerPulse();
 		}
 	}
 </script>
@@ -124,15 +134,15 @@
 			</div>
 
 			<!-- Progress Controls -->
-			<div class="mt-auto pt-2 flex items-center justify-between" onclick={(e) => e.stopPropagation()} role="presentation">
-				<div class="text-[11px] font-medium tabular-nums text-text-secondary">
+			<div class="relative z-[2] mt-auto pt-2 flex items-center justify-between" onclick={(e) => e.stopPropagation()} role="presentation">
+				<div class="text-[11px] font-medium tabular-nums text-text-secondary transition-all duration-300 {epPulse ? 'scale-110 text-primary' : ''}">
 					<span class="text-text-primary font-bold">{entry.numWatchedEpisodes}</span> / {unknown ? '?' : entry.numEpisodes} <span class="text-text-muted text-[9px] ml-0.5 uppercase tracking-wider">ep</span>
 				</div>
 				<div class="flex items-center gap-1.5">
 					<button
 						onclick={(e) => { e.preventDefault(); decrement(); }}
 						disabled={entry.numWatchedEpisodes <= 0}
-						class="flex h-6 w-6 items-center justify-center rounded bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-colors"
+						class="flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90"
 						title="Decrease episode"
 					>
 						<Minus size={14} strokeWidth={2.5} />
@@ -140,7 +150,7 @@
 					<button
 						onclick={(e) => { e.preventDefault(); increment(); }}
 						disabled={isComplete}
-						class="flex h-6 w-6 items-center justify-center rounded bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-colors"
+						class="flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90"
 						title="Increase episode"
 					>
 						{#if isComplete}

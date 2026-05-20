@@ -30,7 +30,7 @@
 			dataLoaded = true;
 
 			Promise.all([userListStore.loadFromCache(), syncStore.init()])
-				.then(() => {
+				.then(async () => {
 					// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
 					const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
 					const isStale =
@@ -38,11 +38,12 @@
 
 					if (!hasSyncedThisSession || isStale) {
 						sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
-						syncStore.fullSync().then((result) => {
-							if (result.success) {
-								userListStore.loadFromCache();
-							}
-						});
+						// Flush offline queue BEFORE full sync to prevent overwriting local edits
+						await userListStore.flushPersistentQueue();
+						const result = await syncStore.fullSync();
+						if (result.success) {
+							userListStore.loadFromCache();
+						}
 					}
 				})
 				.catch((e) => {
@@ -54,11 +55,48 @@
 		}
 	});
 
-	onMount(async () => {
-		await authStore.init();
+	onMount(() => {
+		// ─── Init ───
+		authStore.init().then(() => {
+			initialized = true;
+		});
 		settingsStore.init();
-		dubStore.init(); // Initialize dubs for everyone
-		initialized = true;
+		dubStore.init();
+
+		// ─── Auto-refresh token every 5 minutes ───
+		const refreshInterval = setInterval(
+			async () => {
+				if (authStore.isAuthenticated && needsRefresh()) {
+					const result = await refreshTokens();
+					if (!result.ok) {
+						tokens.clear();
+						authStore.logout();
+					}
+				}
+			},
+			5 * 60 * 1000
+		);
+
+		// ─── Flush pending syncs on visibility change ───
+		const visibilityHandler = () => {
+			if (document.visibilityState === 'hidden') {
+				userListStore.flushPendingSyncs();
+			}
+		};
+		document.addEventListener('visibilitychange', visibilityHandler);
+
+		// ─── Save before unload ───
+		const unloadHandler = () => {
+			userListStore.flushPendingSyncs();
+		};
+		window.addEventListener('beforeunload', unloadHandler);
+
+		// ─── Cleanup ───
+		return () => {
+			clearInterval(refreshInterval);
+			document.removeEventListener('visibilitychange', visibilityHandler);
+			window.removeEventListener('beforeunload', unloadHandler);
+		};
 	});
 
 	// Auth guard
@@ -80,45 +118,6 @@
 	function closeLoginPrompt() {
 		showLoginPrompt = false;
 	}
-
-	// Auto-refresh token every 5 minutes
-	onMount(() => {
-		const interval = setInterval(
-			async () => {
-				if (authStore.isAuthenticated && needsRefresh()) {
-					const result = await refreshTokens();
-					if (!result.ok) {
-						// Token refresh failed — clear session
-						tokens.clear();
-						authStore.logout();
-					}
-				}
-			},
-			5 * 60 * 1000
-		);
-
-		return () => clearInterval(interval);
-	});
-
-	// Flush pending syncs when page is hidden
-	onMount(() => {
-		const handler = () => {
-			if (document.visibilityState === 'hidden') {
-				userListStore.flushPendingSyncs();
-			}
-		};
-		document.addEventListener('visibilitychange', handler);
-		return () => document.removeEventListener('visibilitychange', handler);
-	});
-
-	// Save before unload
-	onMount(() => {
-		const handler = (e: BeforeUnloadEvent) => {
-			userListStore.flushPendingSyncs();
-		};
-		window.addEventListener('beforeunload', handler);
-		return () => window.removeEventListener('beforeunload', handler);
-	});
 </script>
 
 <Toaster

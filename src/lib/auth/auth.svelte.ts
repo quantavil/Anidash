@@ -35,27 +35,40 @@ function createAuthStore() {
 			return;
 		}
 
-		const result = await fetchUserProfile();
-		if (result.ok) {
-			user = result.value;
-		} else {
-			// Try refreshing the token
-			const refreshed = await refreshTokens();
-			if (refreshed.ok) {
-				const retry = await fetchUserProfile();
-				if (retry.ok) {
-					user = retry.value;
-				} else {
-					// Refresh worked but profile fetch failed — keep session, try again later
-					logger.warn('Profile fetch failed after refresh:', retry.error);
+		// Optimistic Cache load
+		if (typeof window !== 'undefined') {
+			const cachedUser = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+			if (cachedUser) {
+				try {
+					user = JSON.parse(cachedUser);
+					isLoading = false; // Immediately let UI render
+				} catch {
+					localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
 				}
-			} else {
-				// Refresh failed — clear tokens, force re-login
-				tokens.clear();
 			}
 		}
 
-		isLoading = false;
+		// Background revalidation (non-blocking)
+		fetchUserProfile().then(async (result) => {
+			if (result.ok) {
+				user = result.value;
+			} else {
+				// Try refreshing the token if profile fetch failed (possible token expired)
+				const refreshed = await refreshTokens();
+				if (refreshed.ok) {
+					const retry = await fetchUserProfile();
+					if (retry.ok) {
+						user = retry.value;
+					} else {
+						logger.warn('Profile fetch failed after refresh:', retry.error);
+					}
+				} else {
+					// Refresh failed — clear tokens, force logout/re-login
+					logout();
+				}
+			}
+			isLoading = false;
+		});
 	}
 
 	// ─── Fetch User Profile ───
@@ -74,6 +87,11 @@ function createAuthStore() {
 					message: 'Invalid user profile data from MAL',
 					issues: zodIssuesToSummaries(parsed.error.issues)
 				});
+			}
+
+			// Save to cache
+			if (typeof window !== 'undefined') {
+				localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(parsed.data));
 			}
 
 			return ok(parsed.data);
@@ -236,6 +254,9 @@ function createAuthStore() {
 
 	async function logout(): Promise<void> {
 		tokens.clear();
+		if (typeof window !== 'undefined') {
+			localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+		}
 		user = null;
 		error = null;
 

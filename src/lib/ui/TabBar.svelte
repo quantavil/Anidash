@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { formatStatus } from '$lib/utils/format';
@@ -30,10 +30,10 @@
 		plan_to_watch: 'bg-info/15 text-info'
 	};
 
-	const currentTab = $derived(getUrlParam($page.url, 'tab', 'watching') as TabKey);
+	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching') as TabKey);
 
 	function selectTab(key: TabKey) {
-		goto(setUrlParam($page.url, 'tab', key === 'watching' ? '' : key), {
+		goto(setUrlParam(page.url, 'tab', key === 'watching' ? '' : key), {
 			keepFocus: true,
 			noScroll: true
 		});

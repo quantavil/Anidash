@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
 	onMount(async () => {
-		const code = $page.url.searchParams.get('code');
-		const state = $page.url.searchParams.get('state');
-		const error = $page.url.searchParams.get('error');
+		const code = page.url.searchParams.get('code');
+		const state = page.url.searchParams.get('state');
+		const error = page.url.searchParams.get('error');
 
 		if (error) {
 			// MAL denied access

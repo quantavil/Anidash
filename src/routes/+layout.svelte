@@ -4,7 +4,7 @@
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
@@ -108,7 +108,7 @@
 
 		if (!authStore.isAuthenticated) {
 			const hasSeenPrompt = sessionStorage.getItem(STORAGE_KEYS.SEEN_LOGIN_PROMPT);
-			if (!hasSeenPrompt && !authStore.isAuthRoute($page.url.pathname)) {
+			if (!hasSeenPrompt && !authStore.isAuthRoute(page.url.pathname)) {
 				showLoginPrompt = true;
 				sessionStorage.setItem(STORAGE_KEYS.SEEN_LOGIN_PROMPT, 'true');
 			}

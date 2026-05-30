@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	import { getAnimeDetail } from '$lib/api/mal';
 	import { getCharacters, getRecommendations } from '$lib/api/jikan';
@@ -34,7 +34,7 @@
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
 	import ProgressLine from '$lib/ui/ProgressLine.svelte';
 
-	const malId = $derived(Number($page.params.id));
+	const malId = $derived(Number(page.params.id));
 
 	// ─── State ───
 
@@ -152,7 +152,7 @@
 	// Load anime when route changes (handles both initial mount and navigation)
 	$effect(() => {
 		let aborted = false;
-		const id = Number($page.params.id);
+		const id = Number(page.params.id);
 		if (id && id !== anime?.malId) {
 			anime = null;
 			characters = [];

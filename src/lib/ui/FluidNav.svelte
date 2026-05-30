@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
@@ -147,8 +147,8 @@
 	<nav class="flex items-center gap-1">
 		{#each NAV_ITEMS as item}
 			{@const isActive =
-				$page.url.pathname === item.href ||
-				(item.href !== '/' && $page.url.pathname.startsWith(item.href + '/'))}
+				page.url.pathname === item.href ||
+				(item.href !== '/' && page.url.pathname.startsWith(item.href + '/'))}
 			<a
 				href={item.href}
 				class="group relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-700 ease-spring active:scale-95
@@ -199,8 +199,8 @@
 >
 	{#each NAV_ITEMS as item}
 		{@const isActive =
-			$page.url.pathname === item.href ||
-			(item.href !== '/' && $page.url.pathname.startsWith(item.href + '/'))}
+			page.url.pathname === item.href ||
+			(item.href !== '/' && page.url.pathname.startsWith(item.href + '/'))}
 		<a
 			href={item.href}
 			class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors

@@ -1,5 +1,5 @@
 // ─── URL SearchParams helpers ───
-// Used in .svelte files alongside $page.url and goto().
+// Used in .svelte files alongside page.url and goto().
 
 /** Read a URL param with a fallback default */
 export function getUrlParam(url: URL, key: string, defaultValue: string): string {

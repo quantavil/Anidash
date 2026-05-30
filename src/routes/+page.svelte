@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { getUrlParam } from '$lib/utils/url-state';
 	import { userListStore } from '$lib/stores/userlist.svelte';
@@ -14,10 +14,10 @@
 
 	// ─── URL State ───
 
-	const currentTab = $derived(getUrlParam($page.url, 'tab', 'watching'));
-	const currentSort = $derived(getUrlParam($page.url, 'sort', 'updated') as SortKey);
+	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching'));
+	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
 
-	const currentQuery = $derived(getUrlParam($page.url, 'q', ''));
+	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
 	// ─── Derived Data ───
 

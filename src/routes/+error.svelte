@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
-	const status = $derived($page.status);
-	const message = $derived($page.error?.message ?? 'Something went wrong');
+	const status = $derived(page.status);
+	const message = $derived(page.error?.message ?? 'Something went wrong');
 
 	const MESSAGES: Record<number, string> = {
 		404: "This page doesn't exist",

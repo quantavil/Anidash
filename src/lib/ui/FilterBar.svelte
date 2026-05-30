@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Search, ArrowUpDown, X } from 'lucide-svelte';
 
@@ -14,14 +14,14 @@
 		{ key: 'progress', label: 'Progress' }
 	];
 
-	const currentSort = $derived(getUrlParam($page.url, 'sort', 'updated') as SortKey);
-	const currentQuery = $derived(getUrlParam($page.url, 'q', ''));
+	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
+	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
 	let showSortMenu = $state(false);
 	let focusedIndex = $state(-1);
 
 	function setSort(key: SortKey) {
-		goto(setUrlParam($page.url, 'sort', key === 'updated' ? '' : key), {
+		goto(setUrlParam(page.url, 'sort', key === 'updated' ? '' : key), {
 			keepFocus: true,
 			noScroll: true
 		});
@@ -66,7 +66,7 @@
 		const value = (e.target as HTMLInputElement).value;
 		if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
 		searchDebounceTimer = setTimeout(() => {
-			goto(setUrlParam($page.url, 'q', value), { keepFocus: true, noScroll: true });
+			goto(setUrlParam(page.url, 'q', value), { keepFocus: true, noScroll: true });
 		}, 250);
 	}
 
@@ -77,7 +77,7 @@
 	});
 
 	function clearSearch() {
-		goto(setUrlParam($page.url, 'q', ''), { keepFocus: true, noScroll: true });
+		goto(setUrlParam(page.url, 'q', ''), { keepFocus: true, noScroll: true });
 	}
 
 	const sortLabel = $derived(

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { LayoutGrid, List } from 'lucide-svelte';
 
-	const currentView = $derived(getUrlParam($page.url, 'view', 'grid') as 'grid' | 'list');
+	const currentView = $derived(getUrlParam(page.url, 'view', 'grid') as 'grid' | 'list');
 
 	function setView(view: 'grid' | 'list') {
-		goto(setUrlParam($page.url, 'view', view === 'grid' ? '' : view), {
+		goto(setUrlParam(page.url, 'view', view === 'grid' ? '' : view), {
 			keepFocus: true,
 			noScroll: true
 		});

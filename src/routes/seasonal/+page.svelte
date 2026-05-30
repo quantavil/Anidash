@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { getSeasonal } from '$lib/api/mal';
@@ -16,8 +16,8 @@
 	// ─── Season State ───
 
 	const current = getCurrentSeason();
-	const urlYear = $derived(Number(getUrlParam($page.url, 'year', String(current.year))));
-	const urlSeason = $derived(getUrlParam($page.url, 'season', current.season) as Season);
+	const urlYear = $derived(Number(getUrlParam(page.url, 'year', String(current.year))));
+	const urlSeason = $derived(getUrlParam(page.url, 'season', current.season) as Season);
 
 	const seasonYear = $derived(urlYear || current.year);
 	const seasonKey = $derived(urlSeason || current.season);

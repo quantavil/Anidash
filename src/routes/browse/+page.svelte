@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
 	import { searchAnime, getAnimeGenres } from '$lib/api/jikan';
@@ -15,10 +15,10 @@
 
 	// ─── URL State ───
 
-	const query = $derived(getUrlParam($page.url, 'q', ''));
-	const filterType = $derived(getUrlParam($page.url, 'type', ''));
-	const filterGenre = $derived(getUrlParam($page.url, 'genre', ''));
-	const filterSort = $derived(getUrlParam($page.url, 'sort', query ? 'relevance' : 'score'));
+	const query = $derived(getUrlParam(page.url, 'q', ''));
+	const filterType = $derived(getUrlParam(page.url, 'type', ''));
+	const filterGenre = $derived(getUrlParam(page.url, 'genre', ''));
+	const filterSort = $derived(getUrlParam(page.url, 'sort', query ? 'relevance' : 'score'));
 
 	// ─── State ───
 
@@ -87,8 +87,7 @@
 								: undefined,
 			sort: filterSort === 'relevance' ? undefined : filterSort === 'title' ? 'asc' : 'desc',
 			page,
-			limit: 25,
-			sfw: true
+			limit: 25
 		});
 
 		if (result.ok) {
@@ -171,7 +170,7 @@
 	// ─── Filter Handlers ───
 
 	function setFilter(key: string, value: string) {
-		goto(setUrlParams($page.url, [{ key, value }]), { keepFocus: true, noScroll: true });
+		goto(setUrlParams(page.url, [{ key, value }]), { keepFocus: true, noScroll: true });
 	}
 
 	let searchInput = $state('');
@@ -297,7 +296,7 @@
 					<button
 						onclick={() => {
 							goto(
-								setUrlParams($page.url, [
+								setUrlParams(page.url, [
 									{ key: 'type', value: '' },
 									{ key: 'genre', value: '' },
 									{ key: 'sort', value: '' }

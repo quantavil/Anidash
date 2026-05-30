@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { authStore } from '$lib/auth/auth.svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Logo from '$lib/ui/Logo.svelte';
 
-	const errorCode = $derived($page.url.searchParams.get('error'));
+	const errorCode = $derived(page.url.searchParams.get('error'));
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-surface-0 px-4">

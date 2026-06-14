@@ -7,7 +7,15 @@
 
 	import type { AnimeStatus } from '$lib/cache/db';
 
-	let { malId, status }: { malId: number; status: AnimeStatus } = $props();
+	let {
+		malId,
+		status,
+		class: className = ''
+	}: {
+		malId: number;
+		status: AnimeStatus;
+		class?: string;
+	} = $props();
 
 	const ALL_STATUSES: AnimeStatus[] = [
 		'watching',
@@ -33,9 +41,9 @@
 <div onclick={(e) => e.stopPropagation()}>
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-primary {STATUS_COLORS[
+			class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-primary {STATUS_COLORS[
 				status
-			]?.badge}"
+			]?.badge} {className}"
 		>
 			<span class="h-1.5 w-1.5 rounded-full {STATUS_COLORS[status]?.dot}"></span>
 			{formatStatus(status)}

@@ -31,14 +31,15 @@
 	}
 </script>
 
-<div class="flex items-center gap-2" onclick={(e) => e.stopPropagation()} role="presentation">
+<div class="flex items-center gap-3" onclick={(e) => e.stopPropagation()} role="presentation">
 	<!-- Episode count -->
-	<span class="min-w-[3rem] text-xs font-medium tabular-nums text-text-secondary">
-		{watched}/{unknown ? '?' : total}
+	<span class="text-xs font-semibold tabular-nums text-text-secondary whitespace-nowrap">
+		<span class="text-text-primary font-bold text-sm">{watched}</span> / {unknown ? '?' : total}
+		<span class="text-text-muted text-[10px] ml-0.5 uppercase tracking-wider">ep</span>
 	</span>
 
 	<!-- Controls -->
-	<div class="flex items-center gap-1">
+	<div class="flex items-center gap-1.5">
 		<button
 			onclick={(e) => {
 				e.preventDefault();
@@ -46,7 +47,7 @@
 				decrement();
 			}}
 			disabled={watched <= 0}
-			class="ep-btn"
+			class="flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90 border border-white/5"
 			title="Decrease episode"
 		>
 			<Minus size={14} strokeWidth={2.5} />
@@ -58,7 +59,7 @@
 				increment();
 			}}
 			disabled={isComplete}
-			class="ep-btn ep-btn-plus"
+			class="flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90 border border-primary/10"
 			title="Increase episode"
 		>
 			{#if isComplete}

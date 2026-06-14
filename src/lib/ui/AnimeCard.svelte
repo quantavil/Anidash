@@ -135,14 +135,14 @@
 
 			<!-- Progress Controls -->
 			<div class="relative z-[2] mt-auto pt-2 flex items-center justify-between" onclick={(e) => e.stopPropagation()} role="presentation">
-				<div class="text-[11px] font-medium tabular-nums text-text-secondary transition-all duration-300 {epPulse ? 'scale-110 text-primary' : ''}">
+				<div class="text-[11px] font-medium tabular-nums text-text-secondary transition-all duration-300 whitespace-nowrap {epPulse ? 'scale-110 text-primary' : ''}">
 					<span class="text-text-primary font-bold">{entry.numWatchedEpisodes}</span> / {unknown ? '?' : entry.numEpisodes} <span class="text-text-muted text-[9px] ml-0.5 uppercase tracking-wider">ep</span>
 				</div>
 				<div class="flex items-center gap-1.5">
 					<button
 						onclick={(e) => { e.preventDefault(); decrement(); }}
 						disabled={entry.numWatchedEpisodes <= 0}
-						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90"
+						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90 border border-white/5"
 						title="Decrease episode"
 					>
 						<Minus size={14} strokeWidth={2.5} />
@@ -150,7 +150,7 @@
 					<button
 						onclick={(e) => { e.preventDefault(); increment(); }}
 						disabled={isComplete}
-						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90"
+						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90 border border-primary/10"
 						title="Increase episode"
 					>
 						{#if isComplete}

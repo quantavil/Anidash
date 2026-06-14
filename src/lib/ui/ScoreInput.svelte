@@ -29,7 +29,7 @@
 	let containerEl = $state<HTMLDivElement | null>(null);
 	let isDragging = $state(false);
 
-	const size = 28; // Standard elegant size
+	const size = 36; // Enlarge to fill container and increase tapability
 
 	function starFill(i: number): number {
 		const s = displayScore;
@@ -128,11 +128,24 @@
 		{#if score > 0}
 			<button
 				onclick={() => userListStore.setScore(malId, 0)}
-				class="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold text-text-muted hover:text-error hover:bg-error/10 transition-all active:scale-95"
+				class="flex items-center justify-center rounded-lg p-1.5 text-error hover:bg-error/10 border border-transparent hover:border-error/20 transition-all active:scale-95"
 				title="Clear rating"
 			>
-				<RotateCcw size={10} />
-				<span>Clear</span>
+				<!-- Simple SVG Cross (Red) -->
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
 			</button>
 		{/if}
 	</div>
@@ -140,7 +153,7 @@
 	<!-- 5-Star Interactive Rating Bar -->
 	<div
 		bind:this={containerEl}
-		class="flex items-center justify-start gap-3 py-1 select-none touch-none w-full max-w-[220px]"
+		class="flex items-center justify-between py-1.5 select-none touch-none w-full"
 		role="slider"
 		tabindex="0"
 		aria-label="Anime rating out of 10 represented by 5 stars"
@@ -158,7 +171,7 @@
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="relative aspect-square w-8 h-8 flex items-center justify-center transition-all duration-200 hover:scale-120 active:scale-90"
+				class="relative aspect-square w-9 h-9 flex items-center justify-center transition-all duration-200 hover:scale-120 active:scale-90"
 			>
 				{#if fill === 1}
 					<Star

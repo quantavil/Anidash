@@ -352,7 +352,11 @@
 											Status
 										</span>
 										<div class="mt-1.5 flex">
-											<StatusBadge {malId} status={listEntry.status} />
+											<StatusBadge
+												{malId}
+												status={listEntry.status}
+												class="h-10 sm:h-8 px-4 sm:px-3 text-xs sm:text-[11px] !rounded-lg flex items-center justify-center shadow-lg"
+											/>
 										</div>
 									</div>
 

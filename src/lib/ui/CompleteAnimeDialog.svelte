@@ -12,7 +12,7 @@
 
 	function handleConfirmComplete() {
 		if (malId !== null) {
-			userListStore.markCompleted(malId);
+			userListStore.setStatus(malId, 'completed');
 		}
 		malId = null;
 	}

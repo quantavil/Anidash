@@ -25,6 +25,7 @@ anidash/
 
 ### Structural Changes
 - Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
+- Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
 
 
 ## APIs & Fallbacks

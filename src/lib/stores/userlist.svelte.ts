@@ -132,7 +132,9 @@ function createUserListStore() {
 				// Show error, but LEAVE IN QUEUE. It will be flushed later.
 				syncStore.syncError = result.error;
 				import('svelte-sonner').then(({ toast }) => {
-					toast.error('Network error. Edit saved locally & will sync later.');
+					toast.error('Network error. Edit saved locally & will sync later.', {
+						id: 'offline-sync-error'
+					});
 				});
 			}
 			pendingSyncs.delete(malId);
@@ -215,26 +217,7 @@ function createUserListStore() {
 		);
 	}
 
-	// ─── Mark Completed ───
 
-	function markCompleted(malId: number): void {
-		const entry = entries[malId];
-		if (!entry) return;
-
-		optimisticUpdate(
-			malId,
-			{
-				status: 'completed' as AnimeStatus,
-				numWatchedEpisodes: entry.numEpisodes,
-				score: entry.score,
-				updatedAt: new Date().toISOString()
-			},
-			{
-				status: 'completed',
-				num_watched_episodes: entry.numEpisodes
-			}
-		);
-	}
 
 	// ─── Remove from List ───
 
@@ -445,7 +428,6 @@ function createUserListStore() {
 		setScore,
 		incrementEpisode,
 		setEpisodeCount,
-		markCompleted,
 		removeFromList,
 		addToList,
 		flushPendingSyncs,

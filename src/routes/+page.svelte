@@ -37,7 +37,7 @@
 				}
 
 				// 3. Dub loop
-				if (dubStore.dubMode && !dubStore.hasDub(e.malId)) return false;
+				if (dubStore.dubMode && dubStore.isReady && !dubStore.hasDub(e.malId)) return false;
 
 				return true;
 			}),
@@ -86,7 +86,7 @@
 			Connect with MyAnimeList
 		</button>
 	</div>
-{:else if !userListStore.initialized || (dubStore.dubMode && !dubStore.isReady)}
+{:else if !userListStore.initialized}
 	<ListPageSkeleton />
 {:else}
 	<div class="mx-auto max-w-7xl px-4 py-6">

@@ -44,7 +44,7 @@
 			? anime.filter((a) => a.mediaType.toLowerCase() === filterType.toLowerCase())
 			: [...anime];
 
-		if (dubStore.dubMode) {
+		if (dubStore.dubMode && dubStore.isReady) {
 			res = res.filter((a) => dubStore.hasDub(a.malId));
 		}
 

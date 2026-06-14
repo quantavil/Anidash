@@ -28,6 +28,7 @@
 	import GenreBadge from '$lib/ui/GenreBadge.svelte';
 	import AddToListModal from '$lib/ui/AddToListModal.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
+	import CharacterDetailModal from '$lib/ui/CharacterDetailModal.svelte';
 	import AnimeDetailSkeleton from '$lib/ui/skeletons/AnimeDetailSkeleton.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
 	import ProgressLine from '$lib/ui/ProgressLine.svelte';
@@ -58,6 +59,8 @@
 	let showAddModal = $state(false);
 	let showCompleteDialog = $state(false);
 	let completeTargetId = $state<number | null>(null);
+	let showCharacterModal = $state(false);
+	let selectedCharacter = $state<JikanCharacterEntry | null>(null);
 
 	// ─── Read More / Expansion States ───
 
@@ -183,6 +186,11 @@
 	function handleCompletePrompt(id: number) {
 		completeTargetId = id;
 		showCompleteDialog = true;
+	}
+
+	function handleCharacterClick(entry: JikanCharacterEntry) {
+		selectedCharacter = entry;
+		showCharacterModal = true;
 	}
 
 	const STATUS_COLORS: Record<string, string> = {
@@ -605,7 +613,11 @@
 					</div>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
 						{#each displayedCharacters as entry}
-							<div class="flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-transform hover:-translate-y-0.5 hover:shadow-md">
+							<button
+								type="button"
+								onclick={() => handleCharacterClick(entry)}
+								class="w-full flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+							>
 								<ImageWithFallback
 									src={entry.character.images?.jpg?.image_url}
 									alt={entry.character.name}
@@ -624,7 +636,7 @@
 										</p>
 									{/if}
 								</div>
-							</div>
+							</button>
 						{/each}
 					</div>
 					{#if characters.length > 12}
@@ -656,6 +668,9 @@
 
 <!-- Complete Confirmation Dialog -->
 <CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />
+
+<!-- Character Detail Modal -->
+<CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />
 
 <style>
 </style>

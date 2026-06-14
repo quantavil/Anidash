@@ -23,6 +23,10 @@ anidash/
 ├── vite.config.ts
 └── audit-report.md # Codebase audit report for design issues, bugs, and redundancies
 
+### Structural Changes
+- Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
+
+
 ## APIs & Fallbacks
 
 - **MyAnimeList (MAL) API v2**: The primary source of truth. Handles User Auth, List Syncing (Read/Update entries), Search, Seasonal, and Ranking. Uses worker proxy to bypass CORS.

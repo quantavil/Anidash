@@ -16,8 +16,9 @@
 		interactive?: boolean;
 	} = $props();
 
+	const numScore = $derived(Number(score));
 	let hoveredScore = $state<number | null>(null);
-	const displayScore = $derived(hoveredScore ?? score);
+	const displayScore = $derived(hoveredScore ?? numScore);
 
 	/** How much of star `i` (0-indexed) should be filled: 0, 0.5, or 1 */
 	function starFill(i: number): number {
@@ -33,9 +34,9 @@
 		const oddScore = evenScore - 1;
 		let finalScore = evenScore;
 
-		if (score === evenScore) {
+		if (numScore === evenScore) {
 			finalScore = oddScore;
-		} else if (score === oddScore) {
+		} else if (numScore === oddScore) {
 			finalScore = 0;
 		}
 
@@ -54,11 +55,11 @@
 		if (!interactive) return;
 		if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
 			e.preventDefault();
-			const next = Math.min(score + 1, 10);
+			const next = Math.min(numScore + 1, 10);
 			userListStore.setScore(malId, next);
 		} else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			e.preventDefault();
-			const prev = Math.max(score - 1, 0);
+			const prev = Math.max(numScore - 1, 0);
 			userListStore.setScore(malId, prev);
 		}
 	}
@@ -70,7 +71,7 @@
 	role="slider"
 	tabindex="0"
 	aria-label="Rating"
-	aria-valuenow={score}
+	aria-valuenow={numScore}
 	aria-valuemin={0}
 	aria-valuemax={10}
 	onmouseleave={handleMouseLeave}
@@ -114,7 +115,7 @@
 
 	{#if showValue}
 		<span class="ml-1.5 text-xs font-semibold tabular-nums text-text-secondary">
-			{score > 0 ? score : '—'}
+			{numScore > 0 ? numScore : '—'}
 		</span>
 	{/if}
 </div>

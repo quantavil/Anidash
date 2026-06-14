@@ -64,7 +64,7 @@ anidash/
 - **Offline Sync Queue**: Implemented a discrete `syncQueue` IndexedDB store (DB_VERSION 2) to natively sequester offline or failed user mutations. Ensures offline mutations are maintained optimistically and re-attempted sequentially upon resolving `navigator.onLine` or triggering `flushPersistentQueue`.
 - **Zero-Dependency Visuals**: Implemented score and media format distribution charts using pure CSS/Svelte logic, maintaining high performance and small bundle size while providing premium analytics.
 - **NSFW Search Visibility**: Removed the hardcoded `sfw: true` filter parameter in Jikan search queries to allow mature and explicit (NSFW) anime results to appear in Browse.
-- **ScoreInput Component**: Added a new custom 10-point rating input component featuring dynamic MAL rating descriptors, hover effects, reset capabilities, and keyboard controls.
+- **ScoreInput Component**: Added custom 5-star (10-point scale) drag-and-tap rating input with native SVG linearGradient, borderless container, and unified button styles.
 
 ## Blunders
 
@@ -73,3 +73,5 @@ anidash/
 - [2026-04-23] Deleted anime returning on next sync → ROOT CAUSE: `removeFromList` caught MAL deletion errors (like rate-limits) but swallowed them, returning `ok()` without queueing a retry. → FIX: Failed deletions are now queued to `syncQueue` with `payload: { _delete: true }` to ensure eventual consistency.
 - [2026-05-02] Empty Anime List on Load → ROOT CAUSE: Implemented a 7-day TTL purge in `userListStore.loadFromCache` using `updatedAt`, incorrectly assuming it represented the cache date. It actually represents the last MAL modification date, causing all anime untouched for 7 days to be deleted. → FIX: Removed the TTL purge logic from `loadFromCache`. List freshness is maintained by `syncStore.fullSync()`.
 - [2026-06-14] Invalid HTML nested interactive buttons → ROOT CAUSE: Interactive `EpisodeCounter` `<button>` elements nested inside top-level `<a>` container. → FIX: Converted container to `div` and utilized absolute stretched `<a>` overlays alongside `z-index` layering for distinct click targets.
+- [2026-06-14] Rating coercion & touch conflicts on mobile → ROOT CAUSE: API/IndexedDB returned scores as strings, failing strict `===` checks. Touch events fired simulated clicks that toggled scores back to 0. → FIX: Cast score to number (`$derived(Number(score))`) and added `e.preventDefault()` to touch handlers.
+

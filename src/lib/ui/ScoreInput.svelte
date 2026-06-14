@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { Star, RotateCcw } from 'lucide-svelte';
+	import { Star } from 'lucide-svelte';
 
 	let {
 		malId,
@@ -10,8 +10,9 @@
 		score: number; // 0-10 MAL scale, 0 = unrated
 	} = $props();
 
+	const numScore = $derived(Number(score));
 	let hoveredScore = $state<number | null>(null);
-	const displayScore = $derived(hoveredScore ?? score);
+	const displayScore = $derived(hoveredScore ?? numScore);
 
 	const SCORE_DESCRIPTIONS: Record<number, string> = {
 		1: 'Appalling',
@@ -39,18 +40,18 @@
 	}
 
 	function handleSelect(val: number) {
-		const newScore = score === val ? 0 : val;
+		const newScore = numScore === val ? 0 : val;
 		userListStore.setScore(malId, newScore);
 	}
 
 	function handleKeyDown(e: KeyboardEvent) {
 		if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
 			e.preventDefault();
-			const next = Math.min(score + 1, 10);
+			const next = Math.min(numScore + 1, 10);
 			userListStore.setScore(malId, next);
 		} else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			e.preventDefault();
-			const prev = Math.max(score - 1, 0);
+			const prev = Math.max(numScore - 1, 0);
 			userListStore.setScore(malId, prev);
 		} else if (e.key === 'Escape') {
 			e.preventDefault();
@@ -60,6 +61,7 @@
 
 	// Touch drag support for mobile
 	function handleTouchStart(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
 		isDragging = true;
 		handleTouchUpdate(e);
 	}
@@ -70,8 +72,9 @@
 		handleTouchUpdate(e);
 	}
 
-	function handleTouchEnd() {
+	function handleTouchEnd(e: TouchEvent) {
 		if (isDragging) {
+			if (e.cancelable) e.preventDefault();
 			if (hoveredScore !== null) {
 				userListStore.setScore(malId, hoveredScore);
 			}
@@ -85,9 +88,22 @@
 		const rect = containerEl.getBoundingClientRect();
 		const touch = e.touches[0];
 		const relativeX = touch.clientX - rect.left;
-		const pct = Math.max(0, Math.min(1, relativeX / rect.width));
-		const scoreVal = Math.round(pct * 10);
-		hoveredScore = scoreVal;
+		const pct = relativeX / rect.width;
+
+		if (pct <= 0) {
+			hoveredScore = 0;
+			return;
+		}
+		if (pct >= 1) {
+			hoveredScore = 10;
+			return;
+		}
+
+		// Divide the container space into 5 equal star zones
+		const starIndex = Math.min(4, Math.floor(pct * 5));
+		const starPct = (pct * 5) - starIndex;
+		const isRightHalf = starPct >= 0.5;
+		hoveredScore = starIndex * 2 + (isRightHalf ? 2 : 1);
 	}
 </script>
 
@@ -125,7 +141,7 @@
 			{/if}
 		</div>
 
-		{#if score > 0}
+		{#if numScore > 0}
 			<button
 				onclick={() => userListStore.setScore(malId, 0)}
 				class="flex items-center justify-center rounded-lg p-1.5 text-error hover:bg-error/10 border border-transparent hover:border-error/20 transition-all active:scale-95"
@@ -157,7 +173,7 @@
 		role="slider"
 		tabindex="0"
 		aria-label="Anime rating out of 10 represented by 5 stars"
-		aria-valuenow={score}
+		aria-valuenow={numScore}
 		aria-valuemin={0}
 		aria-valuemax={10}
 		onmouseleave={() => (hoveredScore = null)}

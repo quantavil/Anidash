@@ -23,6 +23,7 @@
 
 	$effect(() => {
 		// Reset state when src changes
+		src;
 		loaded = false;
 		error = false;
 	});

@@ -2,14 +2,11 @@
 	import { page } from '$app/state';
 
 	import { getAnimeDetail } from '$lib/api/mal';
-	import { getCharacters, getRecommendations } from '$lib/api/jikan';
+	import { getRecommendations, getCharacters } from '$lib/api/jikan';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import type { AnimeRecord } from '$lib/cache/db';
-	import type {
-		JikanCharacterEntry,
-		JikanRecommendationEntry
-	} from '$lib/api/schemas/jikan.schema';
+	import type { JikanRecommendationEntry, JikanCharacterEntry } from '$lib/api/schemas/jikan.schema';
 
 	import {
 		formatMediaType,
@@ -26,7 +23,7 @@
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
 	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
-	import RatingStars from '$lib/ui/RatingStars.svelte';
+	import ScoreInput from '$lib/ui/ScoreInput.svelte';
 	import GenreBadge from '$lib/ui/GenreBadge.svelte';
 	import AddToListModal from '$lib/ui/AddToListModal.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
@@ -86,6 +83,10 @@
 		expandedCharacters ? characters : characters.slice(0, 12)
 	);
 
+	const hasRecommendations = $derived(
+		(anime?.recommendations && anime.recommendations.length > 0) || recommendations.length > 0
+	);
+
 	// ─── Load Anime Detail ───
 
 	async function loadAnime(id: number, isAborted?: () => boolean) {
@@ -118,12 +119,14 @@
 
 	// ─── Background Fetch Data ───
 
-	async function loadCharacters() {
-		if (characters.length > 0 || charactersLoading) return;
+	async function loadCharacters(isAborted?: () => boolean) {
+		if (charactersLoading) return;
 		charactersLoading = true;
 		charactersError = null;
 
 		const result = await getCharacters(malId);
+		if (isAborted?.()) return;
+
 		if (result.ok) {
 			characters = result.value.characters;
 		} else {
@@ -132,12 +135,14 @@
 		charactersLoading = false;
 	}
 
-	async function loadRecommendations() {
-		if (recommendations.length > 0 || recsLoading) return;
+	async function loadRecommendations(isAborted?: () => boolean) {
+		if (recsLoading) return;
 		recsLoading = true;
 		recsError = null;
 
 		const result = await getRecommendations(malId);
+		if (isAborted?.()) return;
+
 		if (result.ok) {
 			recommendations = result.value;
 		} else {
@@ -155,22 +160,20 @@
 
 	// ─── Lifecycle ───
 
-	// Load anime when route changes (handles both initial mount and navigation)
+	// Load anime and Jikan details in parallel when route changes
 	$effect(() => {
 		let aborted = false;
 		const id = Number(page.params.id);
 		if (id && id !== anime?.malId) {
 			anime = null;
-			characters = [];
 			recommendations = [];
+			characters = [];
 			expandedSynopsis = false;
 			expandedCharacters = false;
-			loadAnime(id, () => aborted).then(() => {
-				if (!aborted && anime) {
-					loadCharacters();
-					loadRecommendations();
-				}
-			});
+
+			loadAnime(id, () => aborted);
+			loadCharacters(() => aborted);
+			loadRecommendations(() => aborted);
 		}
 		return () => {
 			aborted = true;
@@ -188,6 +191,10 @@
 		return parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawName;
 	}
 </script>
+
+<svelte:head>
+	<title>{anime?.title ? `${anime.title} | AniDash` : 'AniDash'}</title>
+</svelte:head>
 
 {#if loading && !anime}
 	<AnimeDetailSkeleton />
@@ -323,46 +330,66 @@
 
 				<!-- ─── User List Controls ─── -->
 				<div
-					class="mt-5 rounded-xl border border-white/10 bg-surface-1/40 backdrop-blur-md p-4 shadow-xl"
+					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 backdrop-blur-xl p-5 shadow-2xl relative overflow-hidden"
 				>
+					<!-- Glowing accent effect in background -->
+					<div class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+
 					{#if inList && listEntry}
-						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-							<!-- Top Lane: Status & Progress -->
-							<div class="flex items-center justify-around sm:justify-start sm:gap-8">
-								<!-- Status -->
-								<div class="shrink-0 flex flex-col items-center sm:items-start">
-									<p class="mb-1.5 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-										Status
-									</p>
-									<StatusBadge {malId} status={listEntry.status} />
+						<div class="flex flex-col gap-5 relative z-10">
+							<!-- Top section: Status Dropdown & Episode Counter -->
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+								<!-- Status (aligned left on desktop) -->
+								<div class="flex items-center justify-between sm:justify-start gap-4">
+									<div class="flex flex-col">
+										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+											Status
+										</span>
+										<div class="mt-1">
+											<StatusBadge {malId} status={listEntry.status} />
+										</div>
+									</div>
 								</div>
 
-								<!-- Progress -->
-								<div class="shrink-0 flex flex-col items-center sm:items-start">
-									<p class="mb-1.5 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-										Progress
-									</p>
-									<EpisodeCounter
-										{malId}
-										watched={listEntry.numWatchedEpisodes}
-										total={listEntry.numEpisodes}
-										onComplete={handleCompletePrompt}
-									/>
+								<!-- Progress Counter (aligned right on desktop) -->
+								<div class="flex flex-col sm:items-end">
+									<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted sm:text-right">
+										Episodes Watched
+									</span>
+									<div class="mt-1">
+										<EpisodeCounter
+											{malId}
+											watched={listEntry.numWatchedEpisodes}
+											total={listEntry.numEpisodes}
+											onComplete={handleCompletePrompt}
+										/>
+									</div>
 								</div>
 							</div>
 
-							<!-- Bottom Lane: Score -->
-							<div class="shrink-0 flex flex-col items-center sm:items-end w-full sm:w-auto mt-1 sm:mt-0 pt-4 sm:pt-0 border-t border-white/5 sm:border-0">
-								<p class="mb-2 text-[9px] font-medium uppercase tracking-wider text-text-muted">
-									Your Score
-								</p>
-								<RatingStars {malId} score={listEntry.score} size={22} />
+							<!-- Custom Progress Bar -->
+							{#if listEntry.numEpisodes > 0}
+								{@const pct = Math.min((listEntry.numWatchedEpisodes / listEntry.numEpisodes) * 100, 100)}
+								<div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5">
+									<div
+										class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all duration-500 ease-spring"
+										style="width: {pct}%"
+									></div>
+								</div>
+							{/if}
+
+							<!-- Divider -->
+							<div class="h-px bg-white/5 w-full my-1"></div>
+
+							<!-- Rating / Score section -->
+							<div class="w-full">
+								<ScoreInput {malId} score={listEntry.score} />
 							</div>
 						</div>
 					{:else}
 						<button
 							onclick={() => (showAddModal = true)}
-							class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+							class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
 						>
 							<Plus size={16} />
 							Add to My List
@@ -389,7 +416,7 @@
 
 		<!-- ─── Scrollable Page Sections ─── -->
 		<div class="mt-8 space-y-8">
-			<!-- Section 1: Overview (Synopsis + Bento Info) -->
+			<!-- Section 1: Overview (Synopsis) -->
 			<div class="space-y-4">
 				{#if anime.synopsis}
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5 relative overflow-hidden">
@@ -407,26 +434,6 @@
 						{/if}
 					</div>
 				{/if}
-
-				<!-- Bento Info Grid -->
-				<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5">
-					<h3 class="mb-4 text-xs font-bold uppercase tracking-wider text-text-muted">Information</h3>
-					<div class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-						{#each [
-							{ label: 'Type', value: formatMediaType(anime.mediaType) },
-							{ label: 'Episodes', value: anime.numEpisodes || 'Unknown' },
-							{ label: 'Status', value: formatAnimeStatus(anime.animeStatus) },
-							{ label: 'Season', value: formatSeason(anime.startSeason?.year ?? null, anime.startSeason?.season ?? null) },
-							{ label: 'Studios', value: anime.studios.map((s) => s.name).join(', ') || '—' },
-							{ label: 'Score', value: anime.mean ? anime.mean.toFixed(2) : '—' }
-						] as item}
-							<div class="flex flex-col gap-1">
-								<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">{item.label}</span>
-								<span class="text-xs font-semibold text-text-primary truncate" title={String(item.value)}>{item.value}</span>
-							</div>
-						{/each}
-					</div>
-				</div>
 			</div>
 
 			<!-- Section 2: Related Anime -->

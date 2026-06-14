@@ -3,6 +3,7 @@
 
 import { getDB } from '$lib/cache/db';
 import { logger } from '$lib/utils/logger';
+import { STORAGE_KEYS } from '$lib/constants';
 
 class DubStore {
 	dubs = $state<Set<number>>(new Set());
@@ -13,7 +14,7 @@ class DubStore {
 
 	async init() {
 		if (typeof window !== 'undefined') {
-			this.dubMode = localStorage.getItem('anidash_dub_mode') === 'true';
+			this.dubMode = localStorage.getItem(STORAGE_KEYS.DUB_MODE) === 'true';
 		}
 
 		if (this.dubs.size > 0) return;
@@ -88,7 +89,7 @@ class DubStore {
 	toggleDubMode() {
 		this.dubMode = !this.dubMode;
 		if (typeof window !== 'undefined') {
-			localStorage.setItem('anidash_dub_mode', String(this.dubMode));
+			localStorage.setItem(STORAGE_KEYS.DUB_MODE, String(this.dubMode));
 		}
 	}
 }

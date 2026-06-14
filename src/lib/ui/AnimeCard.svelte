@@ -142,7 +142,7 @@
 					<button
 						onclick={(e) => { e.preventDefault(); decrement(); }}
 						disabled={entry.numWatchedEpisodes <= 0}
-						class="flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90"
+						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90"
 						title="Decrease episode"
 					>
 						<Minus size={14} strokeWidth={2.5} />
@@ -150,7 +150,7 @@
 					<button
 						onclick={(e) => { e.preventDefault(); increment(); }}
 						disabled={isComplete}
-						class="flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90"
+						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90"
 						title="Increase episode"
 					>
 						{#if isComplete}

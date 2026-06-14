@@ -194,6 +194,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Browse | AniDash</title>
+</svelte:head>
+
 <div class="mx-auto max-w-7xl px-4 py-6">
 	<!-- Header -->
 	<h1 class="text-2xl font-bold text-text-primary">Browse Anime</h1>
@@ -237,7 +241,7 @@
 
 	<!-- Filters Panel -->
 	{#if showFilters}
-		<div class="mt-3 rounded-xl border border-border bg-surface-1 p-4">
+		<div class="mt-3 rounded-2xl border border-white/5 bg-surface-1/40 backdrop-blur-md shadow-xl p-5">
 			<div class="flex flex-wrap gap-4">
 				<!-- Type -->
 				<div class="min-w-[140px]">

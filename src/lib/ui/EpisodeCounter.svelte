@@ -15,7 +15,6 @@
 	} = $props();
 
 	const unknown = $derived(total === 0);
-	const pct = $derived(unknown || total === 0 ? 0 : Math.min((watched / total) * 100, 100));
 	const isComplete = $derived(!unknown && watched >= total && total > 0);
 
 	function increment() {

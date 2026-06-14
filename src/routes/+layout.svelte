@@ -14,9 +14,7 @@
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
 
-	import { deleteDB } from '$lib/cache/db';
-	import { tokens } from '$lib/auth/tokens';
-	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
+	import { tokens, refreshTokens, needsRefresh } from '$lib/auth/tokens';
 	import { STORAGE_KEYS } from '$lib/constants';
 
 	let { children } = $props();
@@ -120,6 +118,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>AniDash</title>
+</svelte:head>
+
 <Toaster
 	theme="dark"
 	position="bottom-right"
@@ -160,11 +162,15 @@
 
 	<!-- Login Prompt Modal -->
 	{#if !authStore.isAuthenticated && showLoginPrompt}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+			onclick={closeLoginPrompt}
 		>
 			<div
 				class="w-full max-w-md rounded-2xl bg-surface-1 p-6 shadow-xl border border-white/10 text-center space-y-6"
+				onclick={(e) => e.stopPropagation()}
 			>
 				<h2 class="text-2xl font-bold text-text-primary">Welcome to AniDash</h2>
 				<p class="text-text-secondary">

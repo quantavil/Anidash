@@ -4,5 +4,6 @@ export const STORAGE_KEYS = {
 	PKCE_VERIFIER: 'anidash_pkce_verifier',
 	TOKENS: 'anidash_tokens',
 	REFRESH_LOCK: 'anidash_refresh_lock',
-	USER_PROFILE: 'anidash_user_profile'
+	USER_PROFILE: 'anidash_user_profile',
+	DUB_MODE: 'anidash_dub_mode'
 } as const;

@@ -8,6 +8,7 @@
 	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
+	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
 
 	// ─── Stats ───
 
@@ -140,7 +141,7 @@
 	]);
 
 	const watching = $derived(
-		userListStore.watching
+		[...userListStore.watching]
 			.sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
 			.slice(0, 6)
 	);
@@ -162,6 +163,10 @@
 		showCompleteDialog = true;
 	}
 </script>
+
+<svelte:head>
+	<title>Stats | AniDash</title>
+</svelte:head>
 
 <div class="mx-auto max-w-7xl px-4 py-6 pb-24 lg:pb-6">
 	<!-- Greeting -->
@@ -339,11 +344,12 @@
 							class="h-24 w-[68px] shrink-0 rounded-lg overflow-hidden"
 						/>
 						<div class="min-w-0 flex-1">
-							<h3
+							<AnimeTitle
+								title={entry.title}
+								titleEnglish={entry.titleEnglish}
+								tag="h3"
 								class="line-clamp-2 text-sm font-medium text-text-primary group-hover:text-primary"
-							>
-								{entry.title}
-							</h3>
+							/>
 							<div class="mt-1 flex items-center gap-2 text-xs text-text-muted">
 								{#if entry.mediaType}
 									<span>{formatMediaType(entry.mediaType)}</span>
@@ -397,7 +403,12 @@
 							<tr class="bg-surface-0 transition-colors hover:bg-surface-1">
 								<td class="px-4 py-2.5">
 									<a href="/anime/{entry.malId}" class="text-text-primary hover:text-primary">
-										{entry.title}
+										<AnimeTitle
+											title={entry.title}
+											titleEnglish={entry.titleEnglish}
+											tag="span"
+											class=""
+										/>
 									</a>
 								</td>
 								<td class="hidden px-4 py-2.5 sm:table-cell">

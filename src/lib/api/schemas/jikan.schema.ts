@@ -5,40 +5,44 @@ import { z } from 'zod';
 // ─── Common ───
 
 const JikanPaginationSchema = z.object({
-	last_visible_page: z.number(),
-	has_next_page: z.boolean(),
+	last_visible_page: z.number().optional().nullable(),
+	has_next_page: z.boolean().optional().nullable(),
 	items: z
 		.object({
-			total: z.number(),
-			count: z.number(),
-			per_page: z.number()
+			total: z.number().optional().nullable(),
+			count: z.number().optional().nullable(),
+			per_page: z.number().optional().nullable()
 		})
 		.optional()
+		.nullable()
 });
 
 // ─── Characters ───
 
 const JikanCharacterSchema = z.object({
 	mal_id: z.number(),
-	url: z.string().url().optional(),
+	url: z.string().optional().nullable(),
 	images: z
 		.object({
 			jpg: z
 				.object({
-					image_url: z.string().url().nullable().optional()
-				})
-				.optional(),
-			webp: z
-				.object({
-					image_url: z.string().url().nullable().optional()
+					image_url: z.string().optional().nullable()
 				})
 				.optional()
+				.nullable(),
+			webp: z
+				.object({
+					image_url: z.string().optional().nullable()
+				})
+				.optional()
+				.nullable()
 		})
-		.optional(),
+		.optional()
+		.nullable(),
 	name: z.string(),
 	name_kanji: z.string().nullable().optional(),
-	nicknames: z.array(z.string()).optional(),
-	favorites: z.number().optional(),
+	nicknames: z.array(z.string()).optional().nullable(),
+	favorites: z.number().optional().nullable(),
 	about: z.string().nullable().optional()
 });
 
@@ -49,7 +53,7 @@ export const JikanCharacterEntrySchema = z.object({
 
 export const JikanCharactersResponseSchema = z.object({
 	data: z.array(JikanCharacterEntrySchema),
-	pagination: JikanPaginationSchema.optional()
+	pagination: JikanPaginationSchema.optional().nullable()
 });
 
 export type JikanCharacterEntry = z.infer<typeof JikanCharacterEntrySchema>;
@@ -58,36 +62,39 @@ export type JikanCharactersResponse = z.infer<typeof JikanCharactersResponseSche
 // ─── Recommendations ───
 
 export const JikanRecommendationEntrySchema = z.object({
-	mal_id: z.number().optional(),
-	url: z.string().url().optional(),
-	votes: z.number().optional(),
+	mal_id: z.number().optional().nullable(),
+	url: z.string().optional().nullable(),
+	votes: z.number().optional().nullable(),
 	entry: z.object({
 		mal_id: z.number(),
-		url: z.string().url().optional(),
+		url: z.string().optional().nullable(),
 		images: z
 			.object({
 				jpg: z
 					.object({
-						image_url: z.string().url().nullable().optional()
+						image_url: z.string().optional().nullable()
 					})
 					.optional()
+					.nullable()
 			})
-			.optional(),
+			.optional()
+			.nullable(),
 		title: z.string()
 	}),
 	content: z.string().nullable().optional(),
 	date: z.string().nullable().optional(),
 	user: z
 		.object({
-			url: z.string().url().optional(),
+			url: z.string().optional().nullable(),
 			username: z.string()
 		})
 		.optional()
+		.nullable()
 });
 
 export const JikanRecommendationsResponseSchema = z.object({
 	data: z.array(JikanRecommendationEntrySchema),
-	pagination: JikanPaginationSchema.optional()
+	pagination: JikanPaginationSchema.optional().nullable()
 });
 
 export type JikanRecommendationEntry = z.infer<typeof JikanRecommendationEntrySchema>;

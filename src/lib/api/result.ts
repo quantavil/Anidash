@@ -1,4 +1,5 @@
 // ─── Result<T, E> — No throwing for control flow ───
+import type { ZodIssue } from 'zod';
 
 export type AppError =
 	| { type: 'network'; message: string; cause?: Error }
@@ -42,6 +43,9 @@ export function flatMap<T, U, E>(result: Result<T, E>, fn: (v: T) => Result<U, E
 }
 
 /** Helper: convert a zod SafeParseReturnType into our validation error */
-export function zodIssuesToSummaries(issues: any[]): ZodIssueSummary[] {
-	return issues.map((i) => ({ path: i.path, message: i.message }));
+export function zodIssuesToSummaries(issues: ZodIssue[]): ZodIssueSummary[] {
+	return issues.map((i) => ({
+		path: i.path.filter((p): p is string | number => typeof p === 'string' || typeof p === 'number'),
+		message: i.message
+	}));
 }

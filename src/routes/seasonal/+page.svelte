@@ -31,6 +31,13 @@
 	let loading = $state(true);
 	let filterType = $state('');
 	let sortByRating = $state(false);
+	let sliceLimit = $state(20);
+
+	$effect(() => {
+		// Reset slice limit when search filters or season changes
+		const _trigger = `${seasonYear}-${seasonKey}-${filterType}-${sortByRating}-${dubStore.dubMode}`;
+		sliceLimit = 20;
+	});
 
 	const filteredAnime = $derived.by(() => {
 		let res = filterType
@@ -46,6 +53,8 @@
 		}
 		return res;
 	});
+
+	const displayedAnime = $derived(filteredAnime.slice(0, sliceLimit));
 
 	const TYPES = [
 		{ value: '', label: 'All' },
@@ -106,6 +115,10 @@
 		}
 	});
 </script>
+
+<svelte:head>
+	<title>Seasonal | AniDash</title>
+</svelte:head>
 
 <div class="mx-auto max-w-7xl px-4 py-6">
 	<!-- Header -->
@@ -186,10 +199,21 @@
 			</div>
 		{:else if filteredAnime.length > 0}
 			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-				{#each filteredAnime as anime, i (anime.malId)}
+				{#each displayedAnime as anime, i (anime.malId)}
 					<SearchResultCard {anime} index={i} />
 				{/each}
 			</div>
+
+			{#if filteredAnime.length > sliceLimit}
+				<div class="mt-8 flex justify-center">
+					<button
+						onclick={() => (sliceLimit += 20)}
+						class="rounded-xl border border-white/10 bg-surface-1 px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface-2 transition-all active:scale-95 shadow-md"
+					>
+						Load More
+					</button>
+				</div>
+			{/if}
 
 			{#if filterType && filteredAnime.length < anime.length}
 				<p class="mt-4 text-center text-xs text-text-muted">

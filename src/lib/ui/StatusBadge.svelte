@@ -57,7 +57,7 @@
 				<DropdownMenu.Separator class="my-1 block h-px bg-border" />
 
 				<DropdownMenu.Item
-					class="glass-dropdown-item !text-error !hover:bg-error/20"
+					class="glass-dropdown-item !text-error hover:bg-error/20!"
 					onSelect={handleRemove}
 				>
 					<span class="h-2 w-2 shrink-0 rounded-full bg-error"></span>

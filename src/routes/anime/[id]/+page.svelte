@@ -341,51 +341,55 @@
 					<div class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
 
 					{#if inList && listEntry}
-						<div class="flex flex-col gap-5 relative z-10">
-							<!-- Top section: Status Dropdown & Episode Counter (2-column layout) -->
-							<div class="grid grid-cols-2 gap-4 items-center">
-								<!-- Status -->
-								<div class="flex flex-col">
-									<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-										Status
-									</span>
-									<div class="mt-1.5 flex">
-										<StatusBadge {malId} status={listEntry.status} />
+						<!-- Responsive layout: side-by-side on large screens, stacked on mobile -->
+						<div class="flex flex-col lg:flex-row lg:items-center gap-6 relative z-10">
+							<!-- Left Side: Status & Progress -->
+							<div class="flex-1 flex flex-col gap-4">
+								<div class="grid grid-cols-2 gap-4 items-center">
+									<!-- Status -->
+									<div class="flex flex-col">
+										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+											Status
+										</span>
+										<div class="mt-1.5 flex">
+											<StatusBadge {malId} status={listEntry.status} />
+										</div>
+									</div>
+
+									<!-- Progress Counter -->
+									<div class="flex flex-col items-end">
+										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted text-right">
+											Episodes Watched
+										</span>
+										<div class="mt-1 flex justify-end">
+											<EpisodeCounter
+												{malId}
+												watched={listEntry.numWatchedEpisodes}
+												total={listEntry.numEpisodes}
+												onComplete={handleCompletePrompt}
+											/>
+										</div>
 									</div>
 								</div>
 
-								<!-- Progress Counter -->
-								<div class="flex flex-col items-end">
-									<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted text-right">
-										Episodes Watched
-									</span>
-									<div class="mt-1 flex justify-end">
-										<EpisodeCounter
-											{malId}
-											watched={listEntry.numWatchedEpisodes}
-											total={listEntry.numEpisodes}
-											onComplete={handleCompletePrompt}
-										/>
+								<!-- Custom Progress Bar -->
+								{#if listEntry.numEpisodes > 0}
+									{@const pct = Math.min((listEntry.numWatchedEpisodes / listEntry.numEpisodes) * 100, 100)}
+									<div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5">
+										<div
+											class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all duration-500 ease-spring"
+											style="width: {pct}%"
+										></div>
 									</div>
-								</div>
+								{/if}
 							</div>
 
-							<!-- Custom Progress Bar -->
-							{#if listEntry.numEpisodes > 0}
-								{@const pct = Math.min((listEntry.numWatchedEpisodes / listEntry.numEpisodes) * 100, 100)}
-								<div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5">
-									<div
-										class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all duration-500 ease-spring"
-										style="width: {pct}%"
-									></div>
-								</div>
-							{/if}
+							<!-- Divider (vertical on desktop, horizontal on mobile) -->
+							<div class="hidden lg:block w-px bg-white/10 self-stretch my-1"></div>
+							<div class="block lg:hidden h-px bg-white/5 w-full"></div>
 
-							<!-- Divider -->
-							<div class="h-px bg-white/5 w-full my-1"></div>
-
-							<!-- Rating / Score section -->
-							<div class="w-full">
+							<!-- Right Side: Rating / Score section -->
+							<div class="lg:w-[280px] shrink-0">
 								<ScoreInput {malId} score={listEntry.score} />
 							</div>
 						</div>

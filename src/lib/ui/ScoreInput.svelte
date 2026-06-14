@@ -158,16 +158,14 @@
 				<!-- Filled star portion -->
 				{#if fill > 0}
 					<div
-						class="absolute inset-0 flex items-center overflow-hidden pointer-events-none"
-						style="width: {fill * 100}%;"
+						class="absolute inset-0 flex items-center justify-center pointer-events-none"
+						style={fill === 0.5 ? 'clip-path: inset(0 50% 0 0);' : ''}
 					>
-						<div style="width: {size}px; height: {size}px;" class="flex items-center justify-center shrink-0">
-							<Star
-								{size}
-								class="text-warning fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
-								stroke-width={0}
-							/>
-						</div>
+						<Star
+							{size}
+							class="text-warning fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+							stroke-width={0}
+						/>
 					</div>
 				{/if}
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 
 	import { getAnimeDetail } from '$lib/api/mal';
 	import { getRecommendations, getCharacters } from '$lib/api/jikan';
@@ -95,7 +96,7 @@
 
 		// Try cache first (stale-while-revalidate)
 		const cached = await getAnimeAllowStale(id);
-		if (id !== malId) return;
+		if (id !== Number(page.params.id)) return;
 
 		if (cached) {
 			anime = cached;
@@ -104,7 +105,7 @@
 
 		// Fetch fresh data
 		const result = await getAnimeDetail(id);
-		if (id !== malId) return;
+		if (id !== Number(page.params.id)) return;
 
 		if (result.ok) {
 			anime = result.value;
@@ -124,7 +125,7 @@
 		charactersError = null;
 
 		const result = await getCharacters(id);
-		if (id !== malId) return;
+		if (id !== Number(page.params.id)) return;
 
 		if (result.ok) {
 			characters = result.value.characters;
@@ -140,7 +141,7 @@
 		recsError = null;
 
 		const result = await getRecommendations(id);
-		if (id !== malId) return;
+		if (id !== Number(page.params.id)) return;
 
 		if (result.ok) {
 			recommendations = result.value;
@@ -152,33 +153,37 @@
 
 	// ─── Complete Prompt ───
 
-	function handleCompletePrompt(id: number) {
-		completeTargetId = id;
-		showCompleteDialog = true;
-	}
-
 	// ─── Lifecycle ───
 
 	// Load anime and Jikan details in parallel when route changes
 	$effect(() => {
 		const id = Number(page.params.id);
-		if (id && id !== anime?.malId) {
-			anime = null;
-			recommendations = [];
-			characters = [];
-			expandedSynopsis = false;
-			expandedCharacters = false;
+		const currentMalId = untrack(() => anime?.malId);
 
-			// Reset loading states for the new ID
-			loading = true;
-			charactersLoading = false;
-			recsLoading = false;
+		if (id && id !== currentMalId) {
+			untrack(() => {
+				anime = null;
+				recommendations = [];
+				characters = [];
+				expandedSynopsis = false;
+				expandedCharacters = false;
 
-			loadAnime(id);
-			loadCharacters(id);
-			loadRecommendations(id);
+				// Reset loading states for the new ID
+				loading = true;
+				charactersLoading = false;
+				recsLoading = false;
+
+				loadAnime(id);
+				loadCharacters(id);
+				loadRecommendations(id);
+			});
 		}
 	});
+
+	function handleCompletePrompt(id: number) {
+		completeTargetId = id;
+		showCompleteDialog = true;
+	}
 
 	const STATUS_COLORS: Record<string, string> = {
 		currently_airing: 'text-success',

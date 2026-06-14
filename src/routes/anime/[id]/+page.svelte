@@ -89,13 +89,13 @@
 
 	// ─── Load Anime Detail ───
 
-	async function loadAnime(id: number, isAborted?: () => boolean) {
+	async function loadAnime(id: number) {
 		loading = true;
 		error = null;
 
 		// Try cache first (stale-while-revalidate)
 		const cached = await getAnimeAllowStale(id);
-		if (isAborted?.()) return;
+		if (id !== malId) return;
 
 		if (cached) {
 			anime = cached;
@@ -104,13 +104,12 @@
 
 		// Fetch fresh data
 		const result = await getAnimeDetail(id);
-		if (isAborted?.()) return;
+		if (id !== malId) return;
 
 		if (result.ok) {
 			anime = result.value;
 			await putAnime(result.value);
 		} else if (!cached) {
-			// No cache and fetch failed
 			error = result.error.message || 'Failed to load anime';
 		}
 
@@ -119,13 +118,13 @@
 
 	// ─── Background Fetch Data ───
 
-	async function loadCharacters(isAborted?: () => boolean) {
+	async function loadCharacters(id: number) {
 		if (charactersLoading) return;
 		charactersLoading = true;
 		charactersError = null;
 
-		const result = await getCharacters(malId);
-		if (isAborted?.()) return;
+		const result = await getCharacters(id);
+		if (id !== malId) return;
 
 		if (result.ok) {
 			characters = result.value.characters;
@@ -135,13 +134,13 @@
 		charactersLoading = false;
 	}
 
-	async function loadRecommendations(isAborted?: () => boolean) {
+	async function loadRecommendations(id: number) {
 		if (recsLoading) return;
 		recsLoading = true;
 		recsError = null;
 
-		const result = await getRecommendations(malId);
-		if (isAborted?.()) return;
+		const result = await getRecommendations(id);
+		if (id !== malId) return;
 
 		if (result.ok) {
 			recommendations = result.value;
@@ -162,7 +161,6 @@
 
 	// Load anime and Jikan details in parallel when route changes
 	$effect(() => {
-		let aborted = false;
 		const id = Number(page.params.id);
 		if (id && id !== anime?.malId) {
 			anime = null;
@@ -171,13 +169,15 @@
 			expandedSynopsis = false;
 			expandedCharacters = false;
 
-			loadAnime(id, () => aborted);
-			loadCharacters(() => aborted);
-			loadRecommendations(() => aborted);
+			// Reset loading states for the new ID
+			loading = true;
+			charactersLoading = false;
+			recsLoading = false;
+
+			loadAnime(id);
+			loadCharacters(id);
+			loadRecommendations(id);
 		}
-		return () => {
-			aborted = true;
-		};
 	});
 
 	const STATUS_COLORS: Record<string, string> = {
@@ -337,26 +337,24 @@
 
 					{#if inList && listEntry}
 						<div class="flex flex-col gap-5 relative z-10">
-							<!-- Top section: Status Dropdown & Episode Counter -->
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-								<!-- Status (aligned left on desktop) -->
-								<div class="flex items-center justify-between sm:justify-start gap-4">
-									<div class="flex flex-col">
-										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-											Status
-										</span>
-										<div class="mt-1">
-											<StatusBadge {malId} status={listEntry.status} />
-										</div>
+							<!-- Top section: Status Dropdown & Episode Counter (2-column layout) -->
+							<div class="grid grid-cols-2 gap-4 items-center">
+								<!-- Status -->
+								<div class="flex flex-col">
+									<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+										Status
+									</span>
+									<div class="mt-1.5 flex">
+										<StatusBadge {malId} status={listEntry.status} />
 									</div>
 								</div>
 
-								<!-- Progress Counter (aligned right on desktop) -->
-								<div class="flex flex-col sm:items-end">
-									<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted sm:text-right">
+								<!-- Progress Counter -->
+								<div class="flex flex-col items-end">
+									<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted text-right">
 										Episodes Watched
 									</span>
-									<div class="mt-1">
+									<div class="mt-1 flex justify-end">
 										<EpisodeCounter
 											{malId}
 											watched={listEntry.numWatchedEpisodes}

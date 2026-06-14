@@ -26,6 +26,18 @@
 		10: 'Masterpiece'
 	};
 
+	let containerEl = $state<HTMLDivElement | null>(null);
+	let isDragging = $state(false);
+
+	const size = 32; // Comfortable size for touch targets
+
+	function starFill(i: number): number {
+		const s = displayScore;
+		if (s >= (i * 2) + 2) return 1;
+		if (s === (i * 2) + 1) return 0.5;
+		return 0;
+	}
+
 	function handleSelect(val: number) {
 		const newScore = score === val ? 0 : val;
 		userListStore.setScore(malId, newScore);
@@ -45,9 +57,41 @@
 			userListStore.setScore(malId, 0);
 		}
 	}
+
+	// Touch drag support for mobile
+	function handleTouchStart(e: TouchEvent) {
+		isDragging = true;
+		handleTouchUpdate(e);
+	}
+
+	function handleTouchMove(e: TouchEvent) {
+		if (!isDragging) return;
+		if (e.cancelable) e.preventDefault();
+		handleTouchUpdate(e);
+	}
+
+	function handleTouchEnd() {
+		if (isDragging) {
+			if (hoveredScore !== null) {
+				userListStore.setScore(malId, hoveredScore);
+			}
+			hoveredScore = null;
+			isDragging = false;
+		}
+	}
+
+	function handleTouchUpdate(e: TouchEvent) {
+		if (!containerEl) return;
+		const rect = containerEl.getBoundingClientRect();
+		const touch = e.touches[0];
+		const relativeX = touch.clientX - rect.left;
+		const pct = Math.max(0, Math.min(1, relativeX / rect.width));
+		const scoreVal = Math.round(pct * 10);
+		hoveredScore = scoreVal;
+	}
 </script>
 
-<div class="flex flex-col gap-3 w-full animate-fade-in">
+<div class="flex flex-col gap-2.5 w-full">
 	<!-- Label and Descriptor -->
 	<div class="flex items-center justify-between w-full">
 		<div class="flex flex-col">
@@ -83,41 +127,66 @@
 		{/if}
 	</div>
 
-	<!-- 10-Star Rating Bar -->
+	<!-- 5-Star Interactive Rating Bar -->
 	<div
-		class="flex items-center justify-between gap-1 p-2 rounded-xl bg-surface-2/40 border border-white/5 shadow-inner focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all select-none"
+		bind:this={containerEl}
+		class="flex items-center justify-between gap-2 p-2 rounded-xl bg-surface-2/40 border border-white/5 shadow-inner focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all select-none touch-none max-w-[260px]"
 		role="slider"
 		tabindex="0"
-		aria-label="Anime rating out of 10"
+		aria-label="Anime rating out of 10 represented by 5 stars"
 		aria-valuenow={score}
 		aria-valuemin={0}
 		aria-valuemax={10}
 		onmouseleave={() => (hoveredScore = null)}
 		onkeydown={handleKeyDown}
+		ontouchstart={handleTouchStart}
+		ontouchmove={handleTouchMove}
+		ontouchend={handleTouchEnd}
 	>
-		{#each Array(10) as _, i}
-			{@const starValue = i + 1}
-			{@const isFilled = starValue <= displayScore}
-			<button
-				type="button"
-				class="relative flex-1 flex items-center justify-center p-1 rounded-lg transition-all duration-200 outline-none
-					{isFilled ? 'text-warning' : 'text-white/10 hover:text-white/30'}
-					hover:scale-120 active:scale-90"
-				onclick={() => handleSelect(starValue)}
-				onmouseenter={() => (hoveredScore = starValue)}
-				aria-label="Rate {starValue} out of 10"
+		{#each Array(5) as _, i}
+			{@const fill = starFill(i)}
+			<div
+				class="relative flex-1 aspect-square max-w-[44px] flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95"
 			>
+				<!-- Empty star icon -->
 				<Star
-					size={20}
-					class="transition-all duration-300
-						{isFilled ? 'fill-current drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]' : 'fill-transparent'}"
-					stroke-width={isFilled ? 0 : 1.5}
+					{size}
+					class="text-white/10 fill-transparent pointer-events-none"
+					stroke-width={1.5}
 				/>
-				<!-- Subtle indicator dot for key rating levels (5 and 10) -->
-				{#if !isFilled && (starValue === 5 || starValue === 10)}
-					<div class="absolute bottom-1 w-1 h-1 rounded-full bg-white/20"></div>
+
+				<!-- Filled star portion -->
+				{#if fill > 0}
+					<div
+						class="absolute inset-0 flex items-center overflow-hidden pointer-events-none"
+						style="width: {fill * 100}%;"
+					>
+						<div style="width: {size}px; height: {size}px;" class="flex items-center justify-center shrink-0">
+							<Star
+								{size}
+								class="text-warning fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+								stroke-width={0}
+							/>
+						</div>
+					</div>
 				{/if}
-			</button>
+
+				<!-- Mouse Hover/Tap Zones (Invisible overlays) -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="absolute left-0 top-0 w-1/2 h-full cursor-pointer z-10"
+					onmouseenter={() => (hoveredScore = i * 2 + 1)}
+					onclick={() => handleSelect(i * 2 + 1)}
+				></div>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="absolute right-0 top-0 w-1/2 h-full cursor-pointer z-10"
+					onmouseenter={() => (hoveredScore = i * 2 + 2)}
+					onclick={() => handleSelect(i * 2 + 2)}
+				></div>
+			</div>
 		{/each}
 	</div>
 </div>

@@ -35,7 +35,7 @@
 		<!-- Login button -->
 		<button
 			onclick={() => authStore.login()}
-			class="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-0"
+			class="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none"
 		>
 			Login with MyAnimeList
 		</button>

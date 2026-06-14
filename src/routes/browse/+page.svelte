@@ -248,7 +248,7 @@
 							id="filter-type"
 							value={filterType}
 							onchange={(e) => setFilter('type', (e.target as HTMLSelectElement).value)}
-							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
+							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white/10 transition-all duration-200"
 						>
 							{#each TYPES as t}
 								<option value={t.value} class="bg-surface-2">{t.label}</option>
@@ -268,7 +268,7 @@
 							id="filter-genre"
 							value={filterGenre}
 							onchange={(e) => setFilter('genre', (e.target as HTMLSelectElement).value)}
-							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
+							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white/10 transition-all duration-200"
 						>
 							<option value="" class="bg-surface-2">All Genres</option>
 							{#each genres as g}
@@ -289,7 +289,7 @@
 							id="filter-sort"
 							value={filterSort}
 							onchange={(e) => setFilter('sort', (e.target as HTMLSelectElement).value)}
-							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
+							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white/10 transition-all duration-200"
 						>
 							{#each SORTS as s}
 								<option value={s.value} class="bg-surface-2">{s.label}</option>

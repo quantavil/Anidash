@@ -616,7 +616,7 @@
 							<button
 								type="button"
 								onclick={() => handleCharacterClick(entry)}
-								class="w-full flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+								class="w-full flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus:bg-white/10"
 							>
 								<ImageWithFallback
 									src={entry.character.images?.jpg?.image_url}

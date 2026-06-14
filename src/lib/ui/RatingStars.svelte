@@ -67,7 +67,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-	class="inline-flex items-center gap-1.5 outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-sm transition-shadow"
+	class="inline-flex items-center gap-1.5 outline-none focus-visible:outline-none rounded-sm transition-shadow"
 	role="slider"
 	tabindex="0"
 	aria-label="Rating"

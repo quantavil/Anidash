@@ -2,7 +2,8 @@
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { Search, ArrowUpDown, X } from 'lucide-svelte';
+	import { ArrowUpDown } from 'lucide-svelte';
+	import SearchInput from './SearchInput.svelte';
 
 	import type { SortKey } from '$lib/utils/sort';
 
@@ -87,27 +88,13 @@
 
 <div class="flex w-full flex-wrap items-center justify-between gap-3">
 	<!-- Search -->
-	<div class="relative flex-1 sm:max-w-xs group">
-		<Search
-			size={15}
-			class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-primary"
-		/>
-		<input
-			type="text"
-			aria-label="Search anime list"
-			placeholder="Search your list…"
+	<div class="flex-1 sm:max-w-md">
+		<SearchInput
 			value={currentQuery}
+			placeholder="Search your list…"
 			oninput={handleSearch}
-			class="w-full rounded-full border border-white/5 bg-white/5 py-2 pl-9 pr-8 text-sm text-text-primary placeholder:text-text-muted outline-none transition-all duration-500 ease-spring focus:bg-white/10 focus:ring-1 focus:ring-primary/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+			onclear={clearSearch}
 		/>
-		{#if currentQuery}
-			<button
-				onclick={clearSearch}
-				class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
-			>
-				<X size={14} />
-			</button>
-		{/if}
 	</div>
 
 	<!-- Controls -->

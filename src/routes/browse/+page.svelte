@@ -6,19 +6,22 @@
 	import { searchAnime, getAnimeGenres } from '$lib/api/jikan';
 	import { mapJikanToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { formatMediaType } from '$lib/utils/format';
-	import { Search, SlidersHorizontal, X, ChevronDown, Loader2, Mic } from 'lucide-svelte';
+	import { SlidersHorizontal, ChevronDown, Loader2, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import SearchInput from '$lib/ui/SearchInput.svelte';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
 	import RecommenderWidgets from '$lib/ui/RecommenderWidgets.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { fade } from 'svelte/transition';
 
 	// ─── URL State ───
 
 	const query = $derived(getUrlParam(page.url, 'q', ''));
 	const filterType = $derived(getUrlParam(page.url, 'type', ''));
 	const filterGenre = $derived(getUrlParam(page.url, 'genre', ''));
-	const filterSort = $derived(getUrlParam(page.url, 'sort', query ? 'relevance' : 'score'));
+	const filterSort = $derived(getUrlParam(page.url, 'sort', query ? 'relevance' : 'popularity'));
+	const filterSfw = $derived(getUrlParam(page.url, 'sfw', 'true') === 'true');
 
 	// ─── State ───
 
@@ -28,6 +31,7 @@
 	let hasNextPage = $state(false);
 	let hasSearched = $state(false);
 	let loadingMore = $state(false);
+	let isDebouncing = $state(false);
 
 	// ─── Genres ───
 
@@ -52,17 +56,17 @@
 		{ value: 'start_date', label: 'Newest First' }
 	];
 
+	// ─── Filter Count ───
+
+	const activeFiltersCount = $derived(
+		(filterType ? 1 : 0) + (filterGenre ? 1 : 0) + (!filterSfw ? 1 : 0)
+	);
+
 	// ─── Search ───
 
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	async function doSearch(page: number = 1, append: boolean = false) {
-		if (!query.trim() && !filterGenre) {
-			if (!append) results = [];
-			hasSearched = false;
-			return;
-		}
-
 		if (page === 1) loading = true;
 		else loadingMore = true;
 
@@ -87,7 +91,8 @@
 								: undefined,
 			sort: filterSort === 'relevance' ? undefined : filterSort === 'title' ? 'asc' : 'desc',
 			page,
-			limit: 25
+			limit: 25,
+			sfw: filterSfw ? true : undefined
 		});
 
 		if (result.ok) {
@@ -119,7 +124,7 @@
 	let prevSearchParams = '';
 
 	$effect(() => {
-		const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}&d=${dubStore.dubMode}`;
+		const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}&d=${dubStore.dubMode}&sfw=${filterSfw}`;
 		if (params !== prevSearchParams) {
 			prevSearchParams = params;
 			doSearch(1, false);
@@ -173,6 +178,20 @@
 		goto(setUrlParams(page.url, [{ key, value }]), { keepFocus: true, noScroll: true });
 	}
 
+	function clearAllFilters() {
+		goto(
+			setUrlParams(page.url, [
+				{ key: 'q', value: '' },
+				{ key: 'type', value: '' },
+				{ key: 'genre', value: '' },
+				{ key: 'sort', value: '' },
+				{ key: 'sfw', value: 'true' }
+			]),
+			{ keepFocus: true, noScroll: true }
+		);
+		searchInput = '';
+	}
+
 	let searchInput = $state('');
 
 	$effect(() => {
@@ -182,9 +201,11 @@
 	function handleSearchInput(e: Event) {
 		const val = (e.target as HTMLInputElement).value;
 		searchInput = val;
+		isDebouncing = true;
 		if (debounceTimer) clearTimeout(debounceTimer);
 		debounceTimer = setTimeout(() => {
 			setFilter('q', val);
+			isDebouncing = false;
 		}, 400);
 	}
 
@@ -205,26 +226,15 @@
 
 	<!-- Search Bar -->
 	<div class="mt-5 flex gap-3">
-		<div class="relative flex-1">
-			<Search
-				size={16}
-				class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-			/>
-			<input
-				type="text"
-				placeholder="Search anime by title…"
+		<div class="flex-1">
+			<SearchInput
 				value={searchInput}
+				placeholder="Search anime by title…"
 				oninput={handleSearchInput}
-				class="w-full rounded-lg border border-border bg-surface-1 py-2.5 pl-10 pr-10 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+				onclear={clearSearch}
+				loading={loading}
+				isDebouncing={isDebouncing}
 			/>
-			{#if searchInput}
-				<button
-					onclick={clearSearch}
-					class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
-				>
-					<X size={16} />
-				</button>
-			{/if}
 		</div>
 
 		<div class="flex items-center gap-2">
@@ -234,98 +244,123 @@
           {showFilters ? 'border-primary text-primary' : ''}"
 			>
 				<SlidersHorizontal size={16} />
-				Filters
+				<span>Filters</span>
+				{#if activeFiltersCount > 0}
+					<span class="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
+						{activeFiltersCount}
+					</span>
+				{/if}
 			</button>
 		</div>
 	</div>
 
 	<!-- Filters Panel -->
 	{#if showFilters}
-		<div class="mt-3 rounded-2xl border border-white/5 bg-surface-1/40 backdrop-blur-md shadow-xl p-5">
-			<div class="flex flex-wrap gap-4">
+		<div class="mt-3 rounded-2xl border border-white/5 bg-surface-1/40 backdrop-blur-md shadow-xl p-5" transition:fade>
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
 				<!-- Type -->
-				<div class="min-w-[140px]">
+				<div class="flex flex-col">
 					<label for="filter-type" class="mb-1.5 block text-xs font-medium text-text-muted"
 						>Type</label
 					>
-					<select
-						id="filter-type"
-						value={filterType}
-						onchange={(e) => setFilter('type', (e.target as HTMLSelectElement).value)}
-						class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none"
-					>
-						{#each TYPES as t}
-							<option value={t.value}>{t.label}</option>
-						{/each}
-					</select>
+					<div class="relative w-full">
+						<select
+							id="filter-type"
+							value={filterType}
+							onchange={(e) => setFilter('type', (e.target as HTMLSelectElement).value)}
+							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
+						>
+							{#each TYPES as t}
+								<option value={t.value} class="bg-surface-2">{t.label}</option>
+							{/each}
+						</select>
+						<ChevronDown size={14} class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+					</div>
 				</div>
 
 				<!-- Genre -->
-				<div class="min-w-[140px]">
+				<div class="flex flex-col">
 					<label for="filter-genre" class="mb-1.5 block text-xs font-medium text-text-muted"
 						>Genre</label
 					>
-					<select
-						id="filter-genre"
-						value={filterGenre}
-						onchange={(e) => setFilter('genre', (e.target as HTMLSelectElement).value)}
-						class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none"
-					>
-						<option value="">All Genres</option>
-						{#each genres as g}
-							<option value={String(g.id)}>{g.name}</option>
-						{/each}
-					</select>
+					<div class="relative w-full">
+						<select
+							id="filter-genre"
+							value={filterGenre}
+							onchange={(e) => setFilter('genre', (e.target as HTMLSelectElement).value)}
+							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
+						>
+							<option value="" class="bg-surface-2">All Genres</option>
+							{#each genres as g}
+								<option value={String(g.id)} class="bg-surface-2">{g.name}</option>
+							{/each}
+						</select>
+						<ChevronDown size={14} class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+					</div>
 				</div>
 
-				<!-- Sort -->
-				<div class="min-w-[140px]">
+				<!-- Sort By -->
+				<div class="flex flex-col">
 					<label for="filter-sort" class="mb-1.5 block text-xs font-medium text-text-muted"
 						>Sort By</label
 					>
-					<select
-						id="filter-sort"
-						value={filterSort}
-						onchange={(e) => setFilter('sort', (e.target as HTMLSelectElement).value)}
-						class="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text-primary focus:border-primary focus:outline-none"
-					>
-						{#each SORTS as s}
-							<option value={s.value}>{s.label}</option>
-						{/each}
-					</select>
+					<div class="relative w-full">
+						<select
+							id="filter-sort"
+							value={filterSort}
+							onchange={(e) => setFilter('sort', (e.target as HTMLSelectElement).value)}
+							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all duration-200"
+						>
+							{#each SORTS as s}
+								<option value={s.value} class="bg-surface-2">{s.label}</option>
+							{/each}
+						</select>
+						<ChevronDown size={14} class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+					</div>
 				</div>
 
-				<!-- Clear Filters -->
-				<div class="flex items-end">
-					<button
-						onclick={() => {
-							goto(
-								setUrlParams(page.url, [
-									{ key: 'type', value: '' },
-									{ key: 'genre', value: '' },
-									{ key: 'sort', value: '' }
-								]),
-								{ keepFocus: true, noScroll: true }
-							);
-						}}
-						class="rounded-lg px-3 py-2 text-sm text-text-muted transition-colors hover:text-text-secondary"
-					>
-						Clear Filters
-					</button>
+				<!-- Safe Search (SFW) Toggle -->
+				<div class="flex items-center h-full pt-4 md:pt-5">
+					<label for="filter-sfw" class="flex items-center gap-3 cursor-pointer select-none">
+						<input
+							id="filter-sfw"
+							type="checkbox"
+							checked={filterSfw}
+							onchange={(e) => setFilter('sfw', String((e.target as HTMLInputElement).checked))}
+							class="sr-only peer"
+						/>
+						<div class="relative w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-secondary peer-checked:after:border-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary/30 peer-checked:after:bg-primary"></div>
+						<div class="flex flex-col">
+							<span class="text-xs font-semibold text-text-primary">Safe Search</span>
+							<span class="text-[10px] text-text-muted">Hide mature (18+) content</span>
+						</div>
+					</label>
 				</div>
 			</div>
+
+			<!-- Footer with Clear Filters -->
+			{#if activeFiltersCount > 0}
+				<div class="mt-4 flex items-center justify-end border-t border-white/5 pt-3">
+					<button
+						onclick={clearAllFilters}
+						class="rounded-lg px-3 py-1.5 text-xs font-medium text-text-muted transition-colors hover:text-text-secondary hover:bg-white/5"
+					>
+						Clear All Filters
+					</button>
+				</div>
+			{/if}
 		</div>
 	{/if}
 
 	<!-- Active Filters Tags -->
-	{#if filterType || filterGenre}
-		<div class="mt-3 flex flex-wrap gap-2">
+	{#if filterType || filterGenre || !filterSfw}
+		<div class="mt-3 flex flex-wrap gap-2" transition:fade>
 			{#if filterType}
 				<span
 					class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
 				>
 					{formatMediaType(filterType)}
-					<button onclick={() => setFilter('type', '')}><X size={12} /></button>
+					<button onclick={() => setFilter('type', '')} aria-label="Remove type filter"><X size={12} /></button>
 				</span>
 			{/if}
 			{#if filterGenre}
@@ -334,7 +369,15 @@
 					class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
 				>
 					{genreName}
-					<button onclick={() => setFilter('genre', '')}><X size={12} /></button>
+					<button onclick={() => setFilter('genre', '')} aria-label="Remove genre filter"><X size={12} /></button>
+				</span>
+			{/if}
+			{#if !filterSfw}
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
+				>
+					Unfiltered (18+)
+					<button onclick={() => setFilter('sfw', 'true')} aria-label="Enable safe search"><X size={12} /></button>
 				</span>
 			{/if}
 		</div>
@@ -342,12 +385,20 @@
 
 	<!-- Results -->
 	<div class="mt-6">
+		{#if !query.trim() && !filterGenre && !loading}
+			<!-- Show Recommender Widgets first on Landing page -->
+			<div class="mb-8 w-full" transition:fade>
+				<RecommenderWidgets />
+			</div>
+			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">Popular Anime</h2>
+		{/if}
+
 		{#if loading}
 			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 				<AnimeCardSkeleton count={10} />
 			</div>
 		{:else if results.length > 0}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" transition:fade>
 				{#each results as anime, i (anime.malId)}
 					<SearchResultCard {anime} index={i} />
 				{/each}
@@ -365,20 +416,23 @@
 						<div class="h-8"></div>
 					{/if}
 				</div>
-			{:else if hasSearched}
-				<p class="mt-6 text-center text-sm text-text-muted">End of results</p>
+			{:else}
+				<p class="mt-6 text-center text-sm text-text-muted" transition:fade>End of results</p>
 			{/if}
-		{:else if hasSearched}
+		{:else}
 			<div
 				class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
+				transition:fade
 			>
 				<div class="mb-3 text-4xl">🔍</div>
 				<p class="text-sm text-text-secondary">No anime found matching your search</p>
 				<p class="mt-1 text-xs text-text-muted">Try different keywords or filters</p>
-			</div>
-		{:else}
-			<div class="w-full">
-				<RecommenderWidgets />
+				<button
+					onclick={clearAllFilters}
+					class="mt-4 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+				>
+					Clear All Filters
+				</button>
 			</div>
 		{/if}
 	</div>

@@ -6,9 +6,10 @@
 	let { animeTitle }: { animeTitle: string } = $props();
 
 	function handleMirrorSelect(e: MouseEvent, siteName: string, domain: string) {
-		mirrorsStore.setPreferredDomain(siteName, domain);
-		openDropdowns = {};
-		// It bubbles to the front immediately for the next render
+		setTimeout(() => {
+			mirrorsStore.setPreferredDomain(siteName, domain);
+			openDropdowns = {};
+		}, 0);
 	}
 
 	let openDropdowns = $state<Record<string, boolean>>({});
@@ -74,7 +75,7 @@
 						site.name
 					]
 						? 'flex'
-						: 'hidden lg:group-hover:flex'}"
+						: 'hidden'}"
 				>
 					<div class="px-2 py-1 mb-1 text-[9px] font-bold uppercase tracking-wider text-text-muted">
 						Alternative Mirrors

@@ -24,6 +24,7 @@ anidash/
 └── audit-report.md # Codebase audit report for design issues, bugs, and redundancies
 
 ### Structural Changes
+- Created `src/lib/ui/SearchInput.svelte` to unify search inputs and resolve design inconsistencies / DRY violations (2026-06-14).
 - Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
 - Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
 
@@ -79,4 +80,7 @@ anidash/
 - [2026-05-02] Empty Anime List on Load → ROOT CAUSE: Implemented a 7-day TTL purge in `userListStore.loadFromCache` using `updatedAt`, incorrectly assuming it represented the cache date. It actually represents the last MAL modification date, causing all anime untouched for 7 days to be deleted. → FIX: Removed the TTL purge logic from `loadFromCache`. List freshness is maintained by `syncStore.fullSync()`.
 - [2026-06-14] Invalid HTML nested interactive buttons → ROOT CAUSE: Interactive `EpisodeCounter` `<button>` elements nested inside top-level `<a>` container. → FIX: Converted container to `div` and utilized absolute stretched `<a>` overlays alongside `z-index` layering for distinct click targets.
 - [2026-06-14] Rating coercion & touch conflicts on mobile → ROOT CAUSE: API/IndexedDB returned scores as strings, failing strict `===` checks. Touch events fired simulated clicks that toggled scores back to 0. → FIX: Cast score to number (`$derived(Number(score))`) and added `e.preventDefault()` to touch handlers.
-
+- [2026-06-14] Mirror dropdown links not working on click → ROOT CAUSE: Synchronously changing preferred domain rearranged DOM links, cancelling browser navigation. Also hover styles conflicted with click intent. → FIX: Deferred state changes with `setTimeout` and removed `lg:group-hover:flex` class.
+- [2026-06-14] Browse page UI/UX issues (double borders, bad mobile spacing, missing SFW toggle) → ROOT CAUSE: Flex-wrap and grid layouts stretched on mobile, standard selects caused border clutter, and SFW filter was missing UI switch. → FIX: Refactored filters panel to stack on mobile, added custom chevron dropdown style to remove double borders, added custom SFW switch, and pre-populated landing page.
+- [2026-06-14] Home page list search bar narrow & double border on focus → ROOT CAUSE: `sm:max-w-xs` limited search width on desktop, and focus ring didn't change border-color, causing double outline. → FIX: Changed to `sm:max-w-md` and updated focus state to transition border and ring together.
+- [2026-06-14] Search bars design inconsistencies & DRY violations → ROOT CAUSE: Home list search and Browse search were implemented separately with different roundings, heights, and borders. Also focus outlines drew double borders. → FIX: Created unified `SearchInput` component with `rounded-full`, soft border-ring transition, and refactored both pages to use it.

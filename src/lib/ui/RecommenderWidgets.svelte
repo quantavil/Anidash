@@ -125,7 +125,7 @@
 	</button>
 {/snippet}
 
-<div class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
+<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
 	{@render widget({
 		title: 'PTW Roulette',
 		desc: 'Random from backlog',

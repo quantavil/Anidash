@@ -88,7 +88,7 @@
 
 <div class="flex w-full flex-wrap items-center justify-between gap-3">
 	<!-- Search -->
-	<div class="flex-1 sm:max-w-md">
+	<div class="flex-1 min-w-[200px]">
 		<SearchInput
 			value={currentQuery}
 			placeholder="Search your list…"

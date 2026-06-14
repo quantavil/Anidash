@@ -131,34 +131,14 @@
 		}
 	});
 
-	// ─── Infinite Scroll ───
-
-	let sentinelEl: HTMLElement | null = $state(null);
-	let observer: IntersectionObserver | null = null;
-
+	// ─── Pagination ───
+	
 	onMount(() => {
 		loadGenres();
 
-		observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0]?.isIntersecting && hasNextPage && !loadingMore && !loading) {
-					doSearch(currentPage + 1, true);
-				}
-			},
-			{ rootMargin: '200px' }
-		);
-
 		return () => {
-			observer?.disconnect();
 			if (debounceTimer) clearTimeout(debounceTimer);
 		};
-	});
-
-	$effect(() => {
-		if (sentinelEl && observer) {
-			observer.disconnect();
-			observer.observe(sentinelEl);
-		}
 	});
 
 	// ─── Genres ───
@@ -404,16 +384,21 @@
 				{/each}
 			</div>
 
-			<!-- Infinite scroll sentinel -->
+			<!-- Pagination -->
 			{#if hasNextPage}
-				<div bind:this={sentinelEl} class="flex justify-center py-8">
+				<div class="flex justify-center py-8">
 					{#if loadingMore}
 						<div class="flex items-center gap-2 text-sm text-text-muted">
 							<Loader2 size={16} class="animate-spin" />
 							Loading more…
 						</div>
 					{:else}
-						<div class="h-8"></div>
+						<button
+							onclick={() => doSearch(currentPage + 1, true)}
+							class="rounded-full bg-white/5 border border-white/10 px-6 py-2.5 text-sm font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+						>
+							Show More
+						</button>
 					{/if}
 				</div>
 			{:else}

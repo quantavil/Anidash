@@ -79,7 +79,7 @@ export function formatStatus(status: string): string {
 type StatusVariant = 'badge' | 'dot' | 'solid';
 export const STATUS_COLORS: Record<string, Record<StatusVariant, string>> = {
 	watching: {
-		badge: 'bg-primary/15 text-primary border-primary/30',
+		badge: 'bg-primary/20 text-[#bfb5ff] border-primary/40',
 		dot: 'bg-primary',
 		solid: 'bg-primary/90'
 	},

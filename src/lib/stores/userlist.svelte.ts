@@ -153,11 +153,27 @@ function createUserListStore() {
 	// ─── Status Change ───
 
 	function setStatus(malId: number, newStatus: AnimeStatus): void {
-		optimisticUpdate(
-			malId,
-			{ status: newStatus, updatedAt: new Date().toISOString() },
-			{ status: newStatus }
-		);
+		const entry = entries[malId];
+		if (entry && newStatus === 'completed' && entry.numEpisodes > 0) {
+			optimisticUpdate(
+				malId,
+				{
+					status: 'completed' as AnimeStatus,
+					numWatchedEpisodes: entry.numEpisodes,
+					updatedAt: new Date().toISOString()
+				},
+				{
+					status: 'completed',
+					num_watched_episodes: entry.numEpisodes
+				}
+			);
+		} else {
+			optimisticUpdate(
+				malId,
+				{ status: newStatus, updatedAt: new Date().toISOString() },
+				{ status: newStatus }
+			);
+		}
 	}
 
 	// ─── Score Change ───
@@ -252,12 +268,22 @@ function createUserListStore() {
 		fallbackTitle?: string,
 		fallbackPicture?: string | null
 	): Promise<Result<void>> {
+		// Fetch anime detail first so we have the episode count for completed status
+		const detailResult = await getAnimeDetail(malId);
+		let finalEpisodes = 0;
+		if (detailResult.ok) {
+			finalEpisodes = detailResult.value.numEpisodes;
+		}
+
+		const payload: Record<string, unknown> = { status };
+		if (status === 'completed' && finalEpisodes > 0) {
+			payload.num_watched_episodes = finalEpisodes;
+		}
+
 		// First, update MAL
-		const result = await updateAnimeStatus(malId, { status });
+		const result = await updateAnimeStatus(malId, payload);
 		if (!result.ok) return result;
 
-		// Then fetch the anime detail to populate our cache
-		const detailResult = await getAnimeDetail(malId);
 		if (detailResult.ok) {
 			if (titleEnglish) {
 				detailResult.value.titleEnglish = titleEnglish;
@@ -272,7 +298,7 @@ function createUserListStore() {
 			titleEnglish: titleEnglish ?? null,
 			mainPicture: fallbackPicture ? { medium: fallbackPicture, large: fallbackPicture } : null,
 			mean: null,
-			numEpisodes: 0,
+			numEpisodes: finalEpisodes,
 			genres: [],
 			studios: [],
 			startSeason: { year: null, season: null },
@@ -282,7 +308,7 @@ function createUserListStore() {
 			numScoringUsers: 0,
 			status,
 			score: 0,
-			numWatchedEpisodes: 0,
+			numWatchedEpisodes: status === 'completed' && finalEpisodes > 0 ? finalEpisodes : 0,
 			isRewatching: false,
 			updatedAt: new Date().toISOString(),
 			startDate: null,
@@ -296,7 +322,6 @@ function createUserListStore() {
 			newEntry.titleEnglish = d.titleEnglish;
 			newEntry.mainPicture = d.mainPicture;
 			newEntry.mean = d.mean;
-			newEntry.numEpisodes = d.numEpisodes;
 			newEntry.genres = d.genres;
 			newEntry.studios = d.studios;
 			newEntry.startSeason = d.startSeason;

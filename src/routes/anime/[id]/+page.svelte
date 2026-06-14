@@ -45,12 +45,7 @@
 	const listEntry = $derived(userListStore.getEntry(malId));
 	const inList = $derived(listEntry !== undefined);
 
-	// ─── Tabs ───
-
-	type TabKey = 'overview' | 'characters' | 'recommendations' | 'related';
-	let activeTab = $state<TabKey>('overview');
-
-	// ─── Tab Data (lazy loaded) ───
+	// ─── Tab Data (loaded in background) ───
 
 	let characters = $state<JikanCharacterEntry[]>([]);
 	let charactersLoading = $state(false);
@@ -65,6 +60,31 @@
 	let showAddModal = $state(false);
 	let showCompleteDialog = $state(false);
 	let completeTargetId = $state<number | null>(null);
+
+	// ─── Read More / Expansion States ───
+
+	let expandedSynopsis = $state(false);
+	let expandedCharacters = $state(false);
+
+	// ─── Derived Grid Data ───
+
+	const relatedGrouped = $derived(
+		anime?.relatedAnime && anime.relatedAnime.length > 0
+			? anime.relatedAnime.reduce(
+					(acc, r) => {
+						const type = r.relationType.replace(/_/g, ' ');
+						if (!acc[type]) acc[type] = [];
+						acc[type].push(r);
+						return acc;
+					},
+					{} as Record<string, typeof anime.relatedAnime>
+				)
+			: null
+	);
+
+	const displayedCharacters = $derived(
+		expandedCharacters ? characters : characters.slice(0, 12)
+	);
 
 	// ─── Load Anime Detail ───
 
@@ -96,7 +116,7 @@
 		loading = false;
 	}
 
-	// ─── Lazy Load Tab Data ───
+	// ─── Background Fetch Data ───
 
 	async function loadCharacters() {
 		if (characters.length > 0 || charactersLoading) return;
@@ -126,20 +146,6 @@
 		recsLoading = false;
 	}
 
-	// ─── Tab Switch ───
-
-	function handleTabChange(tab: TabKey) {
-		activeTab = tab;
-		switch (tab) {
-			case 'characters':
-				loadCharacters();
-				break;
-			case 'recommendations':
-				loadRecommendations();
-				break;
-		}
-	}
-
 	// ─── Complete Prompt ───
 
 	function handleCompletePrompt(id: number) {
@@ -157,26 +163,30 @@
 			anime = null;
 			characters = [];
 			recommendations = [];
-			activeTab = 'overview';
-			loadAnime(id, () => aborted);
+			expandedSynopsis = false;
+			expandedCharacters = false;
+			loadAnime(id, () => aborted).then(() => {
+				if (!aborted && anime) {
+					loadCharacters();
+					loadRecommendations();
+				}
+			});
 		}
 		return () => {
 			aborted = true;
 		};
 	});
 
-	const TABS: { key: TabKey; label: string }[] = [
-		{ key: 'overview', label: 'Overview' },
-		{ key: 'characters', label: 'Characters' },
-		{ key: 'recommendations', label: 'Recommendations' },
-		{ key: 'related', label: 'Related' }
-	];
-
 	const STATUS_COLORS: Record<string, string> = {
 		currently_airing: 'text-success',
 		finished_airing: 'text-info',
 		not_yet_aired: 'text-warning'
 	};
+
+	function formatCharacterName(rawName: string): string {
+		const parts = rawName.split(',').map((p) => p.trim());
+		return parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawName;
+	}
 </script>
 
 {#if loading && !anime}
@@ -228,19 +238,11 @@
 						tag="span"
 						class=""
 					/>
-					{#if dubStore.hasDub(anime.malId)}
-						<span
-							class="inline-flex items-center justify-center rounded-lg bg-primary/20 text-primary px-2 py-1 shadow-[0_0_10px_rgba(var(--color-primary),0.2)] border border-primary/30"
-							title="Dubbed"
-						>
-							<Mic size={16} fill="currentColor" />
-						</span>
-					{/if}
 				</div>
 
 				<!-- Quick stats row -->
 				<div
-					class="mt-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-sm text-text-secondary scrollbar-none max-w-full [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-2"
+					class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary max-w-full [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
 				>
 					{#if anime.mean}
 						<div
@@ -286,9 +288,9 @@
 					{/if}
 				</div>
 
-				<!-- Studios & Broadcast row (can stay below or be removed if too dense, but let's keep it tight) -->
+				<!-- Studios & Broadcast row -->
 				<div
-					class="mt-1 flex items-center gap-3 text-xs text-text-muted overflow-x-auto whitespace-nowrap scrollbar-none max-w-full [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+					class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted max-w-full [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
 				>
 					{#if anime.studios.length > 0}
 						<div class="flex items-center gap-1 shrink-0">
@@ -354,7 +356,7 @@
 								<p class="mb-2 text-[9px] font-medium uppercase tracking-wider text-text-muted">
 									Your Score
 								</p>
-								<RatingStars {malId} score={listEntry.score} size={14} />
+								<RatingStars {malId} score={listEntry.score} size={22} />
 							</div>
 						</div>
 					{:else}
@@ -385,330 +387,238 @@
 			</div>
 		</div>
 
-		<!-- ─── Tabs ─── -->
-		<div class="mt-8">
-			<div class="flex gap-2 overflow-x-auto pb-4 scrollbar-none">
-				{#each TABS as tab}
-					<button
-						onclick={() => handleTabChange(tab.key)}
-						class="shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300
-              {activeTab === tab.key
-							? 'bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--color-primary),0.2)] border border-primary/40'
-							: 'bg-surface-1/50 text-text-muted hover:bg-surface-1 hover:text-text-secondary border border-white/5'}"
-					>
-						{tab.label}
-						{#if tab.key === 'characters' && characters.length > 0}
-							<span class="ml-1 text-xs opacity-60">({characters.length})</span>
+		<!-- ─── Scrollable Page Sections ─── -->
+		<div class="mt-8 space-y-8">
+			<!-- Section 1: Overview (Synopsis + Bento Info) -->
+			<div class="space-y-4">
+				{#if anime.synopsis}
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5 relative overflow-hidden">
+						<h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Synopsis</h3>
+						<p class="text-sm leading-relaxed text-text-secondary transition-all duration-300 {expandedSynopsis ? '' : 'line-clamp-4'}">
+							{anime.synopsis}
+						</p>
+						{#if anime.synopsis.length > 280}
+							<button
+								onclick={() => (expandedSynopsis = !expandedSynopsis)}
+								class="mt-3 text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 active:scale-95 transition-transform"
+							>
+								{expandedSynopsis ? 'Show Less ↑' : 'Read More ↓'}
+							</button>
 						{/if}
-					</button>
-				{/each}
+					</div>
+				{/if}
+
+				<!-- Bento Info Grid -->
+				<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5">
+					<h3 class="mb-4 text-xs font-bold uppercase tracking-wider text-text-muted">Information</h3>
+					<div class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
+						{#each [
+							{ label: 'Type', value: formatMediaType(anime.mediaType) },
+							{ label: 'Episodes', value: anime.numEpisodes || 'Unknown' },
+							{ label: 'Status', value: formatAnimeStatus(anime.animeStatus) },
+							{ label: 'Season', value: formatSeason(anime.startSeason?.year ?? null, anime.startSeason?.season ?? null) },
+							{ label: 'Studios', value: anime.studios.map((s) => s.name).join(', ') || '—' },
+							{ label: 'Score', value: anime.mean ? anime.mean.toFixed(2) : '—' }
+						] as item}
+							<div class="flex flex-col gap-1">
+								<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">{item.label}</span>
+								<span class="text-xs font-semibold text-text-primary truncate" title={String(item.value)}>{item.value}</span>
+							</div>
+						{/each}
+					</div>
+				</div>
 			</div>
 
-			<!-- ─── Tab Content ─── -->
-			<div class="mt-6">
-				<!-- Overview -->
-				{#if activeTab === 'overview'}
-					<div class="space-y-6">
-						{#if anime.synopsis}
-							<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5">
-								<h3 class="mb-2 text-sm font-semibold text-text-primary">Synopsis</h3>
-								<p class="text-sm leading-relaxed text-text-secondary">
-									{anime.synopsis}
-								</p>
-							</div>
-						{/if}
-
-						<!-- Info Grid -->
-						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-5">
-							<h3 class="mb-3 text-sm font-semibold text-text-primary">Information</h3>
-							<div class="grid gap-4 sm:grid-cols-2">
-								{#each [{ label: 'Type', value: formatMediaType(anime.mediaType) }, { label: 'Episodes', value: anime.numEpisodes || 'Unknown' }, { label: 'Status', value: formatAnimeStatus(anime.animeStatus) }, { label: 'Season', value: formatSeason(anime.startSeason?.year ?? null, anime.startSeason?.season ?? null) }, { label: 'Studios', value: anime.studios
-												.map((s) => s.name)
-												.join(', ') || '—' }, { label: 'Score', value: anime.mean ? anime.mean.toFixed(2) : '—' }] as item}
-									<div class="flex items-start gap-3 text-sm">
-										<span class="shrink-0 w-20 font-medium text-text-muted">{item.label}</span>
-										<span class="text-text-primary">{item.value}</span>
-									</div>
-								{/each}
-							</div>
-						</div>
-
-						<!-- Quick Recommendations Preview -->
-						{#if anime.recommendations && anime.recommendations.length > 0}
+			<!-- Section 2: Related Anime -->
+			{#if relatedGrouped && Object.keys(relatedGrouped).length > 0}
+				<div class="space-y-4">
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Related Anime</h3>
+					<div class="space-y-4">
+						{#each Object.entries(relatedGrouped) as [type, items]}
 							<div>
-								<h3 class="mb-3 text-sm font-semibold text-text-primary">Recommendations</h3>
-								<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-									{#each anime.recommendations.slice(0, 3) as rec}
+								<h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">{type}</h4>
+								<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+									{#each items as item}
 										<a
-											href="/anime/{rec.id}"
-											class="flex items-center gap-3 rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30"
+											href="/anime/{item.id}"
+											class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
 										>
-											<ImageWithFallback
-												src={rec.mainPicture?.medium}
-												alt={rec.title}
-												class="h-16 w-11 shrink-0 rounded"
-											/>
-											<div class="min-w-0 flex-1">
-												<p class="truncate text-sm text-text-primary">{rec.title}</p>
-												{#if rec.mean}
-													<p class="text-xs text-text-muted">★ {rec.mean.toFixed(1)}</p>
+											<div class="relative aspect-[3/4] overflow-hidden rounded-lg">
+												<ImageWithFallback
+													src={item.mainPicture?.medium}
+													alt={item.title}
+													class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+												/>
+											</div>
+											<div class="min-w-0">
+												<p class="truncate text-xs font-semibold text-text-primary group-hover:text-primary transition-colors">
+													{item.title}
+												</p>
+												{#if item.mediaType}
+													<p class="text-[10px] text-text-muted">{formatMediaType(item.mediaType)}</p>
 												{/if}
 											</div>
 										</a>
 									{/each}
 								</div>
-								{#if anime.recommendations.length > 3}
-									<button
-										onclick={() => handleTabChange('recommendations')}
-										class="mt-2 text-sm text-primary hover:text-primary-hover"
-									>
-										View all {anime.recommendations.length} recommendations →
-									</button>
-								{/if}
 							</div>
-						{/if}
+						{/each}
 					</div>
+				</div>
+			{/if}
 
-					<!-- Characters -->
-				{:else if activeTab === 'characters'}
-					{#if charactersLoading}
-						<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-							{#each Array(6) as _}
-								<div class="flex items-center gap-3 rounded-lg bg-surface-1 p-3">
-									<div class="h-14 w-14 animate-pulse rounded-full bg-surface-2"></div>
-									<div class="space-y-2">
-										<div class="h-4 w-24 animate-pulse rounded bg-surface-2"></div>
-										<div class="h-3 w-16 animate-pulse rounded bg-surface-2"></div>
-									</div>
-								</div>
-							{/each}
-						</div>
-					{:else if charactersError}
-						<div class="flex items-center gap-3">
-							<p class="text-sm text-error">{charactersError}</p>
-							<button
-								onclick={() => {
-									characters = [];
-									loadCharacters();
-								}}
-								class="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-2"
-								>Retry</button
-							>
-						</div>
-					{:else if characters.length === 0}
-						<p class="text-sm text-text-muted">No character information available.</p>
-					{:else}
-						<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-							{#each characters as entry}
-								<div
-									class="flex items-center gap-3 rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-3 transition-transform hover:-translate-y-0.5 hover:shadow-lg"
+			<!-- Section 3: Recommendations -->
+			{#if (anime.recommendations && anime.recommendations.length > 0) || recommendations.length > 0}
+				<div class="space-y-4">
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Recommendations</h3>
+
+					<!-- MAL Recommendations -->
+					{#if anime.recommendations && anime.recommendations.length > 0}
+						<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+							{#each anime.recommendations.slice(0, 6) as rec}
+								<a
+									href="/anime/{rec.id}"
+									class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
 								>
-									<ImageWithFallback
-										src={entry.character.images?.jpg?.image_url}
-										alt={entry.character.name}
-										aspectRatio="1/1"
-										fallbackIcon="user"
-										class="h-14 w-14 shrink-0 rounded-full"
-									/>
-									<div class="min-w-0 flex-1">
-										<p class="truncate text-sm font-medium text-text-primary">
-											{entry.character.name}
+									<div class="relative aspect-[3/4] overflow-hidden rounded-lg">
+										<ImageWithFallback
+											src={rec.mainPicture?.medium}
+											alt={rec.title}
+											class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+										/>
+										{#if rec.mean}
+											<div class="glass-badge absolute right-1.5 top-1.5 px-1.5 py-0.5 text-[9px] font-bold">
+												★ {rec.mean.toFixed(1)}
+											</div>
+										{/if}
+									</div>
+									<div class="min-w-0">
+										<p class="truncate text-xs font-semibold text-text-primary group-hover:text-primary transition-colors">
+											{rec.title}
 										</p>
-										<p class="text-xs capitalize text-text-muted">{entry.role}</p>
-										{#if entry.character.favorites}
-											<p class="mt-0.5 text-[10px] text-text-muted">
-												♥ {entry.character.favorites.toLocaleString()}
+										{#if rec.numRecommendations}
+											<p class="text-[9px] text-text-muted">
+												{rec.numRecommendations} user{rec.numRecommendations === 1 ? '' : 's'}
 											</p>
 										{/if}
 									</div>
-								</div>
+								</a>
 							{/each}
 						</div>
 					{/if}
 
-					<!-- Recommendations -->
-				{:else if activeTab === 'recommendations'}
+					<!-- Community Recommendations -->
 					{#if recsLoading}
-						<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-							{#each Array(6) as _}
-								<div class="h-40 animate-pulse rounded-lg bg-surface-1"></div>
+						<div class="grid gap-3 sm:grid-cols-2">
+							{#each Array(2) as _}
+								<div class="h-28 animate-pulse rounded-xl bg-surface-1"></div>
 							{/each}
 						</div>
-					{:else if recsError}
-						<div class="flex items-center gap-3">
-							<p class="text-sm text-error">{recsError}</p>
-							<button
-								onclick={() => {
-									recommendations = [];
-									loadRecommendations();
-								}}
-								class="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-2"
-								>Retry</button
-							>
-						</div>
-					{:else}
-						<!-- MAL recommendations (from detail) -->
-						{#if anime.recommendations && anime.recommendations.length > 0}
-							<h3 class="mb-3 text-sm font-semibold text-text-primary">From MyAnimeList</h3>
-							<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-								{#each anime.recommendations as rec}
-									<a
-										href="/anime/{rec.id}"
-										class="group flex items-center gap-3 rounded-xl border border-border bg-surface-1/50 p-3 transition-all hover:bg-surface-1 hover:border-primary/30"
-									>
-										<div class="overflow-hidden rounded-lg shadow-lg">
-											<ImageWithFallback
-												src={rec.mainPicture?.medium}
-												alt={rec.title}
-												class="h-20 w-14 shrink-0 object-cover transition-transform duration-500 group-hover:scale-110"
-											/>
-										</div>
-										<div class="min-w-0 flex-1">
-											<p
-												class="line-clamp-2 text-sm font-semibold text-text-primary group-hover:text-primary transition-colors"
-											>
-												{rec.title}
-											</p>
-											<div class="mt-1 flex flex-col gap-0.5">
-												{#if rec.mean}
-													<p class="text-xs text-text-muted flex items-center gap-1">
-														<Star size={10} class="text-warning" fill="currentColor" />
-														{rec.mean.toFixed(1)}
-													</p>
-												{/if}
-												{#if rec.numRecommendations}
-													<p class="text-[10px] text-text-muted">
-														{rec.numRecommendations}
-														{rec.numRecommendations === 1 ? 'recommendation' : 'recommendations'}
-													</p>
-												{/if}
-											</div>
-										</div>
-									</a>
-								{/each}
-							</div>
-						{/if}
-
-						<!-- Jikan recommendations -->
-						{#if recommendations.length > 0}
-							<h3 class="mb-3 mt-8 text-sm font-semibold text-text-primary">
-								Community Recommendations
-							</h3>
-							<div class="space-y-3">
-								{#each recommendations.slice(0, 10) as rec}
-									<div
-										class="rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-4 transition-all duration-300 hover:shadow-lg hover:border-primary/30"
-									>
-										<div class="flex items-start gap-4">
-											{#if rec.entry}
-												<a href="/anime/{rec.entry.mal_id}" class="shrink-0 group">
-													<div
-														class="overflow-hidden rounded-lg border border-white/5 shadow-2xl group-active:scale-95 transition-transform duration-200"
-													>
-														<ImageWithFallback
-															src={rec.entry.images?.jpg?.image_url}
-															alt={rec.entry.title}
-															class="h-28 w-20 object-cover transition-transform duration-500 group-hover:scale-110"
-														/>
-													</div>
-												</a>
-											{/if}
-											<div class="min-w-0 flex-1">
-												<div class="flex items-start justify-between gap-3">
+					{:else if recommendations.length > 0}
+						<div class="space-y-3">
+							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Community Insights</h4>
+							<div class="grid gap-3 md:grid-cols-2">
+								{#each recommendations.slice(0, 4) as rec}
+									<div class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3">
+										{#if rec.entry}
+											<a href="/anime/{rec.entry.mal_id}" class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity">
+												<ImageWithFallback
+													src={rec.entry.images?.jpg?.image_url}
+													alt={rec.entry.title}
+													class="h-full w-full object-cover"
+												/>
+											</a>
+										{/if}
+										<div class="min-w-0 flex-1 flex flex-col justify-between">
+											<div>
+												<div class="flex items-start justify-between gap-2">
 													{#if rec.entry}
-														<a
-															href="/anime/{rec.entry.mal_id}"
-															class="text-base font-semibold leading-tight text-text-primary hover:text-primary transition-colors"
-														>
+														<a href="/anime/{rec.entry.mal_id}" class="truncate text-xs font-bold text-text-primary hover:text-primary transition-colors">
 															{rec.entry.title}
 														</a>
 													{/if}
 													{#if rec.votes}
-														<div
-															class="flex items-center gap-1.5 shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-text-secondary border border-white/10 shadow-sm"
-															title="{rec.votes} users recommended this"
-														>
-															<Users size={12} class="text-primary" />
-															{rec.votes}
-														</div>
+														<span class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted">
+															♥ {rec.votes}
+														</span>
 													{/if}
 												</div>
 												{#if rec.content}
-													<p class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary">
+													<p class="mt-1 line-clamp-3 text-[11px] leading-relaxed text-text-secondary">
 														{rec.content}
 													</p>
 												{/if}
-												{#if rec.user}
-													<div class="mt-4 flex items-center gap-2">
-														<div
-															class="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center"
-														>
-															<Users size={10} class="text-primary" />
-														</div>
-														<span class="text-[10px] font-medium text-text-muted">
-															Suggested by <span class="text-text-secondary"
-																>{rec.user.username}</span
-															>
-														</span>
-													</div>
-												{/if}
 											</div>
+											{#if rec.user}
+												<p class="text-[9px] text-text-muted mt-1">
+													By <span class="text-text-secondary font-medium">{rec.user.username}</span>
+												</p>
+											{/if}
 										</div>
 									</div>
 								{/each}
 							</div>
-						{/if}
-
-						{#if (!anime.recommendations || anime.recommendations.length === 0) && recommendations.length === 0}
-							<p class="text-sm text-text-muted">No recommendations available.</p>
-						{/if}
-					{/if}
-
-					<!-- Related -->
-				{:else if activeTab === 'related'}
-					{#if anime.relatedAnime && anime.relatedAnime.length > 0}
-						{@const grouped = anime.relatedAnime.reduce(
-							(acc, r) => {
-								const type = r.relationType.replace(/_/g, ' ');
-								if (!acc[type]) acc[type] = [];
-								acc[type].push(r);
-								return acc;
-							},
-							{} as Record<string, typeof anime.relatedAnime>
-						)}
-
-						<div class="space-y-6">
-							{#each Object.entries(grouped) as [type, items]}
-								<div>
-									<h3 class="mb-3 text-sm font-semibold capitalize text-text-primary">{type}</h3>
-									<div class="grid gap-3 sm:grid-cols-2">
-										{#each items as item}
-											<a
-												href="/anime/{item.id}"
-												class="flex items-center gap-3 rounded-xl border border-white/5 bg-surface-1/40 backdrop-blur-sm p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30"
-											>
-												<ImageWithFallback
-													src={item.mainPicture?.medium}
-													alt={item.title}
-													class="h-16 w-11 shrink-0 rounded"
-												/>
-												<div class="min-w-0 flex-1">
-													<p class="truncate text-sm text-text-primary">{item.title}</p>
-													{#if item.mediaType}
-														<p class="text-xs text-text-muted">{formatMediaType(item.mediaType)}</p>
-													{/if}
-												</div>
-											</a>
-										{/each}
-									</div>
-								</div>
-							{/each}
 						</div>
-					{:else}
-						<p class="text-sm text-text-muted">No related anime information available.</p>
 					{/if}
-				{/if}
-			</div>
+				</div>
+			{/if}
+
+			<!-- Section 4: Characters -->
+			{#if charactersLoading}
+				<div class="space-y-3">
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
+					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+						{#each Array(8) as _}
+							<div class="flex items-center gap-2 rounded-xl bg-surface-1 p-2">
+								<div class="h-10 w-10 animate-pulse rounded-full bg-surface-2"></div>
+								<div class="space-y-1">
+									<div class="h-3 w-16 animate-pulse rounded bg-surface-2"></div>
+									<div class="h-2.5 w-10 animate-pulse rounded bg-surface-2"></div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{:else if characters.length > 0}
+				<div class="space-y-4">
+					<div class="flex items-center justify-between">
+						<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
+						<span class="text-xs text-text-muted">({characters.length} total)</span>
+					</div>
+					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+						{#each displayedCharacters as entry}
+							<div class="flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-transform hover:-translate-y-0.5 hover:shadow-md">
+								<ImageWithFallback
+									src={entry.character.images?.jpg?.image_url}
+									alt={entry.character.name}
+									aspectRatio="1/1"
+									fallbackIcon="user"
+									class="h-10 w-10 shrink-0 rounded-full"
+								/>
+								<div class="min-w-0 flex-1">
+									<p class="truncate text-xs font-semibold text-text-primary" title={formatCharacterName(entry.character.name)}>
+										{formatCharacterName(entry.character.name)}
+									</p>
+									<p class="text-[10px] capitalize text-text-muted truncate">{entry.role}</p>
+									{#if entry.character.favorites}
+										<p class="mt-0.5 text-[9px] text-text-muted">
+											♥ {entry.character.favorites.toLocaleString()}
+										</p>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+					{#if characters.length > 12}
+						<button
+							onclick={() => (expandedCharacters = !expandedCharacters)}
+							class="mt-2 text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 active:scale-95 transition-transform"
+						>
+							{expandedCharacters ? 'Show Fewer Characters ↑' : `Show All ${characters.length} Characters ↓`}
+						</button>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}

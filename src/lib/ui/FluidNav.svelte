@@ -195,7 +195,7 @@
 
 <!-- Mobile Bottom Tab Bar -->
 <nav
-	class="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-white/10 bg-surface-1/80 backdrop-blur-xl md:hidden pb-SAFE"
+	class="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-white/10 bg-surface-1/80 backdrop-blur-xl md:hidden pb-safe"
 >
 	{#each NAV_ITEMS as item}
 		{@const isActive =

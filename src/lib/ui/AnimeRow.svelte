@@ -82,7 +82,7 @@
 
 	<!-- Rating -->
 	<div class="hidden lg:flex">
-		<RatingStars malId={entry.malId} score={entry.score} size={12} showValue={false} />
+		<RatingStars malId={entry.malId} score={entry.score} size={16} showValue={false} />
 	</div>
 
 	<!-- Updated -->

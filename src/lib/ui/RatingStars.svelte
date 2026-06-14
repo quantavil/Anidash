@@ -5,7 +5,7 @@
 	let {
 		malId,
 		score,
-		size = 14,
+		size = 20,
 		showValue = true,
 		interactive = true
 	}: {
@@ -19,24 +19,32 @@
 	let hoveredScore = $state<number | null>(null);
 	const displayScore = $derived(hoveredScore ?? score);
 
-	/** How much of star `i` (0-indexed) should be filled: 0 or 1 */
+	/** How much of star `i` (0-indexed) should be filled: 0, 0.5, or 1 */
 	function starFill(i: number): number {
 		const s = displayScore;
-		if (s > i) return 1;
+		if (s >= (i + 1) * 2) return 1;
+		if (s === (i * 2) + 1) return 0.5;
 		return 0;
 	}
 
 	function handleClick(starIndex: number) {
 		if (!interactive) return;
-		const newScore = starIndex + 1;
-		// Toggle: if clicking the same score, set to 0 (unrate)
-		const finalScore = newScore === score ? 0 : newScore;
+		const evenScore = (starIndex + 1) * 2;
+		const oddScore = evenScore - 1;
+		let finalScore = evenScore;
+
+		if (score === evenScore) {
+			finalScore = oddScore;
+		} else if (score === oddScore) {
+			finalScore = 0;
+		}
+
 		userListStore.setScore(malId, finalScore);
 	}
 
 	function handleMouseMove(starIndex: number) {
 		if (!interactive) return;
-		hoveredScore = starIndex + 1;
+		hoveredScore = (starIndex + 1) * 2;
 	}
 
 	function handleMouseLeave() {
@@ -58,7 +66,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-	class="inline-flex items-center gap-0.5 outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-sm transition-shadow"
+	class="inline-flex items-center gap-1.5 outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-sm transition-shadow"
 	role="slider"
 	tabindex="0"
 	aria-label="Rating"
@@ -69,13 +77,13 @@
 	onclick={(e) => e.stopPropagation()}
 	onkeydown={handleKeyDown}
 >
-	{#each Array(10) as _, i}
+	{#each Array(5) as _, i}
 		{@const fill = starFill(i)}
 		<div
 			role="button"
 			tabindex="0"
-			class="relative {interactive ? 'cursor-pointer' : ''}"
-			style="width: {size + 2}px; height: {size}px;"
+			class="relative transition-transform duration-200 {interactive ? 'cursor-pointer hover:scale-110 active:scale-95' : ''}"
+			style="width: {size}px; height: {size}px;"
 			onclick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -89,13 +97,13 @@
 			}}
 			onmousemove={() => handleMouseMove(i)}
 		>
-			<!-- Empty star -->
-			<Star {size} class="absolute inset-0 text-surface-3" fill="none" stroke-width={1.5} />
+			<!-- Empty star (clearly visible but muted) -->
+			<Star {size} class="absolute inset-0 text-white/20" fill="none" stroke-width={1.5} />
 			<!-- Filled portion -->
-			<div class="absolute inset-0 overflow-hidden" style="width: {fill * 100}%;">
+			<div class="absolute inset-0 overflow-hidden pointer-events-none" style="width: {fill * 100}%;">
 				<Star
 					{size}
-					class="text-warning"
+					class="text-warning filter drop-shadow-[0_0_4px_rgba(251,191,36,0.3)]"
 					fill="currentColor"
 					stroke="currentColor"
 					stroke-width={0}
@@ -105,7 +113,7 @@
 	{/each}
 
 	{#if showValue}
-		<span class="ml-1 text-xs tabular-nums text-text-muted">
+		<span class="ml-1.5 text-xs font-semibold tabular-nums text-text-secondary">
 			{score > 0 ? score : '—'}
 		</span>
 	{/if}

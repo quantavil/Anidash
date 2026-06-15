@@ -176,65 +176,19 @@
 	}
 </script>
 
-{#snippet widget({
-	title,
-	desc,
-	icon: Icon,
-	action,
-	isLoading,
-	colorClass,
-	gradientClass,
-	loadingIcon: LoadingIcon
-}: any)}
-	<button onclick={action} disabled={isLoading} class="group glass-widget w-full text-center">
-		<!-- Background gradient -->
-		<div
-			class="absolute inset-0 bg-gradient-to-br {gradientClass} opacity-5 transition-opacity duration-300 group-hover:opacity-10 pointer-events-none"
-		></div>
-
-		<!-- Large SVG in background/middle -->
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.03] transition-transform duration-700 group-hover:scale-125 group-hover:opacity-[0.06] group-active:scale-100 pointer-events-none"
-		>
-			<Icon size={150} class={colorClass} strokeWidth={1} />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full">
-			<div class="glass-icon-wrapper">
-				{#if isLoading && LoadingIcon}
-					<LoadingIcon
-						size={24}
-						class="animate-spin {colorClass} drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Icon size={24} class="{colorClass} drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				{title}
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{desc}
-			</p>
-		</div>
-	</button>
-{/snippet}
-
 <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
 	<!-- PTW Roulette Widget -->
 	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm {rollingPTW
-			? 'border-primary/40 shadow-[0_0_15px_rgba(139,126,248,0.2)]'
-			: 'border-white/5 hover:-translate-y-1 hover:shadow-lg hover:border-white/10'}"
+		class="group relative overflow-hidden rounded-2xl border transition-all duration-500 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {rollingPTW
+			? 'border-primary/40 shadow-[0_0_20px_rgba(139,126,248,0.25)]'
+			: 'border-white/5 hover:border-primary/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(139,126,248,0.12)]'}"
 	>
 		<!-- Main Action Area (Triggers Roll) -->
 		<button
 			onclick={runRoulette}
 			disabled={rollingPTW}
 			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
-			aria-label="Roll PTW Roulette"
+			aria-label="Roll Plan to Watch Roulette"
 		></button>
 
 		<!-- Settings Button in corner -->
@@ -243,26 +197,28 @@
 				e.stopPropagation();
 				filterDialogOpen = true;
 			}}
-			class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-all hover:bg-white/10 hover:border-white/10 hover:text-text-primary hover:rotate-45 active:scale-90 cursor-pointer"
+			class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-all hover:bg-primary/10 hover:border-primary/20 hover:text-primary-hover hover:rotate-45 active:scale-90 cursor-pointer"
 			title="Filter Settings"
 		>
 			<Settings size={14} />
 		</button>
 
-		<!-- Background gradient -->
+		<!-- Background glow blobs -->
 		<div
-			class="absolute inset-0 bg-gradient-to-br from-primary via-transparent to-transparent opacity-5 transition-opacity duration-300 group-hover:opacity-10 pointer-events-none"
+			class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
 		></div>
 
 		<!-- Large SVG in background/middle -->
 		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.03] transition-transform duration-700 group-hover:scale-125 group-hover:opacity-[0.06] pointer-events-none"
+			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-primary"
 		>
-			<Dice5 size={150} class="text-primary" strokeWidth={1} />
+			<Dice5 size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
 		</div>
 
 		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div class="glass-icon-wrapper">
+			<div
+				class="glass-icon-wrapper border-primary/10 bg-primary/5 text-primary group-hover:bg-primary/10 group-hover:border-primary/20"
+			>
 				{#if rollingPTW}
 					<Loader2 size={24} class="animate-spin text-primary drop-shadow-[0_0_8px_currentColor]" />
 				{:else}
@@ -293,16 +249,55 @@
 	</div>
 
 	<!-- Seasonal Surprise Widget -->
-	{@render widget({
-		title: 'Seasonal Surprise',
-		desc: 'Random airing anime',
-		icon: Sparkles,
-		action: getRandomSeasonal,
-		isLoading: loading,
-		loadingIcon: Loader2,
-		colorClass: 'text-pink-400',
-		gradientClass: 'from-pink-500 via-transparent to-transparent'
-	})}
+	<div
+		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {loading
+			? 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.25)]'
+			: 'border-white/5 hover:border-pink-500/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(244,114,182,0.12)]'}"
+	>
+		<!-- Main Action Area (Triggers Roll) -->
+		<button
+			onclick={getRandomSeasonal}
+			disabled={loading}
+			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
+			aria-label="Roll Seasonal Surprise"
+		></button>
+
+		<!-- Background glow blobs -->
+		<div
+			class="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
+		></div>
+
+		<!-- Large SVG in background/middle -->
+		<div
+			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-pink-400"
+		>
+			<Sparkles size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
+		</div>
+
+		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
+			<div
+				class="glass-icon-wrapper border-pink-500/10 bg-pink-500/5 text-pink-400 group-hover:bg-pink-500/10 group-hover:border-pink-500/20"
+			>
+				{#if loading}
+					<Loader2 size={24} class="animate-spin text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
+				{:else}
+					<Sparkles size={24} class="text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
+				{/if}
+			</div>
+			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
+				Seasonal Surprise
+			</h3>
+			<p
+				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
+			>
+				{#if loading}
+					Loading...
+				{:else}
+					Random airing anime
+				{/if}
+			</p>
+		</div>
+	</div>
 </div>
 
 <!-- PTW Filters Modal -->

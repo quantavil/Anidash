@@ -132,7 +132,7 @@
 	});
 
 	// ─── Pagination ───
-	
+
 	onMount(() => {
 		loadGenres();
 
@@ -212,8 +212,8 @@
 				placeholder="Search anime by title…"
 				oninput={handleSearchInput}
 				onclear={clearSearch}
-				loading={loading}
-				isDebouncing={isDebouncing}
+				{loading}
+				{isDebouncing}
 			/>
 		</div>
 
@@ -226,7 +226,9 @@
 				<SlidersHorizontal size={16} />
 				<span>Filters</span>
 				{#if activeFiltersCount > 0}
-					<span class="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
+					<span
+						class="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white"
+					>
 						{activeFiltersCount}
 					</span>
 				{/if}
@@ -236,7 +238,10 @@
 
 	<!-- Filters Panel -->
 	{#if showFilters}
-		<div class="mt-3 rounded-2xl border border-white/5 bg-surface-1/40 backdrop-blur-md shadow-xl p-5" transition:fade>
+		<div
+			class="mt-3 rounded-2xl border border-white/5 bg-surface-1/40 backdrop-blur-md shadow-xl p-5"
+			transition:fade
+		>
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
 				<!-- Type -->
 				<div class="flex flex-col">
@@ -254,7 +259,10 @@
 								<option value={t.value} class="bg-surface-2">{t.label}</option>
 							{/each}
 						</select>
-						<ChevronDown size={14} class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+						<ChevronDown
+							size={14}
+							class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+						/>
 					</div>
 				</div>
 
@@ -275,7 +283,10 @@
 								<option value={String(g.id)} class="bg-surface-2">{g.name}</option>
 							{/each}
 						</select>
-						<ChevronDown size={14} class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+						<ChevronDown
+							size={14}
+							class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+						/>
 					</div>
 				</div>
 
@@ -295,7 +306,10 @@
 								<option value={s.value} class="bg-surface-2">{s.label}</option>
 							{/each}
 						</select>
-						<ChevronDown size={14} class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+						<ChevronDown
+							size={14}
+							class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+						/>
 					</div>
 				</div>
 
@@ -309,7 +323,9 @@
 							onchange={(e) => setFilter('sfw', String((e.target as HTMLInputElement).checked))}
 							class="sr-only peer"
 						/>
-						<div class="relative w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-secondary peer-checked:after:border-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary/30 peer-checked:after:bg-primary"></div>
+						<div
+							class="relative w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-secondary peer-checked:after:border-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary/30 peer-checked:after:bg-primary"
+						></div>
 						<div class="flex flex-col">
 							<span class="text-xs font-semibold text-text-primary">Safe Search</span>
 							<span class="text-[10px] text-text-muted">Hide mature (18+) content</span>
@@ -340,7 +356,9 @@
 					class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
 				>
 					{formatMediaType(filterType)}
-					<button onclick={() => setFilter('type', '')} aria-label="Remove type filter"><X size={12} /></button>
+					<button onclick={() => setFilter('type', '')} aria-label="Remove type filter"
+						><X size={12} /></button
+					>
 				</span>
 			{/if}
 			{#if filterGenre}
@@ -349,7 +367,9 @@
 					class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
 				>
 					{genreName}
-					<button onclick={() => setFilter('genre', '')} aria-label="Remove genre filter"><X size={12} /></button>
+					<button onclick={() => setFilter('genre', '')} aria-label="Remove genre filter"
+						><X size={12} /></button
+					>
 				</span>
 			{/if}
 			{#if !filterSfw}
@@ -357,7 +377,9 @@
 					class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
 				>
 					Unfiltered (18+)
-					<button onclick={() => setFilter('sfw', 'true')} aria-label="Enable safe search"><X size={12} /></button>
+					<button onclick={() => setFilter('sfw', 'true')} aria-label="Enable safe search"
+						><X size={12} /></button
+					>
 				</span>
 			{/if}
 		</div>
@@ -370,7 +392,9 @@
 			<div class="mb-8 w-full" transition:fade>
 				<RecommenderWidgets />
 			</div>
-			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">Popular Anime</h2>
+			<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">
+				Popular Anime
+			</h2>
 		{/if}
 
 		{#if loading}
@@ -378,7 +402,10 @@
 				<AnimeCardSkeleton count={10} />
 			</div>
 		{:else if results.length > 0}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" transition:fade>
+			<div
+				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+				transition:fade
+			>
 				{#each results as anime, i (anime.malId)}
 					<SearchResultCard {anime} index={i} />
 				{/each}

@@ -41,7 +41,7 @@
 			class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-primary"
 		/>
 	{/if}
-	
+
 	<input
 		type="text"
 		{placeholder}

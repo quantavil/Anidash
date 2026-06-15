@@ -34,8 +34,8 @@
 
 	function starFill(i: number): number {
 		const s = displayScore;
-		if (s >= (i * 2) + 2) return 1;
-		if (s === (i * 2) + 1) return 0.5;
+		if (s >= i * 2 + 2) return 1;
+		if (s === i * 2 + 1) return 0.5;
 		return 0;
 	}
 
@@ -101,7 +101,7 @@
 
 		// Divide the container space into 5 equal star zones
 		const starIndex = Math.min(4, Math.floor(pct * 5));
-		const starPct = (pct * 5) - starIndex;
+		const starPct = pct * 5 - starIndex;
 		const isRightHalf = starPct >= 0.5;
 		hoveredScore = starIndex * 2 + (isRightHalf ? 2 : 1);
 	}
@@ -130,12 +130,16 @@
 						{displayScore}
 					</span>
 					<span class="text-[10px] text-text-muted">/10</span>
-					<span class="text-[10px] text-text-secondary font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
+					<span
+						class="text-[10px] text-text-secondary font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/5"
+					>
 						{SCORE_DESCRIPTIONS[displayScore]}
 					</span>
 				</div>
 			{:else}
-				<span class="text-[10px] text-text-muted font-semibold bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+				<span
+					class="text-[10px] text-text-muted font-semibold bg-white/5 px-1.5 py-0.5 rounded border border-white/5"
+				>
 					Not Rated
 				</span>
 			{/if}

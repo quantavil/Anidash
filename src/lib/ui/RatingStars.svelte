@@ -24,7 +24,7 @@
 	function starFill(i: number): number {
 		const s = displayScore;
 		if (s >= (i + 1) * 2) return 1;
-		if (s === (i * 2) + 1) return 0.5;
+		if (s === i * 2 + 1) return 0.5;
 		return 0;
 	}
 
@@ -83,7 +83,9 @@
 		<div
 			role="button"
 			tabindex="0"
-			class="relative transition-transform duration-200 {interactive ? 'cursor-pointer hover:scale-110 active:scale-95' : ''}"
+			class="relative transition-transform duration-200 {interactive
+				? 'cursor-pointer hover:scale-110 active:scale-95'
+				: ''}"
 			style="width: {size}px; height: {size}px;"
 			onclick={(e) => {
 				e.preventDefault();
@@ -101,7 +103,10 @@
 			<!-- Empty star (clearly visible but muted) -->
 			<Star {size} class="absolute inset-0 text-white/20" fill="none" stroke-width={1.5} />
 			<!-- Filled portion -->
-			<div class="absolute inset-0 overflow-hidden pointer-events-none" style="width: {fill * 100}%;">
+			<div
+				class="absolute inset-0 overflow-hidden pointer-events-none"
+				style="width: {fill * 100}%;"
+			>
 				<Star
 					{size}
 					class="text-warning filter drop-shadow-[0_0_4px_rgba(251,191,36,0.3)]"

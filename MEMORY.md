@@ -24,10 +24,12 @@ anidash/
 └── audit-report.md # Codebase audit report for design issues, bugs, and redundancies
 
 ### Structural Changes
+
 - Created `src/lib/ui/SearchInput.svelte` to unify search inputs and resolve design inconsistencies / DRY violations (2026-06-14).
 - Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
 - Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
-
+- Revamped and refined `src/lib/ui/EpisodeCounter.svelte` to implement the Shimmer Aura Eclipse design (centered progress count, horizontal hover shimmer radial gradient, Lucide hover animations, adaptive compact/detail layout sizing) (2026-06-15).
+- Refactored `src/lib/ui/AnimeCard.svelte` to remove duplicated progress counter logic and reuse `EpisodeCounter` with `compact={true}` (2026-06-15).
 
 ## APIs & Fallbacks
 

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { UserListRecord } from '$lib/cache/db';
 	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
-	import { Star, Mic, Plus, Minus, Check } from 'lucide-svelte';
+	import { Star, Mic } from 'lucide-svelte';
 	import StatusBadge from './StatusBadge.svelte';
 	import ProgressLine from './ProgressLine.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { userListStore } from '$lib/stores/userlist.svelte';
+	import EpisodeCounter from './EpisodeCounter.svelte';
 
 	let {
 		entry,
@@ -22,35 +22,6 @@
 	const imageUrl = $derived(entry.mainPicture?.large ?? entry.mainPicture?.medium ?? null);
 
 	const unknown = $derived(entry.numEpisodes === 0);
-	const progressPct = $derived(
-		unknown ? 0 : Math.min((entry.numWatchedEpisodes / entry.numEpisodes) * 100, 100)
-	);
-	const isComplete = $derived(
-		!unknown && entry.numWatchedEpisodes >= entry.numEpisodes && entry.numEpisodes > 0
-	);
-
-	// Visual feedback: pulse key changes on each episode update
-	let epPulse = $state(false);
-
-	function triggerPulse() {
-		epPulse = true;
-		setTimeout(() => (epPulse = false), 400);
-	}
-
-	function increment() {
-		const result = userListStore.incrementEpisode(entry.malId);
-		triggerPulse();
-		if (result && result.watched >= result.total && result.total > 0) {
-			onComplete?.(entry.malId);
-		}
-	}
-
-	function decrement() {
-		if (entry.numWatchedEpisodes > 0) {
-			userListStore.setEpisodeCount(entry.malId, entry.numWatchedEpisodes - 1);
-			triggerPulse();
-		}
-	}
 </script>
 
 <div
@@ -134,32 +105,18 @@
 			</div>
 
 			<!-- Progress Controls -->
-			<div class="relative z-[2] mt-auto pt-2 flex items-center justify-between" onclick={(e) => e.stopPropagation()} role="presentation">
-				<div class="text-[11px] font-medium tabular-nums text-text-secondary transition-all duration-300 whitespace-nowrap {epPulse ? 'scale-110 text-primary' : ''}">
-					<span class="text-text-primary font-bold">{entry.numWatchedEpisodes}</span> / {unknown ? '?' : entry.numEpisodes} <span class="text-text-muted text-[9px] ml-0.5 uppercase tracking-wider">ep</span>
-				</div>
-				<div class="flex items-center gap-1.5">
-					<button
-						onclick={(e) => { e.preventDefault(); decrement(); }}
-						disabled={entry.numWatchedEpisodes <= 0}
-						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-surface-2 text-text-muted hover:bg-surface-3 hover:text-text-primary disabled:opacity-30 transition-all active:scale-90 border border-white/5"
-						title="Decrease episode"
-					>
-						<Minus size={14} strokeWidth={2.5} />
-					</button>
-					<button
-						onclick={(e) => { e.preventDefault(); increment(); }}
-						disabled={isComplete}
-						class="flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-30 transition-all active:scale-90 border border-primary/10"
-						title="Increase episode"
-					>
-						{#if isComplete}
-							<Check size={14} strokeWidth={2.5} class="text-success" />
-						{:else}
-							<Plus size={14} strokeWidth={2.5} />
-						{/if}
-					</button>
-				</div>
+			<div
+				class="relative z-[2] mt-auto pt-2 flex items-center justify-between"
+				onclick={(e) => e.stopPropagation()}
+				role="presentation"
+			>
+				<EpisodeCounter
+					malId={entry.malId}
+					watched={entry.numWatchedEpisodes}
+					total={entry.numEpisodes}
+					{onComplete}
+					compact={true}
+				/>
 			</div>
 		</div>
 	</div>

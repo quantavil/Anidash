@@ -65,13 +65,12 @@ const LOCK_TTL_MS = 15_000; // 15 seconds — max time a refresh should take
 let refreshPromise: Promise<Result<void>> | null = null;
 
 interface RefreshLock {
-	ts: number;     // when the lock was acquired
-	tabId: string;  // unique tab identifier
+	ts: number; // when the lock was acquired
+	tabId: string; // unique tab identifier
 }
 
-const TAB_ID = typeof crypto !== 'undefined'
-	? crypto.randomUUID()
-	: Math.random().toString(36).slice(2);
+const TAB_ID =
+	typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 
 function getRefreshLock(): RefreshLock | null {
 	try {

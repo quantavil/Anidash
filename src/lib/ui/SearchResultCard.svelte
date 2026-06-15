@@ -142,7 +142,9 @@
 				class="relative z-[2] mt-2 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
 			>
 				{#if adding}
-					<div class="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+					<div
+						class="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
+					></div>
 					<span>Adding...</span>
 				{:else}
 					<Plus size={12} />

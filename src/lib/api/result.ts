@@ -45,7 +45,9 @@ export function flatMap<T, U, E>(result: Result<T, E>, fn: (v: T) => Result<U, E
 /** Helper: convert a zod SafeParseReturnType into our validation error */
 export function zodIssuesToSummaries(issues: ZodIssue[]): ZodIssueSummary[] {
 	return issues.map((i) => ({
-		path: i.path.filter((p): p is string | number => typeof p === 'string' || typeof p === 'number'),
+		path: i.path.filter(
+			(p): p is string | number => typeof p === 'string' || typeof p === 'number'
+		),
 		message: i.message
 	}));
 }

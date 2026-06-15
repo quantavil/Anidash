@@ -217,8 +217,6 @@ function createUserListStore() {
 		);
 	}
 
-
-
 	// ─── Remove from List ───
 
 	async function removeFromList(malId: number): Promise<Result<void>> {

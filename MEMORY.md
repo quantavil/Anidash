@@ -27,7 +27,6 @@ anidash/
 - Created `src/lib/ui/SearchInput.svelte` to unify search inputs and resolve design inconsistencies / DRY violations (2026-06-14).
 - Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
 - Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
-- Configured `pages_build_output_dir` in `wrangler.toml` (2026-06-15).
 
 
 ## APIs & Fallbacks
@@ -88,3 +87,4 @@ anidash/
 - [2026-06-14] UI elements (search bars, filters, buttons) had redundant double focus rings → ROOT CAUSE: Tailwind `focus:ring` classes were used alongside default outlines or other borders. → FIX: Globally removed `focus:ring` and `focus-visible:ring` classes from SearchInput, Browse filters, Login button, StatusBadge, RatingStars, and Anime characters lists, standardizing on a clean `focus:outline-none focus:bg-white/10` aesthetic.
 - [2026-06-14] Infinite scroll on browse page loaded excessively → ROOT CAUSE: `IntersectionObserver` loaded automatically on scroll. → FIX: Replaced `IntersectionObserver` sentinel with an explicit "Show More" pagination button to give users control over limits.
 - [2026-06-15] Community Insights card layout distortion on mobile → ROOT CAUSE: Flex recommendation card grid-items lacked `min-w-0` constraints, allowing long titles and usernames to bypass truncation and stretch the layout horizontally. → FIX: Added `min-w-0` to the outer cards and their inner title headers in `+page.svelte`.
+- [2026-06-15] Cloudflare Pages build failed with missing VITE_MAL_CLIENT_ID → ROOT CAUSE: Fixing the Wrangler Pages output warning in wrangler.toml caused Cloudflare Pages to use the config file instead of falling back to the Dashboard's settings, wiping out dashboard-configured environment variables. → FIX: Reverted wrangler.toml to its original state (invalid for Pages) to restore Dashboard environment settings fallback.

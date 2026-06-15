@@ -53,6 +53,12 @@ function createAuthStore() {
 			if (result.ok) {
 				user = result.value;
 			} else {
+				// If it's a network/offline error, do NOT log out or refresh
+				if (result.error.type === 'network') {
+					isLoading = false;
+					return;
+				}
+
 				// Try refreshing the token if profile fetch failed (possible token expired)
 				const refreshed = await refreshTokens();
 				if (refreshed.ok) {
@@ -63,8 +69,10 @@ function createAuthStore() {
 						logger.warn('Profile fetch failed after refresh:', retry.error);
 					}
 				} else {
-					// Refresh failed — clear tokens, force logout/re-login
-					logout();
+					// Only log out if the refresh failure was not a temporary network issue
+					if (refreshed.error.type !== 'network') {
+						logout();
+					}
 				}
 			}
 			isLoading = false;

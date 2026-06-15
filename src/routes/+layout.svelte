@@ -66,7 +66,7 @@
 			async () => {
 				if (authStore.isAuthenticated && needsRefresh()) {
 					const result = await refreshTokens();
-					if (!result.ok) {
+					if (!result.ok && result.error.type !== 'network') {
 						tokens.clear();
 						authStore.logout();
 					}

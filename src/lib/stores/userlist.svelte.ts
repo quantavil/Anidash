@@ -2,6 +2,8 @@
 // Single source of truth for the user's anime list.
 // All mutations are optimistic: update locally, sync to MAL in background.
 
+import { browser } from '$app/environment';
+
 import {
 	getAllEntries,
 	putEntry,
@@ -374,7 +376,7 @@ function createUserListStore() {
 		}
 	}
 
-	if (typeof window !== 'undefined') {
+	if (browser) {
 		window.addEventListener('online', () => {
 			flushPersistentQueue().catch(logger.error);
 		});

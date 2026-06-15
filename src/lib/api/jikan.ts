@@ -30,22 +30,25 @@ function buildSearchParams(obj: Record<string, unknown>): URLSearchParams {
 
 async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
 	try {
-		const data = await jikanLimiter.enqueue(async () => {
-			const response = await fetch(url);
+		const response = await jikanLimiter.enqueue(() => fetch(url));
 
-			if (response.status === 429) {
-				const retryAfter = Number(response.headers.get('Retry-After') ?? 2) * 1000;
-				throw Object.assign(new Error('Rate limited'), { retryAfter, status: 429 });
-			}
+		if (response.status === 429) {
+			const retryAfter = Number(response.headers.get('Retry-After') ?? 2) * 1000;
+			return err({
+				type: 'rate_limit',
+				retryAfter,
+				message: 'Jikan rate limit exceeded'
+			});
+		}
 
-			if (!response.ok) {
-				throw Object.assign(new Error(`Jikan HTTP ${response.status}`), {
-					status: response.status
-				});
-			}
+		if (!response.ok) {
+			return err({
+				type: 'network',
+				message: `Jikan HTTP ${response.status}`
+			});
+		}
 
-			return response.json();
-		});
+		const data = await response.json();
 
 		const parsed = schema.safeParse(data);
 		if (!parsed.success) {
@@ -58,16 +61,7 @@ async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<
 
 		return ok(parsed.data!);
 	} catch (e: unknown) {
-		const error = e as { retryAfter?: number; status?: number; message?: string };
-
-		if (error.status === 429 && error.retryAfter) {
-			return err({
-				type: 'rate_limit',
-				retryAfter: error.retryAfter,
-				message: 'Jikan rate limit exceeded'
-			});
-		}
-
+		const error = e as { message?: string };
 		return err({
 			type: 'network',
 			message: error.message || 'Jikan request failed'

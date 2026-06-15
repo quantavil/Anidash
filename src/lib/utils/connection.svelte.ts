@@ -1,10 +1,12 @@
 // ─── Online/Offline detection (Svelte 5 Runes) ───
 
+import { browser } from '$app/environment';
+
 function createConnectionStore() {
 	let isOnline = $state(true);
 	let wasOffline = $state(false);
 
-	if (typeof window !== 'undefined') {
+	if (browser) {
 		isOnline = navigator.onLine;
 
 		const onOnline = () => {

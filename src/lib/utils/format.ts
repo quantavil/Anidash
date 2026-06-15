@@ -60,7 +60,7 @@ const STATUS_LABELS: Record<string, string> = {
 	plan_to_watch: 'Plan to Watch'
 };
 
-export function formatStatus(status: string): string {
+export function formatListStatus(status: string): string {
 	return STATUS_LABELS[status] ?? status;
 }
 
@@ -99,7 +99,7 @@ const ANIME_STATUS_LABELS: Record<string, string> = {
 	not_yet_aired: 'Not Yet Aired'
 };
 
-export function formatAnimeStatus(status: string): string {
+export function formatAiringStatus(status: string): string {
 	return ANIME_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
 }
 

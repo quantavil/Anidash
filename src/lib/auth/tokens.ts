@@ -104,10 +104,10 @@ async function waitForOtherTabRefresh(originalExpiresAt: number): Promise<Result
 
 	return new Promise<Result<void>>((resolve) => {
 		const channel = new BroadcastChannel('anidash_auth_refresh');
-		let timeoutId: any;
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 		const cleanup = () => {
-			clearTimeout(timeoutId);
+			if (timeoutId) clearTimeout(timeoutId);
 			channel.close();
 		};
 

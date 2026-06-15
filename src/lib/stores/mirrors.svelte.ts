@@ -1,11 +1,12 @@
 import { browser } from '$app/environment';
+import { STORAGE_KEYS } from '$lib/constants';
 
 class MirrorsStore {
 	preferences = $state<Record<string, string>>({});
 
 	constructor() {
 		if (browser) {
-			const stored = localStorage.getItem('anidash-mirrors');
+			const stored = localStorage.getItem(STORAGE_KEYS.MIRRORS);
 			if (stored) {
 				try {
 					this.preferences = JSON.parse(stored);
@@ -30,7 +31,7 @@ class MirrorsStore {
 	setPreferredDomain(siteName: string, domain: string) {
 		this.preferences[siteName] = domain;
 		if (browser) {
-			localStorage.setItem('anidash-mirrors', JSON.stringify(this.preferences));
+			localStorage.setItem(STORAGE_KEYS.MIRRORS, JSON.stringify(this.preferences));
 		}
 	}
 }

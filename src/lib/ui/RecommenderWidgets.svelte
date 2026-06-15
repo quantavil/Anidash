@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { STORAGE_KEYS } from '$lib/constants';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { getSeasonal } from '$lib/api/mal';
 	import { getCurrentSeason } from '$lib/utils/season';
@@ -67,7 +68,7 @@
 
 		// Load filters from localStorage
 		try {
-			const saved = localStorage.getItem('anidash_ptw_filters');
+			const saved = localStorage.getItem(STORAGE_KEYS.PTW_FILTERS);
 			if (saved) {
 				const parsed = JSON.parse(saved);
 				selectedGenres = parsed.genres || [];
@@ -96,7 +97,7 @@
 	function saveFilters() {
 		try {
 			localStorage.setItem(
-				'anidash_ptw_filters',
+				STORAGE_KEYS.PTW_FILTERS,
 				JSON.stringify({
 					genres: selectedGenres,
 					formats: selectedFormats,

@@ -7,7 +7,7 @@
 	import {
 		formatMediaType,
 		formatNumberShort,
-		formatStatus,
+		formatListStatus,
 		STATUS_COLORS
 	} from '$lib/utils/format';
 	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
@@ -87,7 +87,7 @@
 					STATUS_COLORS[listEntry.status]?.solid
 				]}
 			>
-				{formatStatus(listEntry.status)}
+				{formatListStatus(listEntry.status)}
 				{#if listEntry.status === 'watching'}
 					<span class="opacity-75 font-bold ml-0.5"
 						>{listEntry.numWatchedEpisodes}/{anime.numEpisodes || '?'}</span

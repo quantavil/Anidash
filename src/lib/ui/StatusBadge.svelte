@@ -2,7 +2,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { Check, ChevronDown } from 'lucide-svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { formatStatus, STATUS_COLORS } from '$lib/utils/format';
+	import { formatListStatus, STATUS_COLORS } from '$lib/utils/format';
 	import { tick } from 'svelte';
 
 	import type { AnimeStatus } from '$lib/cache/db';
@@ -46,7 +46,7 @@
 			]?.badge} {className}"
 		>
 			<span class="h-1.5 w-1.5 rounded-full {STATUS_COLORS[status]?.dot}"></span>
-			{formatStatus(status)}
+			{formatListStatus(status)}
 			<ChevronDown size={12} class="opacity-60" />
 		</DropdownMenu.Trigger>
 
@@ -55,7 +55,7 @@
 				{#each ALL_STATUSES as s, _idx (_idx)}
 					<DropdownMenu.Item class="glass-dropdown-item" onSelect={() => handleSelect(s)}>
 						<span class="h-2 w-2 shrink-0 rounded-full {STATUS_COLORS[s]?.dot}"></span>
-						<span class="flex-1">{formatStatus(s)}</span>
+						<span class="flex-1">{formatListStatus(s)}</span>
 						{#if s === status}
 							<Check size={14} class="text-text-muted" />
 						{/if}

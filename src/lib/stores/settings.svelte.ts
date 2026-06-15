@@ -1,26 +1,29 @@
 // ─── Settings Store ───
 // Centralized store for user preferences. Persisted to localStorage.
 
+import { browser } from '$app/environment';
+import { STORAGE_KEYS } from '$lib/constants';
+
 class SettingsStore {
 	preferEnglish = $state(false);
 
 	init() {
-		if (typeof window !== 'undefined') {
-			this.preferEnglish = localStorage.getItem('anidash_prefer_english') === 'true';
+		if (browser) {
+			this.preferEnglish = localStorage.getItem(STORAGE_KEYS.PREFER_ENGLISH) === 'true';
 		}
 	}
 
 	togglePreferEnglish() {
 		this.preferEnglish = !this.preferEnglish;
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('anidash_prefer_english', String(this.preferEnglish));
+		if (browser) {
+			localStorage.setItem(STORAGE_KEYS.PREFER_ENGLISH, String(this.preferEnglish));
 		}
 	}
 
 	setPreferEnglish(value: boolean) {
 		this.preferEnglish = value;
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('anidash_prefer_english', String(value));
+		if (browser) {
+			localStorage.setItem(STORAGE_KEYS.PREFER_ENGLISH, String(value));
 		}
 	}
 }

@@ -2,7 +2,7 @@
 // Always reflects the last-known MAL state. Sync on login.
 
 import { getDB, type UserListRecord, type SyncQueueRecord, type AnimeStatus } from './db';
-import { ok, err, type Result } from '$lib/api/result';
+
 
 // ─── Read ───
 
@@ -47,21 +47,7 @@ export async function putEntry(entry: UserListRecord): Promise<void> {
 	await db.put('userList', entry);
 }
 
-/** Update specific fields of a list entry */
-export async function updateEntry(
-	malId: number,
-	updates: Partial<Omit<UserListRecord, 'malId'>>
-): Promise<Result<void>> {
-	const db = await getDB();
-	const existing = await db.get('userList', malId);
 
-	if (!existing) {
-		return err({ type: 'cache', message: `No list entry for anime ${malId}` });
-	}
-
-	await db.put('userList', { ...existing, ...updates });
-	return ok(undefined);
-}
 
 /** Remove a single entry */
 export async function removeEntry(malId: number): Promise<void> {

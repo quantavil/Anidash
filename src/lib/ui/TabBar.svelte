@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { formatStatus } from '$lib/utils/format';
+	import { formatListStatus } from '$lib/utils/format';
 
 	type TabKey = 'all' | 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
 
@@ -18,7 +18,7 @@
 		'all'
 	].map((k) => ({
 		key: k as TabKey,
-		label: k === 'all' ? 'All' : formatStatus(k)
+		label: k === 'all' ? 'All' : formatListStatus(k)
 	}));
 
 	const activeColors: Record<string, string> = {

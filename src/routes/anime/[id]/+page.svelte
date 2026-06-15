@@ -14,7 +14,7 @@
 
 	import {
 		formatMediaType,
-		formatAnimeStatus,
+		formatAiringStatus,
 		formatSeason,
 		formatLocalBroadcast,
 		formatNumberShort,
@@ -289,7 +289,7 @@
 							class="flex items-center gap-1 shrink-0 {STATUS_COLORS[anime.animeStatus] ??
 								'text-text-muted'}"
 						>
-							<span>{formatAnimeStatus(anime.animeStatus)}</span>
+							<span>{formatAiringStatus(anime.animeStatus)}</span>
 						</div>
 					{/if}
 					{#if anime.startSeason}

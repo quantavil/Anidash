@@ -2,7 +2,7 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
-	import { formatMediaType, formatRelativeDate, formatStatus } from '$lib/utils/format';
+	import { formatMediaType, formatRelativeDate, formatListStatus } from '$lib/utils/format';
 	import { Film, Star, Tv, Play, Calendar, CircleCheck, Pause, Trash, Clock } from 'lucide-svelte';
 	import StatCard from '$lib/ui/StatCard.svelte';
 	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
@@ -410,7 +410,7 @@
 											entry.status === 'plan_to_watch' && 'bg-info/15 text-info'
 										]}
 									>
-										{formatStatus(entry.status)}
+										{formatListStatus(entry.status)}
 									</span>
 								</td>
 								<td class="hidden px-4 py-2.5 text-text-secondary md:table-cell">

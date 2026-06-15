@@ -2,6 +2,7 @@
 // Manages authentication state, login flow, callback handling.
 
 import { goto } from '$app/navigation';
+import { browser } from '$app/environment';
 import { generatePKCE } from './pkce';
 import { tokens, refreshTokens, parseAndSetTokens } from './tokens';
 import { authFetch } from '$lib/api/fetch';
@@ -36,7 +37,7 @@ function createAuthStore() {
 		}
 
 		// Optimistic Cache load
-		if (typeof window !== 'undefined') {
+		if (browser) {
 			const cachedUser = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
 			if (cachedUser) {
 				try {
@@ -98,7 +99,7 @@ function createAuthStore() {
 			}
 
 			// Save to cache
-			if (typeof window !== 'undefined') {
+			if (browser) {
 				localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(parsed.data));
 			}
 
@@ -251,7 +252,7 @@ function createAuthStore() {
 
 	async function logout(): Promise<void> {
 		tokens.clear();
-		if (typeof window !== 'undefined') {
+		if (browser) {
 			localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
 		}
 		user = null;

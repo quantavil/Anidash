@@ -1,6 +1,7 @@
 // ─── Dub Info Store ───
 // Centralized store to hold the mapping of anime that have a dub.
 
+import { browser } from '$app/environment';
 import { getDB } from '$lib/cache/db';
 import { logger } from '$lib/utils/logger';
 import { STORAGE_KEYS } from '$lib/constants';
@@ -13,7 +14,7 @@ class DubStore {
 	#initPromise: Promise<void> | null = null;
 
 	async init() {
-		if (typeof window !== 'undefined') {
+		if (browser) {
 			this.dubMode = localStorage.getItem(STORAGE_KEYS.DUB_MODE) === 'true';
 		}
 
@@ -88,7 +89,7 @@ class DubStore {
 
 	toggleDubMode() {
 		this.dubMode = !this.dubMode;
-		if (typeof window !== 'undefined') {
+		if (browser) {
 			localStorage.setItem(STORAGE_KEYS.DUB_MODE, String(this.dubMode));
 		}
 	}

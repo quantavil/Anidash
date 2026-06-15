@@ -30,6 +30,7 @@ anidash/
 - Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
 - Revamped and refined `src/lib/ui/EpisodeCounter.svelte` to implement the Shimmer Aura Eclipse design (centered progress count, horizontal hover shimmer radial gradient, Lucide hover animations, adaptive compact/detail layout sizing) (2026-06-15).
 - Refactored `src/lib/ui/AnimeCard.svelte` to remove duplicated progress counter logic and reuse `EpisodeCounter` with `compact={true}` (2026-06-15).
+- Refactored `src/lib/ui/RecommenderWidgets.svelte` to implement persistent filters (Genre, Format, Min Rating slider) and title-cycling animation for the Plan to Watch (PTW) Roulette (2026-06-15).
 
 ## APIs & Fallbacks
 

@@ -110,7 +110,9 @@ export function formatLocalBroadcast(dayOfWeek: string, startTime?: string): str
 	const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 	const jstDayIndex = days.indexOf(dayOfWeek.toLowerCase());
 
-	if (jstDayIndex === -1) return `${capitalize(dayOfWeek)}s at ${startTime} JST`;
+	if (jstDayIndex === -1 || !/^\d{1,2}:\d{2}$/.test(startTime)) {
+		return `${capitalize(dayOfWeek)}s at ${startTime} JST`;
+	}
 
 	const [hours, minutes] = startTime.split(':').map(Number);
 

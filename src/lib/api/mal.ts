@@ -93,8 +93,18 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 
 	while (url) {
 		const currentUrl = url;
-		const fetchResult = await malLimiter.enqueue(() => authFetch(currentUrl));
-		if (!fetchResult.ok) return fetchResult as Err<AppError>;
+		let fetchResult = await malLimiter.enqueue(() => authFetch(currentUrl));
+		if (!fetchResult.ok) {
+			const isTransient =
+				fetchResult.error.type === 'network' ||
+				(fetchResult.error.type === 'api' &&
+					(fetchResult.error.status === 429 || fetchResult.error.status >= 500));
+			if (isTransient) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				fetchResult = await malLimiter.enqueue(() => authFetch(currentUrl));
+			}
+			if (!fetchResult.ok) return fetchResult as Err<AppError>;
+		}
 
 		let data: unknown;
 		try {

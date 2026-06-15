@@ -88,7 +88,15 @@ function createUserListStore() {
 	}
 
 	async function syncFromRemote(): Promise<Result<void>> {
-		await flushPersistentQueue();
+		try {
+			await flushPersistentQueue();
+		} catch (e) {
+			logger.error('Failed to flush persistent queue in syncFromRemote:', e);
+			return err({
+				type: 'cache',
+				message: e instanceof Error ? e.message : 'Failed to flush persistent queue'
+			});
+		}
 		const result = await syncStore.fullSync();
 		if (result.success) {
 			await loadFromCache();
@@ -273,7 +281,11 @@ function createUserListStore() {
 			if (titleEnglish) {
 				detailResult.value.titleEnglish = titleEnglish;
 			}
-			await putAnime(detailResult.value);
+			try {
+				await putAnime(detailResult.value);
+			} catch (err) {
+				logger.error('Failed to write anime detail to cache in addToList:', err);
+			}
 		}
 
 		// Create a local list entry

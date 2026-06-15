@@ -77,6 +77,9 @@ function createAuthStore() {
 				}
 			}
 			isLoading = false;
+		}).catch((err) => {
+			logger.error('Background revalidation failed:', err);
+			isLoading = false;
 		});
 	}
 

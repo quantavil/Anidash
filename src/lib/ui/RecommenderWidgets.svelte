@@ -5,6 +5,8 @@
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { getSeasonal } from '$lib/api/mal';
 	import { getCurrentSeason } from '$lib/utils/season';
+	import { getSeasonalCache, setSeasonalCache } from '$lib/cache/meta.cache';
+	import { mapMalNodeToDisplay } from '$lib/utils/types';
 	import { Dialog } from 'bits-ui';
 	import { Dice5, Sparkles, LoaderCircle, Settings, ListFilter, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -82,10 +84,20 @@
 		// Get random seasonal anime
 		try {
 			const current = getCurrentSeason();
-			const result = await getSeasonal(current.year, current.season, { limit: 50 });
-			if (result.ok && result.value.data.length > 0) {
-				const random = result.value.data[Math.floor(Math.random() * result.value.data.length)];
-				selectedSeasonal = { malId: random.node.id };
+			const cacheKey = `seasonal:${current.year}:${current.season}`;
+			const cached = await getSeasonalCache(cacheKey);
+
+			if (cached && cached.value.length > 0) {
+				const random = cached.value[Math.floor(Math.random() * cached.value.length)];
+				selectedSeasonal = { malId: random.malId };
+			} else {
+				const result = await getSeasonal(current.year, current.season, { limit: 50 });
+				if (result.ok && result.value.data.length > 0) {
+					const fetchedAnime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
+					await setSeasonalCache(cacheKey, fetchedAnime);
+					const random = fetchedAnime[Math.floor(Math.random() * fetchedAnime.length)];
+					selectedSeasonal = { malId: random.malId };
+				}
 			}
 		} catch (error) {
 			// Silently fail if seasonal loading fails
@@ -153,22 +165,33 @@
 				goto(`/anime/${selectedSeasonal.malId}`);
 			} else {
 				const current = getCurrentSeason();
-				const result = await getSeasonal(current.year, current.season, { limit: 50 });
+				const cacheKey = `seasonal:${current.year}:${current.season}`;
+				const cached = await getSeasonalCache(cacheKey);
 
-				if (!result.ok) {
-					toast.error('Failed to load seasonal anime.');
-					return;
+				if (cached && cached.value.length > 0) {
+					const random = cached.value[Math.floor(Math.random() * cached.value.length)];
+					selectedSeasonal = { malId: random.malId };
+					goto(`/anime/${random.malId}`);
+				} else {
+					const result = await getSeasonal(current.year, current.season, { limit: 50 });
+
+					if (!result.ok) {
+						toast.error('Failed to load seasonal anime.');
+						return;
+					}
+
+					const animeList = result.value.data;
+					if (animeList.length === 0) {
+						toast.info('No seasonal anime found.');
+						return;
+					}
+
+					const fetchedAnime = animeList.map((item) => mapMalNodeToDisplay(item.node));
+					await setSeasonalCache(cacheKey, fetchedAnime);
+					const random = fetchedAnime[Math.floor(Math.random() * fetchedAnime.length)];
+					selectedSeasonal = { malId: random.malId };
+					goto(`/anime/${random.malId}`);
 				}
-
-				const animeList = result.value.data;
-				if (animeList.length === 0) {
-					toast.info('No seasonal anime found.');
-					return;
-				}
-
-				const random = animeList[Math.floor(Math.random() * animeList.length)];
-				selectedSeasonal = { malId: random.node.id };
-				goto(`/anime/${random.node.id}`);
 			}
 		} catch (error) {
 			toast.error('An error occurred.');

@@ -84,7 +84,6 @@
 			>
 				<a
 					href="/stats"
-					data-sveltekit-reload
 					class="flex items-center transition-transform hover:scale-105 active:scale-95"
 					title="View Profile Stats"
 				>

@@ -22,7 +22,7 @@ vi.mock('$lib/cache/anime.cache', () => ({
 	putAnime: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock('./sync.svelte.ts', () => ({
+vi.mock('$lib/stores/sync.svelte', () => ({
 	syncStore: { fullSync: vi.fn().mockResolvedValue({ success: true }), syncError: null }
 }));
 
@@ -87,5 +87,46 @@ describe('userlist.svelte.ts state', () => {
 
 		expect(updateAnimeStatus).toHaveBeenCalledWith(5, { status: 'completed' });
 		expect(deleteSyncQueue).toHaveBeenCalledWith(5);
+	});
+
+	it('should handle IDB read failure gracefully in loadFromCache', async () => {
+		const { getAllEntries } = await import('$lib/cache/userlist.cache');
+		vi.mocked(getAllEntries).mockRejectedValueOnce(new Error('IDB Failure'));
+
+		await expect(userListStore.loadFromCache()).resolves.not.toThrow();
+		expect(userListStore.initialized).toBe(true);
+	});
+
+	it('should catch flushPersistentQueue failure in syncFromRemote and return a cache error', async () => {
+		const { getSyncQueue } = await import('$lib/cache/userlist.cache');
+		vi.mocked(getSyncQueue).mockRejectedValueOnce(new Error('Queue Read Failed'));
+
+		const result = await userListStore.syncFromRemote();
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error.type).toBe('cache');
+			expect(result.error.message).toBe('Queue Read Failed');
+		}
+	});
+
+	it('should skip expired (>7 day) entries in flushPersistentQueue', async () => {
+		const now = Date.now();
+		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+		const expiredTime = now - (SEVEN_DAYS_MS + 1000); // 7 days + 1s ago
+		const validTime = now - (24 * 60 * 60 * 1000); // 1 day ago
+
+		const { getSyncQueue, deleteSyncQueue } = await import('$lib/cache/userlist.cache');
+		vi.mocked(getSyncQueue).mockResolvedValueOnce([
+			{ malId: 10, payload: { status: 'completed' }, timestamp: expiredTime },
+			{ malId: 11, payload: { status: 'watching' }, timestamp: validTime }
+		]);
+
+		await userListStore.flushPersistentQueue();
+
+		expect(deleteSyncQueue).toHaveBeenCalledWith(10);
+		expect(updateAnimeStatus).not.toHaveBeenCalledWith(10, expect.any(Object));
+
+		expect(updateAnimeStatus).toHaveBeenCalledWith(11, { status: 'watching' });
+		expect(deleteSyncQueue).toHaveBeenCalledWith(11);
 	});
 });

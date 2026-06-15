@@ -36,6 +36,9 @@ anidash/
 - Removed stale planning files directory `docs/superpowers` (2026-06-15).
 - Refactored `AnimeRecord` to a discriminated union and cleaned up meta caching, token coordination, rate limiters, rating inputs, and async PKCE overhead (2026-06-15).
 - Cleaned up codebase inconsistencies: centralized localStorage keys under `STORAGE_KEYS`, standardized `typeof window` to `browser` guard, standardized schema null/optional chaining, removed dead cache code, renamed status formatting helpers, and cleaned up Jikan API rate-limiting queue wrapper (2026-06-15).
+- Removed unused @sveltejs/adapter-auto and secured Vite config environment scope by restricting loadEnv prefix to 'VITE_' (2026-06-15).
+- Hardened error handling across layout init, auth revalidation, local cache writes, format parsing, and user list fetch retries (2026-06-15).
+- Optimized Browse/Stats tab transitions, cached Jikan API responses (popular list, search, genres) in IndexedDB, and reused seasonal cache in recommender widgets to eliminate slow network requests (2026-06-15).
 
 ## APIs & Fallbacks
 

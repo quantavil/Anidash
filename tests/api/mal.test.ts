@@ -147,4 +147,68 @@ describe('MAL API Mappers', () => {
 		// Ensure cachedAt is populated
 		expect(result.cachedAt).toBeGreaterThan(0);
 	});
+
+	it('should handle explicit null values for optional fields in mapBaseAnimeNode', () => {
+		const rawNode = {
+			id: 777,
+			title: 'Null fields Anime',
+			main_picture: null,
+			alternative_titles: null,
+			mean: null,
+			num_episodes: null,
+			genres: null,
+			studios: null,
+			start_season: null,
+			media_type: null,
+			status: null,
+			num_list_users: null,
+			num_scoring_users: null
+		} as unknown as MalAnimeLean;
+
+		const result = mapBaseAnimeNode(rawNode);
+
+		expect(result).toEqual({
+			malId: 777,
+			title: 'Null fields Anime',
+			titleEnglish: null,
+			mainPicture: null,
+			mean: null,
+			numEpisodes: 0,
+			genres: [],
+			studios: [],
+			startSeason: { year: null, season: null },
+			mediaType: 'unknown',
+			animeStatus: 'unknown',
+			numListUsers: 0,
+			numScoringUsers: 0
+		});
+	});
+
+	it('should handle missing optional list_status fields in mapListEntryToRecord', () => {
+		const rawEntry = {
+			node: {
+				id: 2,
+				title: 'List Anime Minimal'
+			},
+			list_status: {
+				status: 'completed',
+				score: 10,
+				num_episodes_watched: 12
+			}
+		} as unknown as MalUserListEntry;
+
+		const result = mapListEntryToRecord(rawEntry);
+
+		expect(result).toMatchObject({
+			malId: 2,
+			title: 'List Anime Minimal',
+			status: 'completed',
+			score: 10,
+			numWatchedEpisodes: 12,
+			isRewatching: false,
+			updatedAt: null,
+			startDate: null,
+			finishDate: null
+		});
+	});
 });

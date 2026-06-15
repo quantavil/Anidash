@@ -56,9 +56,14 @@
 
 	onMount(() => {
 		// ─── Init ───
-		authStore.init().then(() => {
-			initialized = true;
-		});
+		authStore.init()
+			.then(() => {
+				initialized = true;
+			})
+			.catch((err) => {
+				import('$lib/utils/logger').then(({ logger }) => logger.error('Auth store init failed:', err));
+				initialized = true;
+			});
 		settingsStore.init();
 		dubStore.init();
 

@@ -1,7 +1,5 @@
-// ─── Jikan v4 API Client ───
-// Fallback/enrichment only — episode lists, characters, recommendations.
-// All requests rate-limited to ~3 req/s.
-
+import { getDB } from '$lib/cache/db';
+import { logger } from '$lib/utils/logger';
 import { jikanLimiter } from './rate-limit';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
 import {
@@ -28,7 +26,47 @@ function buildSearchParams(obj: Record<string, unknown>): URLSearchParams {
 	return params;
 }
 
+function getTTLForUrl(url: string): number {
+	if (url.includes('/genres/anime')) {
+		return 7 * 24 * 60 * 60 * 1000; // 7 days
+	}
+	if (url.includes('/characters') || url.includes('/recommendations')) {
+		return 24 * 60 * 60 * 1000; // 24 hours
+	}
+	if (url.includes('/anime?')) {
+		try {
+			const parsedUrl = new URL(url);
+			const q = parsedUrl.searchParams.get('q');
+			if (q && q.trim().length > 0) {
+				return 1 * 60 * 60 * 1000; // 1 hour for active search queries
+			}
+		} catch {
+			// fallback if URL parsing fails
+		}
+		return 4 * 60 * 60 * 1000; // 4 hours for popular / empty search
+	}
+	return 1 * 60 * 60 * 1000; // 1 hour default
+}
+
 async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
+	const cacheKey = `jikan:fetch:${url}`;
+	const ttl = getTTLForUrl(url);
+
+	try {
+		const db = await getDB();
+		const cached = await db.get('meta', cacheKey);
+		const now = Date.now();
+
+		if (cached && now - cached.updatedAt < ttl) {
+			const parsed = schema.safeParse(cached.value);
+			if (parsed.success) {
+				return ok(parsed.data!);
+			}
+		}
+	} catch (e) {
+		logger.warn('Failed to read Jikan cache:', e);
+	}
+
 	try {
 		const response = await jikanLimiter.enqueue(() => fetch(url));
 
@@ -57,6 +95,17 @@ async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<
 				message: 'Invalid response from Jikan API',
 				issues: zodIssuesToSummaries(parsed.error!.issues)
 			});
+		}
+
+		try {
+			const db = await getDB();
+			await db.put('meta', {
+				key: cacheKey,
+				value: parsed.data,
+				updatedAt: Date.now()
+			});
+		} catch (cacheError) {
+			logger.warn('Failed to write Jikan cache:', cacheError);
 		}
 
 		return ok(parsed.data!);

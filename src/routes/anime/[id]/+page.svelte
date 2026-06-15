@@ -559,7 +559,7 @@
 											<div>
 												<div class="flex items-start justify-between gap-2">
 													{#if rec.entry}
-														<a href="/anime/{rec.entry.mal_id}" class="truncate text-xs font-bold text-text-primary hover:text-primary transition-colors">
+														<a href="/anime/{rec.entry.mal_id}" class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors">
 															{rec.entry.title}
 														</a>
 													{/if}
@@ -570,13 +570,13 @@
 													{/if}
 												</div>
 												{#if rec.content}
-													<p class="mt-1 line-clamp-3 text-[11px] leading-relaxed text-text-secondary">
+													<p class="mt-1 line-clamp-3 text-[11px] leading-relaxed text-text-secondary break-words">
 														{rec.content}
 													</p>
 												{/if}
 											</div>
 											{#if rec.user}
-												<p class="text-[9px] text-text-muted mt-1">
+												<p class="text-[9px] text-text-muted mt-1 truncate">
 													By <span class="text-text-secondary font-medium">{rec.user.username}</span>
 												</p>
 											{/if}

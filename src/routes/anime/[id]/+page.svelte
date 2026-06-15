@@ -456,7 +456,7 @@
 			</div>
 
 			<!-- Section 2: Related Anime -->
-			{#if relatedGrouped && Object.keys(relatedGrouped).length > 0}
+			{#if relatedGrouped}
 				<div class="space-y-4">
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Related Anime</h3>
 					<div class="space-y-4">
@@ -494,7 +494,7 @@
 			{/if}
 
 			<!-- Section 3: Recommendations -->
-			{#if (anime.recommendations && anime.recommendations.length > 0) || recommendations.length > 0}
+			{#if hasRecommendations}
 				<div class="space-y-4">
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Recommendations</h3>
 
@@ -545,7 +545,7 @@
 							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Community Insights</h4>
 							<div class="grid gap-3 md:grid-cols-2">
 								{#each recommendations.slice(0, 4) as rec}
-									<div class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3">
+									<div class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0">
 										{#if rec.entry}
 											<a href="/anime/{rec.entry.mal_id}" class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity">
 												<ImageWithFallback
@@ -557,7 +557,7 @@
 										{/if}
 										<div class="min-w-0 flex-1 flex flex-col justify-between">
 											<div>
-												<div class="flex items-start justify-between gap-2">
+												<div class="flex items-start justify-between gap-2 min-w-0 w-full">
 													{#if rec.entry}
 														<a href="/anime/{rec.entry.mal_id}" class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors">
 															{rec.entry.title}
@@ -671,6 +671,3 @@
 
 <!-- Character Detail Modal -->
 <CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />
-
-<style>
-</style>

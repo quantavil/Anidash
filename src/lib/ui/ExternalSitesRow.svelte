@@ -32,7 +32,7 @@
 
 <svelte:window onclick={handleWindowClick} />
 
-{#each EXTERNAL_SITES as site}
+{#each EXTERNAL_SITES as site, _idx (_idx)}
 	{@const sortedDomains = mirrorsStore.getSortedDomains(site.name, site.domains)}
 	{@const primaryDomain = sortedDomains[0]}
 	<div class="group ext-group shrink-0" style="--site-color: {site.color};">
@@ -80,7 +80,7 @@
 					<div class="px-2 py-1 mb-1 text-[9px] font-bold uppercase tracking-wider text-text-muted">
 						Alternative Mirrors
 					</div>
-					{#each sortedDomains as domain, i}
+					{#each sortedDomains as domain, i (domain)}
 						<a
 							href={site.searchUrl(domain, animeTitle)}
 							target="_blank"

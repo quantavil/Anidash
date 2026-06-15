@@ -27,24 +27,6 @@ export async function getAnimeAllowStale(malId: number): Promise<AnimeRecord | n
 	return val ?? null;
 }
 
-/** Get multiple anime records by ID */
-export async function getAnimeBatch(malIds: number[]): Promise<Map<number, AnimeRecord>> {
-	const db = await getDB();
-	const results = new Map<number, AnimeRecord>();
-	const tx = db.transaction('anime', 'readonly');
-
-	await Promise.all(
-		malIds.map(async (id) => {
-			const record = await tx.store.get(id);
-			if (record && !isStale(record.cachedAt)) {
-				results.set(id, record);
-			}
-		})
-	);
-
-	return results;
-}
-
 // ─── Write ───
 
 /** Put an anime record into cache */
@@ -65,18 +47,6 @@ export async function putAnimeBatch(records: AnimeRecord[]): Promise<void> {
 	await Promise.all(records.map((record) => tx.store.put({ ...record, cachedAt: now })));
 
 	await tx.done;
-}
-
-// ─── Invalidate ───
-
-/** Mark a specific anime as stale by resetting cachedAt to 0 */
-export async function invalidateAnime(malId: number): Promise<void> {
-	const db = await getDB();
-	const record = await db.get('anime', malId);
-	if (record) {
-		record.cachedAt = 0;
-		await db.put('anime', record);
-	}
 }
 
 /** Purge all stale anime records (run on app startup) */

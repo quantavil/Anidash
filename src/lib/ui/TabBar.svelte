@@ -50,7 +50,7 @@
 	role="tablist"
 	aria-label="Anime list status tabs"
 >
-	{#each tabs as tab}
+	{#each tabs as tab, _idx (_idx)}
 		{@const isActive = currentTab === tab.key}
 		<button
 			role="tab"

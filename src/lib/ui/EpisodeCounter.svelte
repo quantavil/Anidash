@@ -6,13 +6,11 @@
 		malId,
 		watched,
 		total,
-		onComplete,
 		compact = false
 	}: {
 		malId: number;
 		watched: number;
 		total: number;
-		onComplete?: (malId: number) => void;
 		compact?: boolean;
 	} = $props();
 
@@ -38,7 +36,7 @@
 	function increment() {
 		const result = userListStore.incrementEpisode(malId);
 		if (result && result.watched >= result.total && result.total > 0) {
-			onComplete?.(malId);
+			userListStore.triggerCompletePrompt(malId);
 		}
 	}
 

@@ -145,7 +145,7 @@
 
 	<!-- Links -->
 	<nav class="flex items-center gap-1">
-		{#each NAV_ITEMS as item}
+		{#each NAV_ITEMS as item, _idx (_idx)}
 			{@const isActive =
 				page.url.pathname === item.href ||
 				(item.href !== '/' && page.url.pathname.startsWith(item.href + '/'))}
@@ -197,7 +197,7 @@
 <nav
 	class="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-white/10 bg-surface-1/80 backdrop-blur-xl md:hidden pb-safe"
 >
-	{#each NAV_ITEMS as item}
+	{#each NAV_ITEMS as item, _idx (_idx)}
 		{@const isActive =
 			page.url.pathname === item.href ||
 			(item.href !== '/' && page.url.pathname.startsWith(item.href + '/'))}

@@ -6,7 +6,6 @@
 	import { Film, Star, Tv, Play, Calendar, CircleCheck, Pause, Trash, Clock } from 'lucide-svelte';
 	import StatCard from '$lib/ui/StatCard.svelte';
 	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
-	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
 
@@ -152,16 +151,6 @@
 			.sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
 			.slice(0, 8)
 	);
-
-	// ─── Complete prompt ───
-
-	let showCompleteDialog = $state(false);
-	let completeTargetId = $state<number | null>(null);
-
-	function handleCompletePrompt(malId: number) {
-		completeTargetId = malId;
-		showCompleteDialog = true;
-	}
 </script>
 
 <svelte:head>
@@ -205,7 +194,7 @@
 			>
 				<h2 class="mb-4 text-sm font-semibold text-text-primary">Score Distribution</h2>
 				<div class="flex h-32 items-stretch gap-1.5 sm:gap-2 pt-2">
-					{#each analytics.scoreDist as count, i}
+					{#each analytics.scoreDist as count, i (i)}
 						{@const heightPct =
 							count === 0 ? 0 : Math.max(5, (count / analytics.maxScoreCount) * 100)}
 						<div class="group relative flex h-full flex-1 flex-col items-center justify-end">
@@ -244,7 +233,7 @@
 								stroke="rgba(255,255,255,0.05)"
 								stroke-width="5"
 							/>
-							{#each analytics.donutSlices as slice, i}
+							{#each analytics.donutSlices as slice, i (slice.label)}
 								<circle
 									cx="21"
 									cy="21"
@@ -282,7 +271,7 @@
 
 					<!-- Legend -->
 					<div class="flex flex-1 flex-col justify-center gap-2.5 text-xs">
-						{#each analytics.donutSlices as slice, i}
+						{#each analytics.donutSlices as slice, i (slice.label)}
 							<div class="group flex items-center justify-between">
 								<div class="flex items-center gap-2 truncate pr-2">
 									<div
@@ -332,7 +321,7 @@
 			</div>
 
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each watching as entry}
+				{#each watching as entry, _idx (_idx)}
 					<a
 						href="/anime/{entry.malId}"
 						class="group flex gap-3 rounded-xl border border-border bg-surface-1 p-3 transition-all hover:border-primary/40 hover:bg-surface-2"
@@ -363,7 +352,6 @@
 									malId={entry.malId}
 									watched={entry.numWatchedEpisodes}
 									total={entry.numEpisodes}
-									onComplete={() => handleCompletePrompt(entry.malId)}
 								/>
 							</div>
 							{#if entry.updatedAt}
@@ -399,7 +387,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
-						{#each recentlyUpdated as entry}
+						{#each recentlyUpdated as entry, _idx (_idx)}
 							<tr class="bg-surface-0 transition-colors hover:bg-surface-1">
 								<td class="px-4 py-2.5">
 									<a href="/anime/{entry.malId}" class="text-text-primary hover:text-primary">
@@ -439,6 +427,3 @@
 		</section>
 	{/if}
 </div>
-
-<!-- Complete Confirmation Dialog -->
-<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />

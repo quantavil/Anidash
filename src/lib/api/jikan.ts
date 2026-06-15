@@ -4,7 +4,6 @@
 
 import { jikanLimiter } from './rate-limit';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
-import type { AppError } from './result';
 import {
 	JikanCharactersResponseSchema,
 	JikanRecommendationsResponseSchema,
@@ -17,9 +16,17 @@ import {
 
 const JIKAN_BASE = 'https://api.jikan.moe/v4';
 
-// ─── Helpers ───
-
 import type { ZodSchema } from 'zod';
+
+function buildSearchParams(obj: Record<string, unknown>): URLSearchParams {
+	const params = new URLSearchParams();
+	for (const [key, value] of Object.entries(obj)) {
+		if (value !== undefined && value !== null && value !== '') {
+			params.set(key, String(value));
+		}
+	}
+	return params;
+}
 
 async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
 	try {
@@ -77,7 +84,7 @@ export async function getCharacters(
 	const url = `${JIKAN_BASE}/anime/${malId}/characters?page=${page}`;
 	const result = await jikanFetch(url, JikanCharactersResponseSchema);
 
-	if (!result.ok) return result as Result<never>;
+	if (!result.ok) return result;
 
 	return ok({
 		characters: result.value.data,
@@ -93,7 +100,7 @@ export async function getRecommendations(
 	const url = `${JIKAN_BASE}/anime/${malId}/recommendations`;
 	const result = await jikanFetch(url, JikanRecommendationsResponseSchema);
 
-	if (!result.ok) return result as Result<never>;
+	if (!result.ok) return result;
 
 	return ok(result.value.data);
 }
@@ -123,27 +130,27 @@ export async function searchAnime(params: JikanSearchParams = {}): Promise<
 		currentPage: number;
 	}>
 > {
-	const searchParams = new URLSearchParams();
-
-	if (params.q) searchParams.set('q', params.q);
-	if (params.type) searchParams.set('type', params.type);
-	if (params.status) searchParams.set('status', params.status);
-	if (params.rating) searchParams.set('rating', params.rating);
-	if (params.genres) searchParams.set('genres', params.genres);
-	if (params.min_score) searchParams.set('min_score', String(params.min_score));
-	if (params.max_score) searchParams.set('max_score', String(params.max_score));
-	if (params.start_date) searchParams.set('start_date', params.start_date);
-	if (params.end_date) searchParams.set('end_date', params.end_date);
-	if (params.sort) searchParams.set('sort', params.sort);
-	if (params.order_by) searchParams.set('order_by', params.order_by);
-	if (params.page) searchParams.set('page', String(params.page));
-	searchParams.set('limit', String(params.limit ?? 25));
-	if (params.sfw) searchParams.set('sfw', 'true');
+	const searchParams = buildSearchParams({
+		q: params.q,
+		type: params.type,
+		status: params.status,
+		rating: params.rating,
+		genres: params.genres,
+		min_score: params.min_score,
+		max_score: params.max_score,
+		start_date: params.start_date,
+		end_date: params.end_date,
+		sort: params.sort,
+		order_by: params.order_by,
+		page: params.page,
+		limit: params.limit ?? 25,
+		sfw: params.sfw ? 'true' : undefined
+	});
 
 	const url = `${JIKAN_BASE}/anime?${searchParams}`;
 	const result = await jikanFetch(url, JikanSearchResponseSchema);
 
-	if (!result.ok) return result as Result<never>;
+	if (!result.ok) return result;
 
 	return ok({
 		anime: result.value.data,
@@ -160,7 +167,7 @@ export async function getAnimeGenres(): Promise<
 	const url = `${JIKAN_BASE}/genres/anime`;
 	const result = await jikanFetch(url, JikanGenresResponseSchema);
 
-	if (!result.ok) return result as Result<never>;
+	if (!result.ok) return result;
 
 	return ok(
 		result.value.data.map((g) => ({

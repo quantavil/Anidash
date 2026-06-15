@@ -95,7 +95,7 @@
 					<div class="mt-4 space-y-1.5">
 						<p class="text-xs font-medium text-text-secondary">Add to list as:</p>
 						<div class="flex flex-wrap gap-1.5">
-							{#each statusOptions as opt}
+							{#each statusOptions as opt, _idx (_idx)}
 								<button
 									onclick={() => (selectedStatus = opt.key)}
 									class="rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors

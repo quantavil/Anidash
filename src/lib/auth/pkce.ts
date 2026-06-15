@@ -1,7 +1,7 @@
 // ─── PKCE (Proof Key for Code Exchange) for MAL OAuth ───
 
 /** Generate a cryptographically random code_verifier (128 chars) as required by MAL */
-export function generateVerifier(): string {
+function generateVerifier(): string {
 	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 	const randomValues = new Uint8Array(128);
 	crypto.getRandomValues(randomValues);

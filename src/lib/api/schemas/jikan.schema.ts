@@ -17,28 +17,29 @@ const JikanPaginationSchema = z.object({
 		.nullable()
 });
 
+const JikanImagesSchema = z.object({
+	jpg: z
+		.object({
+			image_url: z.string().nullable().optional(),
+			large_image_url: z.string().nullable().optional()
+		})
+		.optional()
+		.nullable(),
+	webp: z
+		.object({
+			image_url: z.string().nullable().optional(),
+			large_image_url: z.string().nullable().optional()
+		})
+		.optional()
+		.nullable()
+});
+
 // ─── Characters ───
 
 const JikanCharacterSchema = z.object({
 	mal_id: z.number(),
 	url: z.string().optional().nullable(),
-	images: z
-		.object({
-			jpg: z
-				.object({
-					image_url: z.string().optional().nullable()
-				})
-				.optional()
-				.nullable(),
-			webp: z
-				.object({
-					image_url: z.string().optional().nullable()
-				})
-				.optional()
-				.nullable()
-		})
-		.optional()
-		.nullable(),
+	images: JikanImagesSchema.optional().nullable(),
 	name: z.string(),
 	name_kanji: z.string().nullable().optional(),
 	nicknames: z.array(z.string()).optional().nullable(),
@@ -57,7 +58,6 @@ export const JikanCharactersResponseSchema = z.object({
 });
 
 export type JikanCharacterEntry = z.infer<typeof JikanCharacterEntrySchema>;
-export type JikanCharactersResponse = z.infer<typeof JikanCharactersResponseSchema>;
 
 // ─── Recommendations ───
 
@@ -68,17 +68,7 @@ export const JikanRecommendationEntrySchema = z.object({
 	entry: z.object({
 		mal_id: z.number(),
 		url: z.string().optional().nullable(),
-		images: z
-			.object({
-				jpg: z
-					.object({
-						image_url: z.string().optional().nullable()
-					})
-					.optional()
-					.nullable()
-			})
-			.optional()
-			.nullable(),
+		images: JikanImagesSchema.optional().nullable(),
 		title: z.string()
 	}),
 	content: z.string().nullable().optional(),
@@ -98,28 +88,13 @@ export const JikanRecommendationsResponseSchema = z.object({
 });
 
 export type JikanRecommendationEntry = z.infer<typeof JikanRecommendationEntrySchema>;
-export type JikanRecommendationsResponse = z.infer<typeof JikanRecommendationsResponseSchema>;
+
 // ─── Anime Search (Jikan) ───
 
 export const JikanAnimeSchema = z.object({
 	mal_id: z.number(),
 	url: z.string().url().optional(),
-	images: z
-		.object({
-			jpg: z
-				.object({
-					image_url: z.string().url().nullable().optional(),
-					large_image_url: z.string().url().nullable().optional()
-				})
-				.optional(),
-			webp: z
-				.object({
-					image_url: z.string().url().nullable().optional(),
-					large_image_url: z.string().url().nullable().optional()
-				})
-				.optional()
-		})
-		.optional(),
+	images: JikanImagesSchema.optional().nullable(),
 	title: z.string(),
 	title_english: z.string().nullable().optional(),
 	type: z.string().nullable().optional(),
@@ -156,8 +131,6 @@ export const JikanSearchResponseSchema = z.object({
 	pagination: JikanPaginationSchema.optional()
 });
 
-export type JikanSearchResponse = z.infer<typeof JikanSearchResponseSchema>;
-
 // ─── Genres ───
 
 export const JikanGenreSchema = z.object({
@@ -167,10 +140,6 @@ export const JikanGenreSchema = z.object({
 	count: z.number().optional()
 });
 
-export type JikanGenre = z.infer<typeof JikanGenreSchema>;
-
 export const JikanGenresResponseSchema = z.object({
 	data: z.array(JikanGenreSchema)
 });
-
-export type JikanGenresResponse = z.infer<typeof JikanGenresResponseSchema>;

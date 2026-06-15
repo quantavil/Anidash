@@ -8,7 +8,6 @@ import type { MalUser } from '$lib/api/schemas/mal.schema';
 
 const KEY_LAST_SYNC = 'lastSync';
 const KEY_USER_PROFILE = 'userProfile';
-const KEY_GENRE_MAP = 'genreMap';
 
 // ─── Generic ───
 
@@ -43,30 +42,6 @@ export async function setLastSync(timestamp: number): Promise<void> {
 
 // ─── User Profile ───
 
-export async function getCachedProfile(): Promise<MalUser | null> {
-	return getMeta<MalUser>(KEY_USER_PROFILE);
-}
-
 export async function setCachedProfile(profile: MalUser): Promise<void> {
 	return setMeta(KEY_USER_PROFILE, profile);
-}
-
-// ─── Genre Map ───
-
-export interface GenreMap {
-	[id: number]: string;
-}
-
-export async function getGenreMap(): Promise<GenreMap | null> {
-	return getMeta<GenreMap>(KEY_GENRE_MAP);
-}
-
-export async function setGenreMap(map: GenreMap): Promise<void> {
-	return setMeta(KEY_GENRE_MAP, map);
-}
-
-/** Clear all meta */
-export async function clearMeta(): Promise<void> {
-	const db = await getDB();
-	await db.clear('meta');
 }

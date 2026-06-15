@@ -15,6 +15,7 @@
 		tag?: 'span' | 'h1' | 'h2' | 'h3' | 'p';
 	} = $props();
 
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let showingEnglish = $state(settingsStore.preferEnglish);
 
 	const hasBothTitles = $derived(titleEnglish !== null && titleEnglish !== title);

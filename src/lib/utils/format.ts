@@ -10,15 +10,6 @@ export function formatNumberShort(num: number): string {
 	}
 	return String(num);
 }
-export function formatScore(score: number): string {
-	return score === 0 ? '—' : String(score);
-}
-
-/** "12 / 24" or "12 / ?" (unknown episode count = 0) */
-export function formatProgress(watched: number, total: number): string {
-	const totalStr = total === 0 ? '?' : String(total);
-	return `${watched} / ${totalStr}`;
-}
 
 /** ISO date → relative ("2h ago", "3d ago", "Jan 5") */
 export function formatRelativeDate(iso: string): string {
@@ -135,4 +126,11 @@ export function formatLocalBroadcast(dayOfWeek: string, startTime?: string): str
 	const localTime = refDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 
 	return `${localDay}s at ${localTime}`;
+}
+
+/** Formats character names from "Last, First" to "First Last" */
+export function formatCharacterName(rawName: string): string {
+	if (!rawName) return '';
+	const parts = rawName.split(',').map((p) => p.trim());
+	return parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawName;
 }

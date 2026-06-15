@@ -7,13 +7,11 @@
 	let {
 		entries = [],
 		loading = false,
-		resetKey,
-		onComplete
+		resetKey
 	}: {
 		entries: UserListRecord[];
 		loading?: boolean;
 		resetKey?: string;
-		onComplete?: (malId: number) => void;
 	} = $props();
 
 	// Infinite scrolling state
@@ -24,7 +22,7 @@
 	// Reset limit when entries change (e.g., changing tabs, sorting, filtering)
 	$effect(() => {
 		if (resetKey !== undefined) {
-			resetKey;
+			void resetKey;
 		}
 		untrack(() => {
 			limit = PAGE_SIZE;
@@ -69,7 +67,7 @@
 {:else}
 	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		{#each visibleEntries as entry, i (entry.malId)}
-			<AnimeCard {entry} {onComplete} index={i} />
+			<AnimeCard {entry} index={i} />
 		{/each}
 	</div>
 

@@ -186,7 +186,7 @@
 		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
 	>
-		{#each Array(5) as _, i}
+		{#each Array(5) as _, i (i)}
 			{@const fill = starFill(i)}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->

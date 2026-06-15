@@ -11,11 +11,9 @@
 
 	let {
 		entry,
-		onComplete,
 		index = 0
 	}: {
 		entry: UserListRecord;
-		onComplete?: (malId: number) => void;
 		index?: number;
 	} = $props();
 
@@ -114,7 +112,6 @@
 					malId={entry.malId}
 					watched={entry.numWatchedEpisodes}
 					total={entry.numEpisodes}
-					{onComplete}
 					compact={true}
 				/>
 			</div>

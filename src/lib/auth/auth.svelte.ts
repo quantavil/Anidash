@@ -3,11 +3,11 @@
 
 import { goto } from '$app/navigation';
 import { generatePKCE } from './pkce';
-import { tokens, refreshTokens } from './tokens';
+import { tokens, refreshTokens, parseAndSetTokens } from './tokens';
 import { authFetch } from '$lib/api/fetch';
 import { MAL_API_BASE } from '$lib/api/config';
 import { ok, err, type Result } from '$lib/api/result';
-import { MalUserSchema, MalTokenResponseSchema, type MalUser } from '$lib/api/schemas/mal.schema';
+import { MalUserSchema, type MalUser } from '$lib/api/schemas/mal.schema';
 import { zodIssuesToSummaries } from '$lib/api/result';
 import { STORAGE_KEYS } from '$lib/constants';
 import { logger } from '$lib/utils/logger';
@@ -218,23 +218,12 @@ function createAuthStore() {
 					});
 				}
 
-				// Validate token response
-				const parsed = MalTokenResponseSchema.safeParse(body);
-				if (!parsed.success) {
+				// Parse and save tokens
+				const parseResult = parseAndSetTokens(body);
+				if (!parseResult.ok) {
 					isExchanging = false;
-					return err({
-						type: 'validation',
-						message: 'Invalid token response from server',
-						issues: zodIssuesToSummaries(parsed.error.issues)
-					});
+					return parseResult;
 				}
-
-				const tokenData = parsed.data;
-				tokens.set({
-					accessToken: tokenData.access_token,
-					refreshToken: tokenData.refresh_token ?? '',
-					expiresAt: Date.now() + tokenData.expires_in * 1000
-				});
 
 				// Fetch user profile
 				const userResult = await fetchUserProfile();
@@ -271,7 +260,9 @@ function createAuthStore() {
 		try {
 			const { userListStore } = await import('$lib/stores/userlist.svelte');
 			userListStore.clear();
-		} catch {}
+		} catch {
+			/* ignore */
+		}
 
 		// Clear IndexedDB
 		try {

@@ -4,7 +4,6 @@ export interface DebouncedFn<T extends (...args: never[]) => unknown> {
 	(...args: Parameters<T>): void;
 	cancel: () => void;
 	flush: () => void;
-	pending: () => boolean;
 }
 
 export function debounce<T extends (...args: never[]) => unknown>(
@@ -42,8 +41,6 @@ export function debounce<T extends (...args: never[]) => unknown>(
 			latestArgs = null;
 		}
 	};
-
-	debounced.pending = () => timer !== null;
 
 	return debounced;
 }

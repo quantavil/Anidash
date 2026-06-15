@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { getSeasonal } from '$lib/api/mal';
 	import { getCurrentSeason } from '$lib/utils/season';
 	import { Dialog } from 'bits-ui';
-	import { Dice5, Sparkles, Loader2, Settings, Filter, X } from 'lucide-svelte';
+	import { Dice5, Sparkles, LoaderCircle, Settings, ListFilter, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 
@@ -21,8 +22,8 @@
 
 	// Extract unique metadata from the Plan to Watch list
 	const availableMetadata = $derived.by(() => {
-		const genreMap = new Map<number, string>();
-		const formats = new Set<string>();
+		const genreMap = new SvelteMap<number, string>();
+		const formats = new SvelteSet<string>();
 
 		for (const entry of ptwEntries) {
 			if (entry.genres) {
@@ -220,7 +221,10 @@
 				class="glass-icon-wrapper border-primary/10 bg-primary/5 text-primary group-hover:bg-primary/10 group-hover:border-primary/20"
 			>
 				{#if rollingPTW}
-					<Loader2 size={24} class="animate-spin text-primary drop-shadow-[0_0_8px_currentColor]" />
+					<LoaderCircle
+						size={24}
+						class="animate-spin text-primary drop-shadow-[0_0_8px_currentColor]"
+					/>
 				{:else}
 					<Dice5 size={24} class="text-primary drop-shadow-[0_0_8px_currentColor]" />
 				{/if}
@@ -279,7 +283,10 @@
 				class="glass-icon-wrapper border-pink-500/10 bg-pink-500/5 text-pink-400 group-hover:bg-pink-500/10 group-hover:border-pink-500/20"
 			>
 				{#if loading}
-					<Loader2 size={24} class="animate-spin text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
+					<LoaderCircle
+						size={24}
+						class="animate-spin text-pink-400 drop-shadow-[0_0_8px_currentColor]"
+					/>
 				{:else}
 					<Sparkles size={24} class="text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
 				{/if}
@@ -321,7 +328,7 @@
 				<!-- Header -->
 				<div class="flex items-center justify-between">
 					<Dialog.Title class="text-base font-bold text-text-primary flex items-center gap-2">
-						<Filter size={16} class="text-primary" />
+						<ListFilter size={16} class="text-primary" />
 						PTW Roulette Filters
 					</Dialog.Title>
 					<Dialog.Close
@@ -340,7 +347,7 @@
 						<p class="text-xs text-text-muted">No genres available in your backlog</p>
 					{:else}
 						<div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-							{#each availableMetadata.genres as genre}
+							{#each availableMetadata.genres as genre, _idx (_idx)}
 								{@const active = selectedGenres.includes(genre.id)}
 								<button
 									onclick={() => {
@@ -370,7 +377,7 @@
 						<p class="text-xs text-text-muted">No formats available in your backlog</p>
 					{:else}
 						<div class="flex flex-wrap gap-1.5">
-							{#each availableMetadata.formats as format}
+							{#each availableMetadata.formats as format, _idx (_idx)}
 								{@const active = selectedFormats.includes(format)}
 								<button
 									onclick={() => {

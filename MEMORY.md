@@ -31,6 +31,9 @@ anidash/
 - Revamped and refined `src/lib/ui/EpisodeCounter.svelte` to implement the Shimmer Aura Eclipse design (centered progress count, horizontal hover shimmer radial gradient, Lucide hover animations, adaptive compact/detail layout sizing) (2026-06-15).
 - Refactored `src/lib/ui/AnimeCard.svelte` to remove duplicated progress counter logic and reuse `EpisodeCounter` with `compact={true}` (2026-06-15).
 - Refactored `src/lib/ui/RecommenderWidgets.svelte` to implement persistent filters (Genre, Format, Min Rating slider) and title-cycling animation for the Plan to Watch (PTW) Roulette (2026-06-15).
+- Created `src/routes/auth/oauth.ts` to unify token exchange and refresh server boilerplate (2026-06-15).
+- Removed empty placeholder `src/lib/index.ts` and empty route `src/routes/anime/+page.svelte` (2026-06-15).
+- Removed stale planning files directory `docs/superpowers` (2026-06-15).
 
 ## APIs & Fallbacks
 

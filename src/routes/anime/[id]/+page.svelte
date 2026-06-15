@@ -17,7 +17,8 @@
 		formatAnimeStatus,
 		formatSeason,
 		formatLocalBroadcast,
-		formatNumberShort
+		formatNumberShort,
+		formatCharacterName
 	} from '$lib/utils/format';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
@@ -30,7 +31,6 @@
 	import ScoreInput from '$lib/ui/ScoreInput.svelte';
 	import GenreBadge from '$lib/ui/GenreBadge.svelte';
 	import AddToListModal from '$lib/ui/AddToListModal.svelte';
-	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import CharacterDetailModal from '$lib/ui/CharacterDetailModal.svelte';
 	import AnimeDetailSkeleton from '$lib/ui/skeletons/AnimeDetailSkeleton.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
@@ -60,8 +60,6 @@
 	// ─── Modals ───
 
 	let showAddModal = $state(false);
-	let showCompleteDialog = $state(false);
-	let completeTargetId = $state<number | null>(null);
 	let showCharacterModal = $state(false);
 	let selectedCharacter = $state<JikanCharacterEntry | null>(null);
 
@@ -184,11 +182,6 @@
 		}
 	});
 
-	function handleCompletePrompt(id: number) {
-		completeTargetId = id;
-		showCompleteDialog = true;
-	}
-
 	function handleCharacterClick(entry: JikanCharacterEntry) {
 		selectedCharacter = entry;
 		showCharacterModal = true;
@@ -199,11 +192,6 @@
 		finished_airing: 'text-info',
 		not_yet_aired: 'text-warning'
 	};
-
-	function formatCharacterName(rawName: string): string {
-		const parts = rawName.split(',').map((p) => p.trim());
-		return parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawName;
-	}
 </script>
 
 <svelte:head>
@@ -339,7 +327,7 @@
 				<!-- Genres -->
 				{#if anime.genres.length > 0}
 					<div class="mt-3 flex flex-wrap gap-1.5">
-						{#each anime.genres as genre}
+						{#each anime.genres as genre, _idx (_idx)}
 							<GenreBadge name={genre.name} />
 						{/each}
 					</div>
@@ -386,7 +374,6 @@
 												{malId}
 												watched={listEntry.numWatchedEpisodes}
 												total={listEntry.numEpisodes}
-												onComplete={handleCompletePrompt}
 											/>
 										</div>
 									</div>
@@ -483,13 +470,13 @@
 						Related Anime
 					</h3>
 					<div class="space-y-4">
-						{#each Object.entries(relatedGrouped) as [type, items]}
+						{#each Object.entries(relatedGrouped) as [type, items] (type)}
 							<div>
 								<h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">
 									{type}
 								</h4>
 								<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-									{#each items as item}
+									{#each items as item, _idx (_idx)}
 										<a
 											href="/anime/{item.id}"
 											class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
@@ -532,7 +519,7 @@
 					<!-- MAL Recommendations -->
 					{#if anime.recommendations && anime.recommendations.length > 0}
 						<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-							{#each anime.recommendations.slice(0, 6) as rec}
+							{#each anime.recommendations.slice(0, 6) as rec, _idx (_idx)}
 								<a
 									href="/anime/{rec.id}"
 									class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
@@ -571,7 +558,7 @@
 					<!-- Community Recommendations -->
 					{#if recsLoading}
 						<div class="grid gap-3 sm:grid-cols-2">
-							{#each Array(2) as _}
+							{#each Array(2) as _, _idx (_idx)}
 								<div class="h-28 animate-pulse rounded-xl bg-surface-1"></div>
 							{/each}
 						</div>
@@ -581,7 +568,7 @@
 								Community Insights
 							</h4>
 							<div class="grid gap-3 md:grid-cols-2">
-								{#each recommendations.slice(0, 4) as rec}
+								{#each recommendations.slice(0, 4) as rec, _idx (_idx)}
 									<div
 										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
 									>
@@ -644,7 +631,7 @@
 				<div class="space-y-3">
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-						{#each Array(8) as _}
+						{#each Array(8) as _, _idx (_idx)}
 							<div class="flex items-center gap-2 rounded-xl bg-surface-1 p-2">
 								<div class="h-10 w-10 animate-pulse rounded-full bg-surface-2"></div>
 								<div class="space-y-1">
@@ -664,7 +651,7 @@
 						<span class="text-xs text-text-muted">({characters.length} total)</span>
 					</div>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-						{#each displayedCharacters as entry}
+						{#each displayedCharacters as entry, _idx (_idx)}
 							<button
 								type="button"
 								onclick={() => handleCharacterClick(entry)}
@@ -722,9 +709,6 @@
 	mediaType={anime?.mediaType ?? ''}
 	numEpisodes={anime?.numEpisodes ?? 0}
 />
-
-<!-- Complete Confirmation Dialog -->
-<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />
 
 <!-- Character Detail Modal -->
 <CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />

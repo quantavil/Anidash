@@ -18,6 +18,8 @@
 	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
+	import { debounce } from '$lib/utils/debounce';
+
 	let showSortMenu = $state(false);
 	let focusedIndex = $state(-1);
 
@@ -61,19 +63,18 @@
 		}
 	}
 
-	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	const debouncedSearch = debounce((value: string) => {
+		goto(setUrlParam(page.url, 'q', value), { keepFocus: true, noScroll: true });
+	}, 250);
 
 	function handleSearch(e: Event) {
 		const value = (e.target as HTMLInputElement).value;
-		if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-		searchDebounceTimer = setTimeout(() => {
-			goto(setUrlParam(page.url, 'q', value), { keepFocus: true, noScroll: true });
-		}, 250);
+		debouncedSearch(value);
 	}
 
 	$effect(() => {
 		return () => {
-			if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+			debouncedSearch.cancel();
 		};
 	});
 
@@ -114,7 +115,6 @@
 
 			{#if showSortMenu}
 				<!-- Click-away overlay -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
 					class="fixed inset-0 z-40"
 					onclick={() => {
@@ -124,7 +124,7 @@
 					role="presentation"
 				></div>
 				<div class="absolute right-0 top-full mt-2 glass-dropdown border-border!" role="menu">
-					{#each SORT_OPTIONS as option, idx}
+					{#each SORT_OPTIONS as option, idx (option.key)}
 						<button
 							onclick={() => setSort(option.key)}
 							role="menuitem"

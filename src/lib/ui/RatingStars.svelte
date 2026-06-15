@@ -65,7 +65,6 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
 	class="inline-flex items-center gap-1.5 outline-none focus-visible:outline-none rounded-sm transition-shadow"
 	role="slider"
@@ -78,7 +77,7 @@
 	onclick={(e) => e.stopPropagation()}
 	onkeydown={handleKeyDown}
 >
-	{#each Array(5) as _, i}
+	{#each Array(5) as _, i (i)}
 		{@const fill = starFill(i)}
 		<div
 			role="button"

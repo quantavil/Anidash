@@ -3,7 +3,7 @@
 	let { count = 12 }: { count?: number } = $props();
 </script>
 
-{#each Array(count) as _, i}
+{#each Array(count) as _, i (i)}
 	<div class="animate-pulse glass-card p-3">
 		<!-- Image placeholder -->
 		<div class="aspect-[3/4] w-full rounded-lg bg-surface-2"></div>

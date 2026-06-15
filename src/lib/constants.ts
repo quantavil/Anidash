@@ -7,3 +7,12 @@ export const STORAGE_KEYS = {
 	USER_PROFILE: 'anidash_user_profile',
 	DUB_MODE: 'anidash_dub_mode'
 } as const;
+
+export const MEDIA_TYPE_FILTER_OPTIONS = [
+	{ value: '', label: 'All' },
+	{ value: 'tv', label: 'TV' },
+	{ value: 'movie', label: 'Movie' },
+	{ value: 'ova', label: 'OVA' },
+	{ value: 'special', label: 'Special' },
+	{ value: 'ona', label: 'ONA' }
+] as const;

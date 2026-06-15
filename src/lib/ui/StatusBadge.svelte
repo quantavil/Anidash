@@ -52,7 +52,7 @@
 
 		<DropdownMenu.Portal>
 			<DropdownMenu.Content class="glass-dropdown" sideOffset={4} align="start">
-				{#each ALL_STATUSES as s}
+				{#each ALL_STATUSES as s, _idx (_idx)}
 					<DropdownMenu.Item class="glass-dropdown-item" onSelect={() => handleSelect(s)}>
 						<span class="h-2 w-2 shrink-0 rounded-full {STATUS_COLORS[s]?.dot}"></span>
 						<span class="flex-1">{formatStatus(s)}</span>

@@ -49,13 +49,6 @@ export function needsRefresh(): boolean {
 	return Date.now() > data.expiresAt - 3_600_000;
 }
 
-/** True if token is already expired */
-export function isExpired(): boolean {
-	const data = tokens.get();
-	if (!data) return true;
-	return Date.now() >= data.expiresAt;
-}
-
 // ─── Cross-Tab Refresh Coordination ───
 // MAL rotates refresh tokens on exchange. If two tabs refresh concurrently,
 // the second request uses an invalidated token and logs the user out.
@@ -183,27 +176,7 @@ async function doRefresh(): Promise<Result<void>> {
 			return err({ type: 'auth', message: bodyPartial.error || 'Token refresh failed' });
 		}
 
-		// Validate token response
-		const parsed = MalTokenResponseSchema.safeParse(body);
-		if (!parsed.success) {
-			tokens.clear();
-			return err({
-				type: 'validation',
-				message: 'Invalid token response from server',
-				issues: zodIssuesToSummaries(parsed.error.issues)
-			});
-		}
-
-		const tokenData = parsed.data;
-
-		// MAL may or may not return a new refresh_token
-		tokens.set({
-			accessToken: tokenData.access_token,
-			refreshToken: tokenData.refresh_token ?? data.refreshToken,
-			expiresAt: Date.now() + tokenData.expires_in * 1000
-		});
-
-		return ok(undefined);
+		return parseAndSetTokens(body, data.refreshToken);
 	} catch (e) {
 		return err({
 			type: 'network',
@@ -211,4 +184,26 @@ async function doRefresh(): Promise<Result<void>> {
 			cause: e instanceof Error ? e : undefined
 		});
 	}
+}
+
+/** Parse a token response body, validate it, and store the tokens. */
+export function parseAndSetTokens(body: unknown, fallbackRefreshToken?: string): Result<void> {
+	const parsed = MalTokenResponseSchema.safeParse(body);
+	if (!parsed.success) {
+		tokens.clear();
+		return err({
+			type: 'validation',
+			message: 'Invalid token response from server',
+			issues: zodIssuesToSummaries(parsed.error.issues)
+		});
+	}
+
+	const tokenData = parsed.data;
+	tokens.set({
+		accessToken: tokenData.access_token,
+		refreshToken: tokenData.refresh_token || fallbackRefreshToken || '',
+		expiresAt: Date.now() + tokenData.expires_in * 1000
+	});
+
+	return ok(undefined);
 }

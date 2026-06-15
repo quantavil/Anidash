@@ -1,6 +1,5 @@
 import prettier from 'eslint-config-prettier';
-import path from 'node:path';
-import { includeIgnoreFile } from '@eslint/compat';
+import gitignore from 'eslint-config-flat-gitignore';
 import js from '@eslint/js';
 import svelte from 'eslint-plugin-svelte';
 import { defineConfig } from 'eslint/config';
@@ -8,10 +7,8 @@ import globals from 'globals';
 import ts from 'typescript-eslint';
 import svelteConfig from './svelte.config.js';
 
-const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
-
 export default defineConfig(
-	includeIgnoreFile(gitignorePath),
+	gitignore(),
 	js.configs.recommended,
 	ts.configs.recommended,
 	svelte.configs.recommended,
@@ -39,6 +36,14 @@ export default defineConfig(
 	{
 		// Override or add rule settings here, such as:
 		// 'svelte/button-has-type': 'error'
-		rules: {}
+		rules: {
+			'svelte/no-navigation-without-resolve': 'off',
+			'@typescript-eslint/no-unused-vars': [
+				'warn',
+				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+			],
+			'@typescript-eslint/no-explicit-any': 'warn',
+			'@typescript-eslint/ban-ts-comment': 'warn'
+		}
 	}
 );

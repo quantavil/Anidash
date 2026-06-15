@@ -11,6 +11,7 @@
 
 	import FluidNav from '$lib/ui/FluidNav.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
+	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
 
@@ -197,4 +198,8 @@
 			</div>
 		</div>
 	{/if}
+	<CompleteAnimeDialog
+		bind:open={userListStore.showCompleteDialog}
+		bind:malId={userListStore.completeTargetId}
+	/>
 {/if}

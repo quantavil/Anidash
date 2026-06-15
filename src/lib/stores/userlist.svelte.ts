@@ -14,6 +14,7 @@ import { updateAnimeStatus, getAnimeDetail, deleteAnimeStatus } from '$lib/api/m
 import { putAnime } from '$lib/cache/anime.cache';
 import { syncStore } from './sync.svelte.ts';
 import { debounce, type DebouncedFn } from '$lib/utils/debounce';
+import { SvelteMap } from 'svelte/reactivity';
 import { ok, err, type Result } from '$lib/api/result';
 import type { AppError } from '$lib/api/result';
 import type { UserListRecord, AnimeStatus } from '$lib/cache/db';
@@ -27,7 +28,11 @@ function createUserListStore() {
 	let initialized = $state(false);
 
 	// Debounced MAL sync functions per anime (prevents rapid-fire PATCH)
-	const pendingSyncs = new Map<number, DebouncedFn<() => void>>();
+	const pendingSyncs = new SvelteMap<number, DebouncedFn<() => void>>();
+
+	// Global complete confirmation dialog state
+	let showCompleteDialog = $state(false);
+	let completeTargetId = $state<number | null>(null);
 
 	// ─── Derived ───
 
@@ -101,7 +106,11 @@ function createUserListStore() {
 		if (!entry) return;
 
 		// 1. Apply locally by mutating the proxied state object
-		const updated = { ...entry, ...localChanges } as UserListRecord;
+		const updated = {
+			...entry,
+			...localChanges,
+			updatedAt: new Date().toISOString()
+		} as UserListRecord;
 		entries[malId] = updated;
 
 		// 2. Update IDB
@@ -161,8 +170,7 @@ function createUserListStore() {
 				malId,
 				{
 					status: 'completed' as AnimeStatus,
-					numWatchedEpisodes: entry.numEpisodes,
-					updatedAt: new Date().toISOString()
+					numWatchedEpisodes: entry.numEpisodes
 				},
 				{
 					status: 'completed',
@@ -170,11 +178,7 @@ function createUserListStore() {
 				}
 			);
 		} else {
-			optimisticUpdate(
-				malId,
-				{ status: newStatus, updatedAt: new Date().toISOString() },
-				{ status: newStatus }
-			);
+			optimisticUpdate(malId, { status: newStatus }, { status: newStatus });
 		}
 	}
 
@@ -194,8 +198,7 @@ function createUserListStore() {
 		optimisticUpdate(
 			malId,
 			{
-				numWatchedEpisodes: newCount,
-				updatedAt: new Date().toISOString()
+				numWatchedEpisodes: newCount
 			},
 			{ num_watched_episodes: newCount }
 		);
@@ -210,8 +213,7 @@ function createUserListStore() {
 		optimisticUpdate(
 			malId,
 			{
-				numWatchedEpisodes: count,
-				updatedAt: new Date().toISOString()
+				numWatchedEpisodes: count
 			},
 			{ num_watched_episodes: count }
 		);
@@ -416,6 +418,22 @@ function createUserListStore() {
 		},
 		get initialized() {
 			return initialized;
+		},
+		get showCompleteDialog() {
+			return showCompleteDialog;
+		},
+		set showCompleteDialog(val) {
+			showCompleteDialog = val;
+		},
+		get completeTargetId() {
+			return completeTargetId;
+		},
+		set completeTargetId(val) {
+			completeTargetId = val;
+		},
+		triggerCompletePrompt(malId: number) {
+			completeTargetId = malId;
+			showCompleteDialog = true;
 		},
 
 		clear,

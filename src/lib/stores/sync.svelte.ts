@@ -6,14 +6,12 @@ import { getUserAnimeList } from '$lib/api/mal';
 import { getLastSync, setLastSync, setCachedProfile } from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';
 import { authStore } from '$lib/auth/auth.svelte';
-import type { UserListRecord } from '$lib/cache/db';
 import type { AppError } from '$lib/api/result';
 
 function createSyncStore() {
 	let isSyncing = $state(false);
 	let lastSynced = $state<number | null>(null);
 	let syncError = $state<AppError | null>(null);
-	let progress = $state<{ current: number; total: number } | null>(null);
 
 	async function init(): Promise<void> {
 		lastSynced = await getLastSync();
@@ -24,7 +22,6 @@ function createSyncStore() {
 
 		isSyncing = true;
 		syncError = null;
-		progress = null;
 
 		try {
 			// 1. Fetch full list from MAL
@@ -37,7 +34,6 @@ function createSyncStore() {
 			}
 
 			const entries = result.value;
-			progress = { current: entries.length, total: entries.length };
 
 			// 2. Bulk replace in IDB
 			await bulkPut(entries);
@@ -83,9 +79,6 @@ function createSyncStore() {
 		},
 		set syncError(val) {
 			syncError = val;
-		},
-		get progress() {
-			return progress;
 		},
 		init,
 		fullSync,

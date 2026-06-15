@@ -3,6 +3,7 @@
 	import { Heart, ExternalLink, X } from 'lucide-svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import type { JikanCharacterEntry } from '$lib/api/schemas/jikan.schema';
+	import { formatCharacterName } from '$lib/utils/format';
 
 	let {
 		open = $bindable(false),
@@ -11,12 +12,6 @@
 		open: boolean;
 		entry: JikanCharacterEntry | null;
 	} = $props();
-
-	function formatCharacterName(rawName: string): string {
-		if (!rawName) return '';
-		const parts = rawName.split(',').map((p) => p.trim());
-		return parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawName;
-	}
 </script>
 
 <Dialog.Root bind:open>

@@ -101,8 +101,6 @@ export const MalListStatusSchema = z.object({
 	finish_date: z.string().nullable().optional()
 });
 
-export type MalListStatus = z.infer<typeof MalListStatusSchema>;
-
 // ─── User List Entry (node + list_status) ───
 
 export const MalUserListEntrySchema = z.object({
@@ -122,8 +120,6 @@ export const MalUserListResponseSchema = z.object({
 		})
 		.optional()
 });
-
-export type MalUserListResponse = z.infer<typeof MalUserListResponseSchema>;
 
 // ─── Anime Detail (full — for detail page) ───
 

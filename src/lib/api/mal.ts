@@ -29,6 +29,16 @@ const malLimiter = createRateLimiter(MAL_MIN_INTERVAL_MS);
 
 import type { ZodSchema } from 'zod';
 
+function buildSearchParams(obj: Record<string, unknown>): URLSearchParams {
+	const params = new URLSearchParams();
+	for (const [key, value] of Object.entries(obj)) {
+		if (value !== undefined && value !== null && value !== '') {
+			params.set(key, String(value));
+		}
+	}
+	return params;
+}
+
 async function malGet<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
 	const fetchResult = await malLimiter.enqueue(() => authFetch(url));
 
@@ -54,12 +64,6 @@ async function malGet<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> 
 			cause: e instanceof Error ? e : undefined
 		});
 	}
-}
-
-// ─── User Profile ───
-
-export async function getUserProfile(): Promise<Result<MalUser>> {
-	return malGet(`${MAL_API_BASE}/users/@me`, MalUserSchema);
 }
 
 // ─── User Anime List ───
@@ -222,13 +226,12 @@ export async function updateAnimeStatus(
 	id: number,
 	update: MalStatusUpdate
 ): Promise<Result<void>> {
-	// MAL PATCH expects form-encoded body
-	const params = new URLSearchParams();
-	if (update.status !== undefined) params.set('status', update.status);
-	if (update.score !== undefined) params.set('score', String(update.score));
-	if (update.num_watched_episodes !== undefined)
-		params.set('num_watched_episodes', String(update.num_watched_episodes));
-	if (update.is_rewatching !== undefined) params.set('is_rewatching', String(update.is_rewatching));
+	const params = buildSearchParams({
+		status: update.status,
+		score: update.score,
+		num_watched_episodes: update.num_watched_episodes,
+		is_rewatching: update.is_rewatching
+	});
 
 	const url = `${MAL_API_BASE}/anime/${id}/my_list_status`;
 	const fetchResult = await malLimiter.enqueue(() =>
@@ -295,18 +298,17 @@ export async function searchAnime(
 		limit?: number;
 	}
 ): Promise<Result<MalAnimeSearchResponse>> {
-	const params = new URLSearchParams({
+	const params = buildSearchParams({
 		q: query,
 		fields: SEARCH_FIELDS,
-		limit: String(options?.limit ?? 25)
+		limit: options?.limit ?? 25,
+		offset: options?.offset,
+		genres: options?.genre,
+		type: options?.type,
+		status: options?.status,
+		min_score: options?.minScore,
+		sort: options?.sort
 	});
-
-	if (options?.offset) params.set('offset', String(options.offset));
-	if (options?.genre) params.set('genres', String(options.genre));
-	if (options?.type) params.set('type', options.type);
-	if (options?.status) params.set('status', options.status);
-	if (options?.minScore) params.set('min_score', String(options.minScore));
-	if (options?.sort) params.set('sort', options.sort);
 
 	const url = `${MAL_API_BASE}/anime?${params}`;
 	return malGet(url, MalAnimeSearchResponseSchema);
@@ -324,36 +326,14 @@ export async function getSeasonal(
 		limit?: number;
 	}
 ): Promise<Result<MalAnimeSearchResponse>> {
-	const params = new URLSearchParams({
+	const params = buildSearchParams({
 		fields: SEARCH_FIELDS,
-		limit: String(options?.limit ?? 100)
+		limit: options?.limit ?? 100,
+		sort: options?.sort,
+		filter: options?.filter,
+		offset: options?.offset
 	});
-
-	if (options?.sort) params.set('sort', options.sort);
-	if (options?.filter) params.set('filter', options.filter);
-	if (options?.offset) params.set('offset', String(options.offset));
 
 	const url = `${MAL_API_BASE}/anime/season/${year}/${season}?${params}`;
-	return malGet(url, MalAnimeSearchResponseSchema);
-}
-
-// ─── Ranking ───
-
-export async function getRanking(
-	rankingType: string = 'all',
-	options?: {
-		offset?: number;
-		limit?: number;
-	}
-): Promise<Result<MalAnimeSearchResponse>> {
-	const params = new URLSearchParams({
-		ranking_type: rankingType,
-		fields: SEARCH_FIELDS,
-		limit: String(options?.limit ?? 100)
-	});
-
-	if (options?.offset) params.set('offset', String(options.offset));
-
-	const url = `${MAL_API_BASE}/anime/ranking?${params}`;
 	return malGet(url, MalAnimeSearchResponseSchema);
 }

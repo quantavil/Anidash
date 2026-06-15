@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Search, X, Loader2 } from 'lucide-svelte';
+	import { Search, X, LoaderCircle } from 'lucide-svelte';
 
 	let {
 		value = $bindable(''),
@@ -31,7 +31,7 @@
 
 <div class="relative w-full group">
 	{#if loading || isDebouncing}
-		<Loader2
+		<LoaderCircle
 			size={15}
 			class="absolute left-3.5 top-1/2 -translate-y-1/2 animate-spin text-primary"
 		/>

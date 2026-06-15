@@ -11,7 +11,7 @@
 
 	<!-- Tab skeleton -->
 	<div class="mb-4 flex gap-2 animate-pulse">
-		{#each Array(6) as _}
+		{#each Array(6) as _, _idx (_idx)}
 			<div class="h-9 w-24 rounded-lg bg-surface-2"></div>
 		{/each}
 	</div>

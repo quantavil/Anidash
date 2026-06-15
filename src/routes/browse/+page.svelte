@@ -6,7 +6,7 @@
 	import { searchAnime, getAnimeGenres } from '$lib/api/jikan';
 	import { mapJikanToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { formatMediaType } from '$lib/utils/format';
-	import { SlidersHorizontal, ChevronDown, Loader2, X } from 'lucide-svelte';
+	import { SlidersHorizontal, ChevronDown, LoaderCircle, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchInput from '$lib/ui/SearchInput.svelte';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
@@ -14,6 +14,8 @@
 	import RecommenderWidgets from '$lib/ui/RecommenderWidgets.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { fade } from 'svelte/transition';
+	import { debounce } from '$lib/utils/debounce';
+	import { MEDIA_TYPE_FILTER_OPTIONS } from '$lib/constants';
 
 	// ─── URL State ───
 
@@ -39,14 +41,7 @@
 	let genresLoaded = $state(false);
 	let showFilters = $state(false);
 
-	const TYPES = [
-		{ value: '', label: 'All Types' },
-		{ value: 'tv', label: 'TV' },
-		{ value: 'movie', label: 'Movie' },
-		{ value: 'ova', label: 'OVA' },
-		{ value: 'special', label: 'Special' },
-		{ value: 'ona', label: 'ONA' }
-	];
+	const TYPES = MEDIA_TYPE_FILTER_OPTIONS;
 
 	const SORTS = [
 		{ value: 'relevance', label: 'Relevance' },
@@ -64,7 +59,10 @@
 
 	// ─── Search ───
 
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+	const debouncedSetFilter = debounce((val: string) => {
+		setFilter('q', val);
+		isDebouncing = false;
+	}, 400);
 
 	async function doSearch(page: number = 1, append: boolean = false) {
 		if (page === 1) loading = true;
@@ -137,7 +135,7 @@
 		loadGenres();
 
 		return () => {
-			if (debounceTimer) clearTimeout(debounceTimer);
+			debouncedSetFilter.cancel();
 		};
 	});
 
@@ -172,6 +170,7 @@
 		searchInput = '';
 	}
 
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let searchInput = $state('');
 
 	$effect(() => {
@@ -182,11 +181,7 @@
 		const val = (e.target as HTMLInputElement).value;
 		searchInput = val;
 		isDebouncing = true;
-		if (debounceTimer) clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(() => {
-			setFilter('q', val);
-			isDebouncing = false;
-		}, 400);
+		debouncedSetFilter(val);
 	}
 
 	function clearSearch() {
@@ -255,7 +250,7 @@
 							onchange={(e) => setFilter('type', (e.target as HTMLSelectElement).value)}
 							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white/10 transition-all duration-200"
 						>
-							{#each TYPES as t}
+							{#each TYPES as t, _idx (_idx)}
 								<option value={t.value} class="bg-surface-2">{t.label}</option>
 							{/each}
 						</select>
@@ -279,7 +274,7 @@
 							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white/10 transition-all duration-200"
 						>
 							<option value="" class="bg-surface-2">All Genres</option>
-							{#each genres as g}
+							{#each genres as g, _idx (_idx)}
 								<option value={String(g.id)} class="bg-surface-2">{g.name}</option>
 							{/each}
 						</select>
@@ -302,7 +297,7 @@
 							onchange={(e) => setFilter('sort', (e.target as HTMLSelectElement).value)}
 							class="w-full appearance-none rounded-lg border border-white/5 bg-surface-2/60 px-3 py-2 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white/10 transition-all duration-200"
 						>
-							{#each SORTS as s}
+							{#each SORTS as s, _idx (_idx)}
 								<option value={s.value} class="bg-surface-2">{s.label}</option>
 							{/each}
 						</select>
@@ -416,7 +411,7 @@
 				<div class="flex justify-center py-8">
 					{#if loadingMore}
 						<div class="flex items-center gap-2 text-sm text-text-muted">
-							<Loader2 size={16} class="animate-spin" />
+							<LoaderCircle size={16} class="animate-spin" />
 							Loading more…
 						</div>
 					{:else}

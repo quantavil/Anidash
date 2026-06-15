@@ -9,7 +9,6 @@
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import AnimeGrid from '$lib/ui/AnimeGrid.svelte';
-	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import ListPageSkeleton from '$lib/ui/skeletons/ListPageSkeleton.svelte';
 
 	// ─── URL State ───
@@ -44,16 +43,6 @@
 			currentSort
 		)
 	);
-
-	// ─── Complete Prompt ───
-
-	let showCompleteDialog = $state(false);
-	let completeTargetId = $state<number | null>(null);
-
-	function handleCompletePrompt(malId: number) {
-		completeTargetId = malId;
-		showCompleteDialog = true;
-	}
 </script>
 
 {#if !authStore.isAuthenticated}
@@ -110,7 +99,6 @@
 			entries={filteredEntries}
 			resetKey="{currentTab}-{currentSort}-{currentQuery}"
 			loading={false}
-			onComplete={handleCompletePrompt}
 		/>
 
 		<!-- Stats footer -->
@@ -121,6 +109,3 @@
 		{/if}
 	</div>
 {/if}
-
-<!-- Complete Confirmation Dialog -->
-<CompleteAnimeDialog bind:open={showCompleteDialog} bind:malId={completeTargetId} />

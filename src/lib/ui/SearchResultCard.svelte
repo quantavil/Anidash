@@ -128,7 +128,7 @@
 		<!-- Genres (show first 2) -->
 		{#if anime.genres.length > 0}
 			<div class="mt-auto flex flex-wrap gap-1 pt-1">
-				{#each anime.genres.slice(0, 2) as genre}
+				{#each anime.genres.slice(0, 2) as genre, _idx (_idx)}
 					<GenreBadge name={genre} small />
 				{/each}
 			</div>

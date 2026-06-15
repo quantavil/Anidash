@@ -10,11 +10,9 @@
 	import { dubStore } from '$lib/stores/dub.svelte';
 
 	let {
-		entry,
-		onComplete
+		entry
 	}: {
 		entry: UserListRecord;
-		onComplete?: (malId: number) => void;
 	} = $props();
 
 	const imageUrl = $derived(entry.mainPicture?.medium ?? entry.mainPicture?.large ?? null);
@@ -76,7 +74,6 @@
 			malId={entry.malId}
 			watched={entry.numWatchedEpisodes}
 			total={entry.numEpisodes}
-			{onComplete}
 		/>
 	</div>
 

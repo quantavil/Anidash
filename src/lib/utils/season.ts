@@ -38,6 +38,6 @@ export function nextSeason(year: number, season: Season): { year: number; season
 }
 
 /** Season index for sorting (0=winter, 3=fall) */
-export function seasonIndex(season: Season): number {
+function seasonIndex(season: Season): number {
 	return SEASON_ORDER.indexOf(season);
 }

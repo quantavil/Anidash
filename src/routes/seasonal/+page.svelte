@@ -12,6 +12,7 @@
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { MEDIA_TYPE_FILTER_OPTIONS } from '$lib/constants';
 
 	// ─── Season State ───
 
@@ -56,14 +57,7 @@
 
 	const displayedAnime = $derived(filteredAnime.slice(0, sliceLimit));
 
-	const TYPES = [
-		{ value: '', label: 'All' },
-		{ value: 'tv', label: 'TV' },
-		{ value: 'movie', label: 'Movie' },
-		{ value: 'ova', label: 'OVA' },
-		{ value: 'special', label: 'Special' },
-		{ value: 'ona', label: 'ONA' }
-	];
+	const TYPES = MEDIA_TYPE_FILTER_OPTIONS;
 
 	// ─── Fetch ───
 
@@ -165,7 +159,7 @@
 	<!-- Type Filter and Sort -->
 	<div class="mt-5 flex flex-wrap items-center justify-between gap-4">
 		<div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-			{#each TYPES as t}
+			{#each TYPES as t, _idx (_idx)}
 				<button
 					onclick={() => (filterType = t.value)}
 					class="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors

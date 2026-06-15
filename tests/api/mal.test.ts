@@ -141,7 +141,7 @@ describe('MAL API Mappers', () => {
 					numRecommendations: 50
 				}
 			],
-			isDetail: true
+			type: 'detail'
 		});
 
 		// Ensure cachedAt is populated

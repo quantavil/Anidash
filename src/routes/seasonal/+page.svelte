@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { getSeasonal } from '$lib/api/mal';
-	import { getMetaRecord, setMeta } from '$lib/cache/meta.cache';
+	import { getSeasonalCache, setSeasonalCache } from '$lib/cache/meta.cache';
 	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
 	import { formatMediaType, capitalize } from '$lib/utils/format';
@@ -65,7 +65,7 @@
 		const cacheKey = `seasonal:${seasonYear}:${seasonKey}`;
 		const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-		const cached = await getMetaRecord<DisplayAnime[]>(cacheKey);
+		const cached = await getSeasonalCache(cacheKey);
 		const isStale = !cached || Date.now() - cached.updatedAt > CACHE_TTL;
 
 		if (cached) {
@@ -81,7 +81,7 @@
 
 			if (result.ok) {
 				const fetchedAnime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
-				await setMeta(cacheKey, fetchedAnime);
+				await setSeasonalCache(cacheKey, fetchedAnime);
 				anime = fetchedAnime;
 			} else if (!cached) {
 				toast.error('Failed to load seasonal anime');

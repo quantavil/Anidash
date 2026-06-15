@@ -96,31 +96,40 @@ function releaseLock(): void {
 	}
 }
 
-/** Wait for another tab to finish refreshing (polls localStorage for new tokens). */
+/** Wait for another tab to finish refreshing. */
 async function waitForOtherTabRefresh(originalExpiresAt: number): Promise<Result<void>> {
-	const maxWait = LOCK_TTL_MS;
-	const pollInterval = 200;
-	let waited = 0;
-
-	while (waited < maxWait) {
-		await new Promise((r) => setTimeout(r, pollInterval));
-		waited += pollInterval;
-
-		// Check if tokens were updated by the other tab
-		const current = tokens.get();
-		if (current && current.expiresAt > originalExpiresAt) {
-			return ok(undefined); // Other tab refreshed successfully
-		}
-
-		// Check if the lock was released (other tab finished)
-		const lock = getRefreshLock();
-		if (!lock || Date.now() - lock.ts >= LOCK_TTL_MS) {
-			break; // Lock expired or released — we can try ourselves
-		}
+	if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') {
+		return doRefresh();
 	}
 
-	// Other tab may have failed; try refreshing ourselves
-	return doRefresh();
+	return new Promise<Result<void>>((resolve) => {
+		const channel = new BroadcastChannel('anidash_auth_refresh');
+		let timeoutId: any;
+
+		const cleanup = () => {
+			clearTimeout(timeoutId);
+			channel.close();
+		};
+
+		channel.onmessage = (e) => {
+			if (e.data === 'success') {
+				const current = tokens.get();
+				if (current && current.expiresAt > originalExpiresAt) {
+					cleanup();
+					resolve(ok(undefined));
+					return;
+				}
+			}
+			cleanup();
+			resolve(doRefresh());
+		};
+
+		// Safety timeout in case the other tab crashes/closes
+		timeoutId = setTimeout(() => {
+			cleanup();
+			resolve(doRefresh());
+		}, LOCK_TTL_MS);
+	});
 }
 
 /** Refresh the access token via the Worker proxy. Deduplicates concurrent calls. */
@@ -147,7 +156,21 @@ export async function refreshTokens(): Promise<Result<void>> {
 		return ok(undefined);
 	}
 
-	refreshPromise = doRefresh().finally(() => releaseLock());
+	const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('anidash_auth_refresh') : null;
+	refreshPromise = doRefresh()
+		.then((res) => {
+			if (res.ok) {
+				channel?.postMessage('success');
+			} else {
+				channel?.postMessage('failed');
+			}
+			return res;
+		})
+		.finally(() => {
+			channel?.close();
+			releaseLock();
+		});
+
 	const result = await refreshPromise;
 	refreshPromise = null;
 	return result;

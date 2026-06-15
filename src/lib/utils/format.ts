@@ -34,12 +34,10 @@ export function formatSeason(year: number | null, season: string | null): string
 	return `${capitalize(season)} ${year}`;
 }
 
-/** Season name → capitalized ("winter" → "Winter") */
 export function capitalize(s: string): string {
 	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-/** Media type display ("tv" → "TV", "ova" → "OVA", "movie" → "Movie") */
 const MEDIA_TYPE_LABELS: Record<string, string> = {
 	tv: 'TV',
 	ova: 'OVA',
@@ -54,7 +52,6 @@ export function formatMediaType(type: string): string {
 	return MEDIA_TYPE_LABELS[type.toLowerCase()] ?? type;
 }
 
-/** Status display ("watching" → "Watching", "on_hold" → "On Hold") */
 const STATUS_LABELS: Record<string, string> = {
 	watching: 'Watching',
 	completed: 'Completed',
@@ -96,7 +93,6 @@ export const STATUS_COLORS: Record<string, Record<StatusVariant, string>> = {
 	}
 };
 
-/** Anime airing status ("currently_airing" → "Currently Airing") */
 const ANIME_STATUS_LABELS: Record<string, string> = {
 	currently_airing: 'Currently Airing',
 	finished_airing: 'Finished Airing',
@@ -128,7 +124,6 @@ export function formatLocalBroadcast(dayOfWeek: string, startTime?: string): str
 	return `${localDay}s at ${localTime}`;
 }
 
-/** Formats character names from "Last, First" to "First Last" */
 export function formatCharacterName(rawName: string): string {
 	if (!rawName) return '';
 	const parts = rawName.split(',').map((p) => p.trim());

@@ -6,7 +6,7 @@
 	import { getRecommendations, getCharacters } from '$lib/api/jikan';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import type { AnimeRecord } from '$lib/cache/db';
+	import type { DetailedAnimeRecord } from '$lib/cache/db';
 	import type {
 		JikanRecommendationEntry,
 		JikanCharacterEntry
@@ -40,7 +40,7 @@
 
 	// ─── State ───
 
-	let anime = $state<AnimeRecord | null>(null);
+	let anime = $state<DetailedAnimeRecord | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -100,7 +100,7 @@
 		const cached = await getAnimeAllowStale(id);
 		if (id !== Number(page.params.id)) return;
 
-		if (cached) {
+		if (cached && cached.type === 'detail') {
 			anime = cached;
 			loading = false;
 		}

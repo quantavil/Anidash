@@ -118,7 +118,7 @@ function createAuthStore() {
 		error = null;
 
 		try {
-			const { verifier, challenge, state } = await generatePKCE();
+			const { verifier, challenge, state } = generatePKCE();
 			const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes TTL
 
 			sessionStorage.setItem(

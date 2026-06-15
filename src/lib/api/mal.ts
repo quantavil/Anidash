@@ -19,7 +19,7 @@ import {
 	type MalStatusUpdate,
 	type MalAnimeLean
 } from './schemas/mal.schema';
-import type { UserListRecord, AnimeRecord } from '$lib/cache/db';
+import type { UserListRecord, AnimeRecord, DetailedAnimeRecord } from '$lib/cache/db';
 
 // ─── Rate Limiter ───
 
@@ -185,7 +185,7 @@ const DETAIL_FIELDS = [
 	'broadcast'
 ].join(',');
 
-export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
+export async function getAnimeDetail(id: number): Promise<Result<DetailedAnimeRecord>> {
 	const url = `${MAL_API_BASE}/anime/${id}?fields=${DETAIL_FIELDS}`;
 	const result = await malGet(url, MalAnimeDetailSchema);
 
@@ -194,7 +194,7 @@ export async function getAnimeDetail(id: number): Promise<Result<AnimeRecord>> {
 	return ok(mapDetailToRecord(result.value));
 }
 
-export function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
+export function mapDetailToRecord(detail: MalAnimeDetail): DetailedAnimeRecord {
 	return {
 		...mapBaseAnimeNode(detail),
 		synopsis: detail.synopsis ?? null,
@@ -215,7 +215,7 @@ export function mapDetailToRecord(detail: MalAnimeDetail): AnimeRecord {
 				mean: r.node.mean ?? null,
 				numRecommendations: r.num_recommendations ?? 0
 			})) ?? null,
-		isDetail: true,
+		type: 'detail',
 		cachedAt: Date.now()
 	};
 }

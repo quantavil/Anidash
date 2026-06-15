@@ -27,9 +27,6 @@
 		10: 'Masterpiece'
 	};
 
-	let containerEl = $state<HTMLDivElement | null>(null);
-	let isDragging = $state(false);
-
 	const size = 36; // Enlarge to fill container and increase tapability
 
 	function starFill(i: number): number {
@@ -57,53 +54,6 @@
 			e.preventDefault();
 			userListStore.setScore(malId, 0);
 		}
-	}
-
-	// Touch drag support for mobile
-	function handleTouchStart(e: TouchEvent) {
-		if (e.cancelable) e.preventDefault();
-		isDragging = true;
-		handleTouchUpdate(e);
-	}
-
-	function handleTouchMove(e: TouchEvent) {
-		if (!isDragging) return;
-		if (e.cancelable) e.preventDefault();
-		handleTouchUpdate(e);
-	}
-
-	function handleTouchEnd(e: TouchEvent) {
-		if (isDragging) {
-			if (e.cancelable) e.preventDefault();
-			if (hoveredScore !== null) {
-				userListStore.setScore(malId, hoveredScore);
-			}
-			hoveredScore = null;
-			isDragging = false;
-		}
-	}
-
-	function handleTouchUpdate(e: TouchEvent) {
-		if (!containerEl) return;
-		const rect = containerEl.getBoundingClientRect();
-		const touch = e.touches[0];
-		const relativeX = touch.clientX - rect.left;
-		const pct = relativeX / rect.width;
-
-		if (pct <= 0) {
-			hoveredScore = 0;
-			return;
-		}
-		if (pct >= 1) {
-			hoveredScore = 10;
-			return;
-		}
-
-		// Divide the container space into 5 equal star zones
-		const starIndex = Math.min(4, Math.floor(pct * 5));
-		const starPct = pct * 5 - starIndex;
-		const isRightHalf = starPct >= 0.5;
-		hoveredScore = starIndex * 2 + (isRightHalf ? 2 : 1);
 	}
 </script>
 
@@ -172,8 +122,7 @@
 
 	<!-- 5-Star Interactive Rating Bar -->
 	<div
-		bind:this={containerEl}
-		class="flex items-center justify-between py-1.5 select-none touch-none w-full"
+		class="flex items-center justify-between py-1.5 select-none w-full"
 		role="slider"
 		tabindex="0"
 		aria-label="Anime rating out of 10 represented by 5 stars"
@@ -182,9 +131,6 @@
 		aria-valuemax={10}
 		onmouseleave={() => (hoveredScore = null)}
 		onkeydown={handleKeyDown}
-		ontouchstart={handleTouchStart}
-		ontouchmove={handleTouchMove}
-		ontouchend={handleTouchEnd}
 	>
 		{#each Array(5) as _, i (i)}
 			{@const fill = starFill(i)}

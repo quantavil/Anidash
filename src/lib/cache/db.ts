@@ -22,14 +22,21 @@ export interface BaseAnimeRecord {
 	numScoringUsers: number;
 }
 
-export interface AnimeRecord extends BaseAnimeRecord {
+export interface LeanAnimeRecord extends BaseAnimeRecord {
+	type: 'lean';
+	cachedAt: number; // epoch ms
+}
+
+export interface DetailedAnimeRecord extends BaseAnimeRecord {
+	type: 'detail';
 	synopsis: string | null;
 	broadcast: { day_of_the_week: string; start_time?: string } | null;
 	relatedAnime: RelatedAnimeRecord[] | null;
 	recommendations: RecommendationRecord[] | null;
-	isDetail: boolean; // true = full detail fetched, false = lean list data
 	cachedAt: number; // epoch ms
 }
+
+export type AnimeRecord = LeanAnimeRecord | DetailedAnimeRecord;
 
 export interface RelatedAnimeRecord {
 	id: number;

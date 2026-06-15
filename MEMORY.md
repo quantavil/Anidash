@@ -34,6 +34,7 @@ anidash/
 - Created `src/routes/auth/oauth.ts` to unify token exchange and refresh server boilerplate (2026-06-15).
 - Removed empty placeholder `src/lib/index.ts` and empty route `src/routes/anime/+page.svelte` (2026-06-15).
 - Removed stale planning files directory `docs/superpowers` (2026-06-15).
+- Refactored `AnimeRecord` to a discriminated union and cleaned up meta caching, token coordination, rate limiters, rating inputs, and async PKCE overhead (2026-06-15).
 
 ## APIs & Fallbacks
 

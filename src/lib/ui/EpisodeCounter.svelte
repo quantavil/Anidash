@@ -106,7 +106,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		width: 180px; /* Default width for detail pane / list rows */
+		width: 100%;
+		max-width: 220px; /* Cap width for detail pane / list rows */
 		height: 38px;
 		border-radius: 22px;
 		padding: 4px 12px;
@@ -122,7 +123,8 @@
 	}
 
 	.pill-base.compact {
-		width: 130px; /* Compact width for card grid */
+		width: 100%;
+		max-width: 100%; /* Fill the card controls space completely */
 		height: 30px;
 		border-radius: 16px;
 		padding: 2px 6px;

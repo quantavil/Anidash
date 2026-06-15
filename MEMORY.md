@@ -27,6 +27,7 @@ anidash/
 - Created `src/lib/ui/SearchInput.svelte` to unify search inputs and resolve design inconsistencies / DRY violations (2026-06-14).
 - Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
 - Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
+- Configured `pages_build_output_dir` in `wrangler.toml` (2026-06-15).
 
 
 ## APIs & Fallbacks

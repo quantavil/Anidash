@@ -7,7 +7,8 @@
 		loading = false,
 		isDebouncing = false,
 		oninput,
-		onclear
+		onclear,
+		onkeydown
 	}: {
 		value: string;
 		placeholder?: string;
@@ -15,6 +16,7 @@
 		isDebouncing?: boolean;
 		oninput?: (e: Event) => void;
 		onclear?: () => void;
+		onkeydown?: (e: KeyboardEvent) => void;
 	} = $props();
 
 	function handleInput(e: Event) {
@@ -47,6 +49,7 @@
 		{placeholder}
 		{value}
 		oninput={handleInput}
+		onkeydown={onkeydown}
 		class="w-full rounded-full border border-white/5 bg-white/5 py-2.5 pl-10 pr-9 text-sm text-text-primary placeholder:text-text-muted outline-none transition-all duration-500 ease-spring focus:bg-white/10 focus:outline-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
 	/>
 

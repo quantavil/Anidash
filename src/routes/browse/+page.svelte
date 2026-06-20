@@ -5,7 +5,7 @@
 	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
 	import { searchAnime, getAnimeGenres } from '$lib/api/jikan';
 	import { mapJikanToDisplay, type DisplayAnime } from '$lib/utils/types';
-	import { formatMediaType } from '$lib/utils/format';
+	import { formatMediaType, formatSeason } from '$lib/utils/format';
 	import { SlidersHorizontal, ChevronDown, LoaderCircle, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchInput from '$lib/ui/SearchInput.svelte';
@@ -16,6 +16,8 @@
 	import { fade } from 'svelte/transition';
 	import { debounce } from '$lib/utils/debounce';
 	import { MEDIA_TYPE_FILTER_OPTIONS } from '$lib/constants';
+	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { matchesFuzzy, getSearchKeyword } from '$lib/utils/search';
 
 	// ─── URL State ───
 
@@ -64,6 +66,43 @@
 		isDebouncing = false;
 	}, 400);
 
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			debouncedSetFilter.cancel();
+			isDebouncing = false;
+			setFilter('q', searchInput);
+		}
+	}
+
+	const filteredResults = $derived.by(() => {
+		if (!query.trim()) return results;
+
+		const localMatches = userListStore.allEntries
+			.filter((e) => matchesFuzzy(e.title, e.titleEnglish, query))
+			.map((e) => ({
+				malId: e.malId,
+				title: e.title,
+				titleEnglish: e.titleEnglish,
+				mainPicture: e.mainPicture?.large ?? e.mainPicture?.medium ?? null,
+				mean: e.mean,
+				numEpisodes: e.numEpisodes,
+				genres: e.genres.map((g) => g.name),
+				studios: e.studios.map((s) => s.name),
+				startSeason: e.startSeason
+					? formatSeason(e.startSeason.year, e.startSeason.season)
+					: null,
+				mediaType: e.mediaType,
+				animeStatus: e.animeStatus,
+				numListUsers: e.numListUsers,
+				synopsis: null
+			} as DisplayAnime));
+
+		const localIds = new Set(localMatches.map((m) => m.malId));
+		const uniqueOnline = results.filter((r) => !localIds.has(r.malId));
+
+		return [...localMatches, ...uniqueOnline];
+	});
+
 	async function doSearch(page: number = 1, append: boolean = false) {
 		if (page === 1) loading = true;
 		else loadingMore = true;
@@ -73,7 +112,7 @@
 			await dubStore.init();
 		}
 
-		const result = await searchAnime({
+		const searchParams = {
 			q: query || undefined,
 			type: filterType || undefined,
 			genres: filterGenre || undefined,
@@ -91,10 +130,32 @@
 			page,
 			limit: 25,
 			sfw: filterSfw ? true : undefined
-		});
+		};
+
+		let result = await searchAnime(searchParams);
+
+		// Fallback fuzzy search: if full query had multiple words and returned 0 results
+		if (result.ok && result.value.anime.length === 0 && query) {
+			const keyword = getSearchKeyword(query);
+			if (keyword && keyword !== query.toLowerCase().trim()) {
+				const fallbackResult = await searchAnime({
+					...searchParams,
+					q: keyword
+				});
+				if (fallbackResult.ok) {
+					result = fallbackResult;
+				}
+			}
+		}
 
 		if (result.ok) {
 			let mapped = result.value.anime.map(mapJikanToDisplay);
+
+			// Client-side fuzzy filter on API results
+			if (query) {
+				mapped = mapped.filter((a) => matchesFuzzy(a.title, a.titleEnglish, query));
+			}
+
 			if (dubStore.dubMode) {
 				mapped = mapped.filter((a) => dubStore.hasDub(a.malId));
 			}
@@ -207,6 +268,7 @@
 				placeholder="Search anime by title…"
 				oninput={handleSearchInput}
 				onclear={clearSearch}
+				onkeydown={handleKeyDown}
 				{loading}
 				{isDebouncing}
 			/>
@@ -396,12 +458,12 @@
 			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 				<AnimeCardSkeleton count={10} />
 			</div>
-		{:else if results.length > 0}
+		{:else if filteredResults.length > 0}
 			<div
 				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
 				transition:fade
 			>
-				{#each results as anime, i (anime.malId)}
+				{#each filteredResults as anime, i (anime.malId)}
 					<SearchResultCard {anime} index={i} />
 				{/each}
 			</div>

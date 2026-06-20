@@ -5,6 +5,7 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { sortEntries, type SortKey } from '$lib/utils/sort';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import { matchesFuzzy } from '$lib/utils/search';
 
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
@@ -27,12 +28,8 @@
 				if (currentTab !== 'all' && e.status !== currentTab) return false;
 
 				// 2. Query loop
-				if (currentQuery) {
-					const q = currentQuery.toLowerCase().trim();
-					const matches =
-						e.title.toLowerCase().includes(q) ||
-						(e.titleEnglish?.toLowerCase().includes(q) ?? false);
-					if (!matches) return false;
+				if (currentQuery && !matchesFuzzy(e.title, e.titleEnglish, currentQuery)) {
+					return false;
 				}
 
 				// 3. Dub loop

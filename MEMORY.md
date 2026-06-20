@@ -41,6 +41,9 @@ anidash/
 - Optimized Browse/Stats tab transitions, cached Jikan API responses (popular list, search, genres) in IndexedDB, and reused seasonal cache in recommender widgets to eliminate slow network requests (2026-06-15).
 - Made `alternative_titles` and its English title subfield nullable in `MalAnimeLeanSchema` to prevent validation errors on null/missing values during MAL sync (2026-06-20).
 - Added fallback for `titleEnglish` in `addToList` to preserve English title from search results if MAL detail API returns null/missing alternative titles (2026-06-20).
+- Created `src/lib/utils/search.ts` containing centralized `matchesFuzzy` and `getSearchKeyword` helpers for Romaji/English matching (2026-06-20).
+- Refactored dashboard search and Browse search pages to utilize the unified fuzzy search matching utility (2026-06-20).
+- Implemented immediate search on Enter key, client-side fuzzy filtering, and local list merging on the Browse page to resolve fuzzy search limits and Jikan API rate limits (2026-06-20).
 
 ## APIs & Fallbacks
 

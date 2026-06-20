@@ -62,5 +62,8 @@
 		>
 			{showingEnglish ? 'EN' : 'JP'}
 		</span>
+		<span class="block mt-0.5 text-[11px] font-normal leading-normal text-text-muted line-clamp-1">
+			{showingEnglish ? title : titleEnglish}
+		</span>
 	{/if}
 </svelte:element>

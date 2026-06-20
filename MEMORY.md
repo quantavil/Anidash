@@ -39,6 +39,8 @@ anidash/
 - Removed unused @sveltejs/adapter-auto and secured Vite config environment scope by restricting loadEnv prefix to 'VITE_' (2026-06-15).
 - Hardened error handling across layout init, auth revalidation, local cache writes, format parsing, and user list fetch retries (2026-06-15).
 - Optimized Browse/Stats tab transitions, cached Jikan API responses (popular list, search, genres) in IndexedDB, and reused seasonal cache in recommender widgets to eliminate slow network requests (2026-06-15).
+- Made `alternative_titles` and its English title subfield nullable in `MalAnimeLeanSchema` to prevent validation errors on null/missing values during MAL sync (2026-06-20).
+- Added fallback for `titleEnglish` in `addToList` to preserve English title from search results if MAL detail API returns null/missing alternative titles (2026-06-20).
 
 ## APIs & Fallbacks
 

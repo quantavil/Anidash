@@ -316,7 +316,7 @@ function createUserListStore() {
 		if (detailResult.ok) {
 			const d = detailResult.value;
 			newEntry.title = d.title;
-			newEntry.titleEnglish = d.titleEnglish;
+			newEntry.titleEnglish = d.titleEnglish || titleEnglish || null;
 			newEntry.mainPicture = d.mainPicture;
 			newEntry.mean = d.mean;
 			newEntry.genres = d.genres;

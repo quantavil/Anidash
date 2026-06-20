@@ -82,8 +82,9 @@ export const MalAnimeLeanSchema = z.object({
 	num_scoring_users: z.number().optional(),
 	alternative_titles: z
 		.object({
-			en: z.string().optional()
+			en: z.string().nullable().optional()
 		})
+		.nullable()
 		.optional()
 });
 

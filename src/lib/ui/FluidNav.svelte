@@ -17,9 +17,23 @@
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
+	import { toast } from 'svelte-sonner';
+	import { invalidateAll } from '$app/navigation';
 
 	async function handleSync() {
-		await import('$lib/stores/userlist.svelte').then((m) => m.userListStore.syncFromRemote());
+		toast.loading('Syncing list with MAL...', { id: 'manual-sync' });
+		try {
+			const m = await import('$lib/stores/userlist.svelte');
+			const result = await m.userListStore.syncFromRemote();
+			if (result.ok) {
+				toast.success('Sync complete!', { id: 'manual-sync' });
+				await invalidateAll();
+			} else {
+				toast.error(result.error.message || 'Sync failed', { id: 'manual-sync' });
+			}
+		} catch (err) {
+			toast.error('Sync failed unexpectedly', { id: 'manual-sync' });
+		}
 	}
 
 	function handleLogout() {

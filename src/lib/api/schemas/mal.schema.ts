@@ -8,8 +8,8 @@ import { z } from 'zod';
 const UrlSchema = z.string().url().nullable();
 
 const PictureSchema = z.object({
-	medium: z.string().url().nullable(),
-	large: z.string().url().nullable()
+	medium: z.string().nullable().optional(),
+	large: z.string().nullable().optional()
 });
 
 const GenreSchema = z.object({
@@ -23,8 +23,8 @@ const StudioSchema = z.object({
 });
 
 const StartSeasonSchema = z.object({
-	year: z.number().nullable(),
-	season: z.string().nullable()
+	year: z.number().nullable().optional(),
+	season: z.string().nullable().optional()
 });
 
 // ─── User ───
@@ -94,9 +94,9 @@ export type MalAnimeLean = z.infer<typeof MalAnimeLeanSchema>;
 
 export const MalListStatusSchema = z.object({
 	status: z.enum(['watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch']),
-	score: z.number(),
-	num_episodes_watched: z.number(),
-	is_rewatching: z.boolean().optional(),
+	score: z.number().nullable().optional(),
+	num_episodes_watched: z.number().nullable().optional(),
+	is_rewatching: z.boolean().nullable().optional(),
 	updated_at: z.string().nullable().optional(),
 	start_date: z.string().nullable().optional(),
 	finish_date: z.string().nullable().optional()
@@ -128,8 +128,8 @@ export const MalAnimeDetailSchema = MalAnimeLeanSchema.extend({
 	synopsis: z.string().nullable().optional(),
 	broadcast: z
 		.object({
-			day_of_the_week: z.string(),
-			start_time: z.string().optional()
+			day_of_the_week: z.string().nullable().optional(),
+			start_time: z.string().nullable().optional()
 		})
 		.nullable()
 		.optional(),
@@ -140,12 +140,13 @@ export const MalAnimeDetailSchema = MalAnimeLeanSchema.extend({
 					id: z.number(),
 					title: z.string(),
 					main_picture: PictureSchema.nullable().optional(),
-					media_type: z.string().optional()
+					media_type: z.string().nullable().optional()
 				}),
-				relation_type: z.string(),
-				relation_type_formatted: z.string().optional()
+				relation_type: z.string().nullable().optional(),
+				relation_type_formatted: z.string().nullable().optional()
 			})
 		)
+		.nullable()
 		.optional(),
 	recommendations: z
 		.array(
@@ -155,11 +156,12 @@ export const MalAnimeDetailSchema = MalAnimeLeanSchema.extend({
 					title: z.string(),
 					main_picture: PictureSchema.nullable().optional(),
 					mean: z.number().nullable().optional(),
-					media_type: z.string().optional()
+					media_type: z.string().nullable().optional()
 				}),
-				num_recommendations: z.number().optional()
+				num_recommendations: z.number().nullable().optional()
 			})
 		)
+		.nullable()
 		.optional()
 });
 

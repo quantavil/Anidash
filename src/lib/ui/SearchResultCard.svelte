@@ -36,7 +36,8 @@
 			'plan_to_watch',
 			anime.titleEnglish,
 			anime.title,
-			anime.mainPicture
+			anime.mainPicture,
+			anime.genres
 		);
 		adding = false;
 		if (result.ok) {

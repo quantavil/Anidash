@@ -30,12 +30,24 @@ export async function getEntriesByStatus(status: AnimeStatus): Promise<UserListR
 /** Replace the entire list with fresh data from MAL */
 export async function bulkPut(entries: UserListRecord[]): Promise<void> {
 	const db = await getDB();
+	const currentEntries = await db.getAll('userList');
+	const newIds = new Set(entries.map((e) => e.malId));
+
 	const tx = db.transaction('userList', 'readwrite');
 
-	// Clear existing entries
-	await tx.store.clear();
+	// 1. Delete outdated entries (those not in the sync list and not marked as local-only or explicit)
+	for (const entry of currentEntries) {
+		if (!newIds.has(entry.malId)) {
+			const isExplicit =
+				entry.isLocalOnly ||
+				entry.genres?.some((g) => g.name === 'Hentai' || g.name === 'Erotica');
+			if (!isExplicit) {
+				await tx.store.delete(entry.malId);
+			}
+		}
+	}
 
-	// Put all new entries
+	// 2. Put/overwrite the fresh entries
 	await Promise.all(entries.map((entry) => tx.store.put(entry)));
 
 	await tx.done;

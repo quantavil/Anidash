@@ -17,7 +17,8 @@
 		picture = null,
 		mean = null,
 		mediaType = '',
-		numEpisodes = 0
+		numEpisodes = 0,
+		genres = []
 	}: {
 		open?: boolean;
 		onOpenChange?: (open: boolean) => void;
@@ -28,6 +29,7 @@
 		mean?: number | null;
 		mediaType?: string;
 		numEpisodes?: number;
+		genres?: { id: number; name: string }[] | string[];
 	} = $props();
 
 	let selectedStatus = $state<AnimeStatus>('plan_to_watch');
@@ -48,7 +50,8 @@
 			selectedStatus,
 			titleEnglish,
 			animeTitle,
-			picture
+			picture,
+			genres
 		);
 		adding = false;
 

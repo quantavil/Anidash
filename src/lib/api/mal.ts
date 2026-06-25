@@ -149,7 +149,10 @@ export function mapBaseAnimeNode(node: MalAnimeLean) {
 		numEpisodes: node.num_episodes ?? 0,
 		genres: node.genres ?? [],
 		studios: node.studios ?? [],
-		startSeason: node.start_season ?? { year: null, season: null },
+		startSeason: {
+			year: node.start_season?.year ?? null,
+			season: node.start_season?.season ?? null
+		},
 		mediaType: node.media_type ?? 'unknown',
 		animeStatus: node.status ?? 'unknown',
 		numListUsers: node.num_list_users ?? 0,
@@ -164,8 +167,8 @@ export function mapListEntryToRecord(entry: MalUserListEntry): UserListRecord {
 	return {
 		...mapBaseAnimeNode(node),
 		status: ls.status,
-		score: ls.score,
-		numWatchedEpisodes: ls.num_episodes_watched,
+		score: ls.score ?? 0,
+		numWatchedEpisodes: ls.num_episodes_watched ?? 0,
 		isRewatching: ls.is_rewatching ?? false,
 		updatedAt: ls.updated_at ?? null,
 		startDate: ls.start_date ?? null,

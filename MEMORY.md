@@ -44,6 +44,8 @@ anidash/
 - Created `src/lib/utils/search.ts` containing centralized `matchesFuzzy` and `getSearchKeyword` helpers for Romaji/English matching (2026-06-20).
 - Refactored dashboard search and Browse search pages to utilize the unified fuzzy search matching utility (2026-06-20).
 - Implemented immediate search on Enter key, client-side fuzzy filtering, and local list merging on the Browse page to resolve fuzzy search limits and Jikan API rate limits (2026-06-20).
+- Relaxed Zod schemas in `mal.schema.ts` and improved mappers in `mal.ts` to prevent silent sync failures on null/missing subfields. Implemented toast status feedback and SvelteKit invalidation on manual list syncs in `FluidNav.svelte` (2026-06-25).
+- Enforced Svelte 5 runes reactivity in `userlist.svelte.ts` via state re-assignments, and refactored `bulkPut` in `userlist.cache.ts` to surgically preserve explicit/NSFW and local-only anime entries from sync deletions (2026-06-25).
 
 ## APIs & Fallbacks
 

@@ -115,13 +115,16 @@ function createUserListStore() {
 		const entry = entries[malId];
 		if (!entry) return;
 
-		// 1. Apply locally by mutating the proxied state object
+		// 1. Apply locally by mutating the proxied state object with full re-assignment
 		const updated = {
 			...entry,
 			...localChanges,
 			updatedAt: new Date().toISOString()
 		} as UserListRecord;
-		entries[malId] = updated;
+		entries = {
+			...entries,
+			[malId]: updated
+		};
 
 		// 2. Update IDB
 		putEntry($state.snapshot(updated)).catch(logger.error);
@@ -236,8 +239,10 @@ function createUserListStore() {
 		const entry = entries[malId];
 		if (!entry) return err({ type: 'cache', message: 'Entry not found' });
 
-		// 1. Optimistic local remove
-		delete entries[malId];
+		// 1. Optimistic local remove with full re-assignment
+		const newEntries = { ...entries };
+		delete newEntries[malId];
+		entries = newEntries;
 		await removeEntry(malId);
 
 		// 2. Sync to MAL
@@ -259,7 +264,8 @@ function createUserListStore() {
 		status: AnimeStatus,
 		titleEnglish?: string | null,
 		fallbackTitle?: string,
-		fallbackPicture?: string | null
+		fallbackPicture?: string | null,
+		genres?: string[] | { id: number; name: string }[]
 	): Promise<Result<void>> {
 		// Fetch anime detail first so we have the episode count for completed status
 		const detailResult = await getAnimeDetail(malId);
@@ -288,6 +294,18 @@ function createUserListStore() {
 			}
 		}
 
+		const normalizedGenres: { id: number; name: string }[] = [];
+		if (genres) {
+			for (let i = 0; i < genres.length; i++) {
+				const g = genres[i];
+				if (typeof g === 'string') {
+					normalizedGenres.push({ id: i, name: g });
+				} else if (g && typeof g === 'object' && 'name' in g) {
+					normalizedGenres.push(g);
+				}
+			}
+		}
+
 		// Create a local list entry
 		const newEntry: UserListRecord = {
 			malId,
@@ -296,7 +314,7 @@ function createUserListStore() {
 			mainPicture: fallbackPicture ? { medium: fallbackPicture, large: fallbackPicture } : null,
 			mean: null,
 			numEpisodes: finalEpisodes,
-			genres: [],
+			genres: normalizedGenres,
 			studios: [],
 			startSeason: { year: null, season: null },
 			mediaType: 'unknown',
@@ -309,7 +327,8 @@ function createUserListStore() {
 			isRewatching: false,
 			updatedAt: new Date().toISOString(),
 			startDate: null,
-			finishDate: null
+			finishDate: null,
+			isLocalOnly: !detailResult.ok
 		};
 
 		// If we got detail, use it (overrides fallbacks)
@@ -328,7 +347,10 @@ function createUserListStore() {
 			newEntry.numScoringUsers = d.numScoringUsers;
 		}
 
-		entries[malId] = newEntry;
+		entries = {
+			...entries,
+			[malId]: newEntry
+		};
 		await putEntry($state.snapshot(newEntry));
 
 		return ok(undefined);

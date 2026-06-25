@@ -708,6 +708,7 @@
 	mean={anime?.mean ?? null}
 	mediaType={anime?.mediaType ?? ''}
 	numEpisodes={anime?.numEpisodes ?? 0}
+	genres={anime?.genres ?? []}
 />
 
 <!-- Character Detail Modal -->

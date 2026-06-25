@@ -65,6 +65,7 @@ export interface UserListRecord extends BaseAnimeRecord {
 	updatedAt: string | null;
 	startDate: string | null;
 	finishDate: string | null;
+	isLocalOnly?: boolean;
 }
 
 export interface MetaRecord {

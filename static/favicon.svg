@@ -1,5 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#8b7ef8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M3 21l9-18 9 18" />
-  <path d="M8 14h8" />
-  <path d="M12 6L18 6" fill="none" opacity="0.5" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="50%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Subtle glowing background glow -->
+  <circle cx="50" cy="50" r="35" fill="url(#grad)" opacity="0.15" filter="blur(8px)" />
+  
+  <!-- Stylized Play/Dash "A" Icon -->
+  <path d="M35 25
+           C35 22.5 37.8 21.2 39.8 22.7
+           L73.2 47.7
+           C74.8 48.9 74.8 51.1 73.2 52.3
+           L39.8 77.3
+           C37.8 78.8 35 77.5 35 75.0
+           Z" fill="url(#grad)" />
+  
+  <!-- Sleek overlay to create a modern glass/reflective look -->
+  <path d="M35 25 L73.2 50 L35 75 Z" fill="#FFFFFF" opacity="0.1" />
+  
+  <!-- Speed lines / Dash trails to the left -->
+  <rect x="23" y="32" width="6" height="36" rx="3" fill="url(#grad)" opacity="0.8" />
+  <rect x="13" y="42" width="6" height="16" rx="3" fill="url(#grad)" opacity="0.5" />
 </svg>

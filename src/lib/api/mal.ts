@@ -144,7 +144,12 @@ export function mapBaseAnimeNode(node: MalAnimeLean) {
 		malId: node.id,
 		title: node.title,
 		titleEnglish: node.alternative_titles?.en || null,
-		mainPicture: node.main_picture ?? null,
+		mainPicture: node.main_picture
+			? {
+					medium: node.main_picture.medium ?? null,
+					large: node.main_picture.large ?? null
+				}
+			: null,
 		mean: node.mean ?? null,
 		numEpisodes: node.num_episodes ?? 0,
 		genres: node.genres ?? [],
@@ -211,20 +216,35 @@ export function mapDetailToRecord(detail: MalAnimeDetail): DetailedAnimeRecord {
 	return {
 		...mapBaseAnimeNode(detail),
 		synopsis: detail.synopsis ?? null,
-		broadcast: detail.broadcast ?? null,
+		broadcast: detail.broadcast?.day_of_the_week
+			? {
+					day_of_the_week: detail.broadcast.day_of_the_week,
+					start_time: detail.broadcast.start_time ?? undefined
+				}
+			: null,
 		relatedAnime:
 			detail.related_anime?.map((r) => ({
 				id: r.node.id,
 				title: r.node.title,
-				mainPicture: r.node.main_picture ?? null,
+				mainPicture: r.node.main_picture
+					? {
+							medium: r.node.main_picture.medium ?? null,
+							large: r.node.main_picture.large ?? null
+						}
+					: null,
 				mediaType: r.node.media_type ?? null,
-				relationType: r.relation_type
+				relationType: r.relation_type ?? 'unknown'
 			})) ?? null,
 		recommendations:
 			detail.recommendations?.map((r) => ({
 				id: r.node.id,
 				title: r.node.title,
-				mainPicture: r.node.main_picture ?? null,
+				mainPicture: r.node.main_picture
+					? {
+							medium: r.node.main_picture.medium ?? null,
+							large: r.node.main_picture.large ?? null
+						}
+					: null,
 				mean: r.node.mean ?? null,
 				numRecommendations: r.num_recommendations ?? 0
 			})) ?? null,

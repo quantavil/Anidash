@@ -33,7 +33,8 @@ export async function setLastSync(timestamp: number): Promise<void> {
 
 export async function setCachedProfile(profile: MalUser): Promise<void> {
 	const db = await getDB();
-	await db.put('meta', { key: KEY_USER_PROFILE, value: profile, updatedAt: Date.now() });
+	const cleanProfile = JSON.parse(JSON.stringify(profile));
+	await db.put('meta', { key: KEY_USER_PROFILE, value: cleanProfile, updatedAt: Date.now() });
 }
 
 // ─── Seasonal Cache ───

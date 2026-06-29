@@ -111,7 +111,7 @@
 
 		if (result.ok) {
 			anime = result.value;
-			await putAnime(result.value);
+			await putAnime($state.snapshot(result.value));
 		} else if (!cached) {
 			error = result.error.message || 'Failed to load anime';
 		}

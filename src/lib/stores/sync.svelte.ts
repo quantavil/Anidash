@@ -40,7 +40,7 @@ function createSyncStore() {
 
 			// 3. Cache user profile
 			if (authStore.user) {
-				await setCachedProfile(authStore.user);
+				await setCachedProfile($state.snapshot(authStore.user));
 			}
 
 			// 4. Update last sync timestamp

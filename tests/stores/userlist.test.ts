@@ -5,11 +5,11 @@ import { updateAnimeStatus, deleteAnimeStatus } from '$lib/api/mal';
 
 vi.mock('$lib/cache/userlist.cache', () => ({
 	getAllEntries: vi.fn().mockResolvedValue([]),
-	putEntry: vi.fn().mockResolvedValue(undefined),
-	removeEntry: vi.fn().mockResolvedValue(undefined),
-	putSyncQueue: vi.fn().mockResolvedValue(undefined),
+	putEntry: vi.fn().mockResolvedValue({ ok: true }),
+	removeEntry: vi.fn().mockResolvedValue({ ok: true }),
+	putSyncQueue: vi.fn().mockResolvedValue({ ok: true }),
 	getSyncQueue: vi.fn().mockResolvedValue([]),
-	deleteSyncQueue: vi.fn().mockResolvedValue(undefined)
+	deleteSyncQueue: vi.fn().mockResolvedValue({ ok: true })
 }));
 
 vi.mock('$lib/api/mal', () => ({

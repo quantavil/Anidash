@@ -175,3 +175,15 @@ export async function deleteDB(): Promise<void> {
 	dbPromise = null;
 	await indexedDB.deleteDatabase(DB_NAME);
 }
+
+/** Clear only user-specific data from IndexedDB on logout */
+export async function clearUserCache(): Promise<void> {
+	const db = await getDB();
+	const tx = db.transaction(['userList', 'syncQueue', 'meta'], 'readwrite');
+	await tx.objectStore('userList').clear();
+	await tx.objectStore('syncQueue').clear();
+	const metaStore = tx.objectStore('meta');
+	await metaStore.delete('lastSync');
+	await metaStore.delete('userProfile');
+	await tx.done;
+}

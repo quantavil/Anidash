@@ -10,7 +10,7 @@
 	import { Dialog } from 'bits-ui';
 	import { Dice5, Sparkles, LoaderCircle, Settings, ListFilter, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 
 	let loading = $state(false);
 	let initializing = $state(false);
@@ -129,6 +129,14 @@
 	let rollingPTW = $state(false);
 	let rolledTitle = $state('');
 
+	let rouletteInterval: ReturnType<typeof setInterval> | null = null;
+	let rouletteTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	onDestroy(() => {
+		if (rouletteInterval) clearInterval(rouletteInterval);
+		if (rouletteTimeout) clearTimeout(rouletteTimeout);
+	});
+
 	async function runRoulette() {
 		if (rollingPTW) return;
 		if (matchingPTW.length === 0) {
@@ -142,16 +150,18 @@
 		const steps = duration / intervalMs;
 		let step = 0;
 
-		const timer = setInterval(() => {
+		rouletteInterval = setInterval(() => {
 			const temp = matchingPTW[Math.floor(Math.random() * matchingPTW.length)];
 			rolledTitle = temp.titleEnglish || temp.title;
 			step++;
 			if (step >= steps) {
-				clearInterval(timer);
+				if (rouletteInterval) clearInterval(rouletteInterval);
+				rouletteInterval = null;
 				const finalPick = matchingPTW[Math.floor(Math.random() * matchingPTW.length)];
 				goto(`/anime/${finalPick.malId}`);
-				setTimeout(() => {
+				rouletteTimeout = setTimeout(() => {
 					rollingPTW = false;
+					rouletteTimeout = null;
 				}, 500);
 			}
 		}, intervalMs);

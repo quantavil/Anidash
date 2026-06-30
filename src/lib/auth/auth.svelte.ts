@@ -270,10 +270,10 @@ function createAuthStore() {
 
 		// Clear IndexedDB
 		try {
-			const { deleteDB } = await import('$lib/cache/db');
-			await deleteDB();
+			const { clearUserCache } = await import('$lib/cache/db');
+			await clearUserCache();
 		} catch {
-			// IDB deletion can fail if locked — not critical
+			// IDB cleanup can fail if locked — not critical
 		}
 
 		goto('/login');

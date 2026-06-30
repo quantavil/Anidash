@@ -47,6 +47,11 @@ anidash/
 - Relaxed Zod schemas in `mal.schema.ts` and improved mappers in `mal.ts` to prevent silent sync failures on null/missing subfields. Implemented toast status feedback and SvelteKit invalidation on manual list syncs in `FluidNav.svelte` (2026-06-25).
 - Enforced Svelte 5 runes reactivity in `userlist.svelte.ts` via state re-assignments, and refactored `bulkPut` in `userlist.cache.ts` to surgically preserve explicit/NSFW and local-only anime entries from sync deletions (2026-06-25).
 - Deleted duplicate `src/lib/assets/favicon.svg` and updated `static/favicon.svg` with a modern gradient play-and-dash design (2026-06-28).
+- Resolved search race condition in `src/routes/browse/+page.svelte` by tracking request IDs (2026-06-30).
+- Cleaned up PTW Roulette interval in `src/lib/ui/RecommenderWidgets.svelte` during `onDestroy` (2026-06-30).
+- Restricted logout IndexedDB cleanup in `src/lib/cache/db.ts` to user-specific stores and keys (2026-06-30).
+- Swapped void database writes for `Result` error propagation in `src/lib/cache/userlist.cache.ts` and surfaced toasts (2026-06-30).
+
 
 ## APIs & Fallbacks
 

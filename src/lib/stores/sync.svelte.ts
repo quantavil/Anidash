@@ -36,7 +36,12 @@ function createSyncStore() {
 			const entries = result.value;
 
 			// 2. Bulk replace in IDB
-			await bulkPut(entries);
+			const cacheRes = await bulkPut(entries);
+			if (!cacheRes.ok) {
+				syncError = cacheRes.error;
+				isSyncing = false;
+				return { success: false, entryCount: 0 };
+			}
 
 			// 3. Cache user profile
 			if (authStore.user) {

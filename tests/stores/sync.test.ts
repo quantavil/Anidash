@@ -7,7 +7,7 @@ import { purgeStaleAnime } from '$lib/cache/anime.cache';
 
 // Mock dependencies
 vi.mock('$lib/cache/userlist.cache', () => ({
-	bulkPut: vi.fn().mockResolvedValue(undefined)
+	bulkPut: vi.fn().mockResolvedValue({ ok: true })
 }));
 
 vi.mock('$lib/api/mal', () => ({

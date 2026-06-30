@@ -127,17 +127,40 @@ function createUserListStore() {
 		};
 
 		// 2. Update IDB
-		putEntry($state.snapshot(updated)).catch(logger.error);
+		putEntry($state.snapshot(updated))
+			.then((res) => {
+				if (!res.ok) {
+					logger.error('Failed to update IndexedDB:', res.error);
+					import('svelte-sonner').then(({ toast }) => {
+						toast.error('Local database write failed. Changes may not be saved offline.');
+					});
+				}
+			})
+			.catch((err) => {
+				logger.error('Failed to update IndexedDB:', err);
+				import('svelte-sonner').then(({ toast }) => {
+					toast.error('Local database write failed. Changes may not be saved offline.');
+				});
+			});
 
 		// 3. Debounced MAL sync
 		cancelPendingSync(malId);
 		const syncFn = debounce(async () => {
 			// 3a. Save to persistent offline queue immediately
-			await putSyncQueue({
+			const queueRes = await putSyncQueue({
 				malId,
 				payload: malPayload,
 				timestamp: Date.now()
 			});
+
+			if (!queueRes.ok) {
+				logger.error('Failed to save to sync queue:', queueRes.error);
+				import('svelte-sonner').then(({ toast }) => {
+					toast.error('Offline sync failed. Your changes could not be queued.');
+				});
+				pendingSyncs.delete(malId);
+				return;
+			}
 
 			// If explicitly offline, just leave it in queue
 			if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -149,7 +172,10 @@ function createUserListStore() {
 			const result = await updateAnimeStatus(malId, malPayload);
 			if (result.ok) {
 				// Success — remove from queue
-				await deleteSyncQueue(malId);
+				const deleteRes = await deleteSyncQueue(malId);
+				if (!deleteRes.ok) {
+					logger.error('Failed to delete from sync queue after successful sync:', deleteRes.error);
+				}
 			} else {
 				// Show error, but LEAVE IN QUEUE. It will be flushed later.
 				syncStore.syncError = result.error;
@@ -243,7 +269,15 @@ function createUserListStore() {
 		const newEntries = { ...entries };
 		delete newEntries[malId];
 		entries = newEntries;
-		await removeEntry(malId);
+		
+		const removeRes = await removeEntry(malId);
+		if (!removeRes.ok) {
+			logger.error(`Failed to remove entry ${malId} from IndexedDB:`, removeRes.error);
+			import('svelte-sonner').then(({ toast }) => {
+				toast.error('Local database write failed. Entry could not be deleted.');
+			});
+			return err(removeRes.error);
+		}
 
 		// 2. Sync to MAL
 		const result = await deleteAnimeStatus(malId);
@@ -251,7 +285,14 @@ function createUserListStore() {
 		if (!result.ok) {
 			logger.warn(`Failed to sync deletion for ${malId} to MAL:`, result.error);
 			// Queue for retry on next sync flush
-			await putSyncQueue({ malId, payload: { _delete: true }, timestamp: Date.now() });
+			const queueRes = await putSyncQueue({ malId, payload: { _delete: true }, timestamp: Date.now() });
+			if (!queueRes.ok) {
+				logger.error(`Failed to queue deletion for ${malId}:`, queueRes.error);
+				import('svelte-sonner').then(({ toast }) => {
+					toast.error('Offline sync failed. Deletion could not be queued.');
+				});
+				return err(queueRes.error);
+			}
 		}
 
 		return ok(undefined);
@@ -351,7 +392,14 @@ function createUserListStore() {
 			...entries,
 			[malId]: newEntry
 		};
-		await putEntry($state.snapshot(newEntry));
+		const putRes = await putEntry($state.snapshot(newEntry));
+		if (!putRes.ok) {
+			logger.error(`Failed to add entry ${malId} to IndexedDB:`, putRes.error);
+			import('svelte-sonner').then(({ toast }) => {
+				toast.error('Local database write failed. Entry could not be added.');
+			});
+			return err(putRes.error);
+		}
 
 		return ok(undefined);
 	}

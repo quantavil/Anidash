@@ -36,6 +36,7 @@
 	let hasSearched = $state(false);
 	let loadingMore = $state(false);
 	let isDebouncing = $state(false);
+	let currentSearchId = 0;
 
 	// ─── Genres ───
 
@@ -104,6 +105,9 @@
 	});
 
 	async function doSearch(page: number = 1, append: boolean = false) {
+		currentSearchId++;
+		const searchId = currentSearchId;
+
 		if (page === 1) loading = true;
 		else loadingMore = true;
 
@@ -111,6 +115,8 @@
 		if (dubStore.dubMode) {
 			await dubStore.init();
 		}
+
+		if (searchId !== currentSearchId) return;
 
 		const searchParams = {
 			q: query || undefined,
@@ -134,6 +140,8 @@
 
 		let result = await searchAnime(searchParams);
 
+		if (searchId !== currentSearchId) return;
+
 		// Fallback fuzzy search: if full query had multiple words and returned 0 results
 		if (result.ok && result.value.anime.length === 0 && query) {
 			const keyword = getSearchKeyword(query);
@@ -142,6 +150,7 @@
 					...searchParams,
 					q: keyword
 				});
+				if (searchId !== currentSearchId) return;
 				if (fallbackResult.ok) {
 					result = fallbackResult;
 				}

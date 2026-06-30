@@ -18,7 +18,11 @@
 
 	const current = getCurrentSeason();
 	const urlYear = $derived(Number(getUrlParam(page.url, 'year', String(current.year))));
-	const urlSeason = $derived(getUrlParam(page.url, 'season', current.season) as Season);
+	const VALID_SEASONS: Season[] = ['winter', 'spring', 'summer', 'fall'];
+	const urlSeason = $derived.by(() => {
+		const raw = getUrlParam(page.url, 'season', current.season);
+		return VALID_SEASONS.includes(raw as Season) ? (raw as Season) : current.season;
+	});
 
 	const seasonYear = $derived(urlYear || current.year);
 	const seasonKey = $derived(urlSeason || current.season);

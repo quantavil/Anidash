@@ -89,17 +89,10 @@
 		};
 		document.addEventListener('visibilitychange', visibilityHandler);
 
-		// ─── Save before unload ───
-		const unloadHandler = () => {
-			userListStore.flushPendingSyncs();
-		};
-		window.addEventListener('beforeunload', unloadHandler);
-
 		// ─── Cleanup ───
 		return () => {
 			clearInterval(refreshInterval);
 			document.removeEventListener('visibilitychange', visibilityHandler);
-			window.removeEventListener('beforeunload', unloadHandler);
 		};
 	});
 
@@ -130,7 +123,7 @@
 
 <Toaster
 	theme="dark"
-	position="bottom-right"
+	position="top-right"
 	toastOptions={{
 		style: 'background: #18181b; border: 1px solid #27272a; color: #f4f4f5;',
 		duration: 3000
@@ -168,15 +161,20 @@
 
 	<!-- Login Prompt Modal -->
 	{#if !authStore.isAuthenticated && showLoginPrompt}
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
 			onclick={closeLoginPrompt}
+			onkeydown={(e) => { if (e.key === 'Escape') closeLoginPrompt(); }}
+			role="dialog"
+			aria-modal="true"
+			aria-label="Login prompt"
+			tabindex="-1"
 		>
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
 				class="w-full max-w-md rounded-2xl bg-surface-1 p-6 shadow-xl border border-white/10 text-center space-y-6"
 				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
 			>
 				<h2 class="text-2xl font-bold text-text-primary">Welcome to AniDash</h2>
 				<p class="text-text-secondary">
@@ -184,7 +182,9 @@
 					personalized recommendations.
 				</p>
 				<div class="flex flex-col gap-3">
+					<!-- svelte-ignore a11y_autofocus -->
 					<button
+						autofocus
 						onclick={() => {
 							closeLoginPrompt();
 							authStore.login();

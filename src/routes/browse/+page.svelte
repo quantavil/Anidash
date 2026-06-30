@@ -30,7 +30,7 @@
 	// ─── State ───
 
 	let results = $state<DisplayAnime[]>([]);
-	let loading = $state(false);
+	let loading = $state(true);
 	let currentPage = $state(1);
 	let hasNextPage = $state(false);
 	let hasSearched = $state(false);

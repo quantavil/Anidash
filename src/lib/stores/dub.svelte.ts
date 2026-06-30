@@ -12,13 +12,14 @@ class DubStore {
 	isLoading = $state(false);
 	isReady = $state(false);
 	#initPromise: Promise<void> | null = null;
+	#hasInitialized = false;
 
 	async init() {
 		if (browser) {
 			this.dubMode = localStorage.getItem(STORAGE_KEYS.DUB_MODE) === 'true';
 		}
 
-		if (this.dubs.size > 0) return;
+		if (this.#hasInitialized || this.dubs.size > 0) return;
 		if (this.#initPromise) return this.#initPromise;
 
 		this.#initPromise = (async () => {
@@ -28,7 +29,7 @@ class DubStore {
 				const cached = await db.get('meta', 'dubInfo');
 				const now = Date.now();
 
-				// 1. If cached and fresh (< 24h), use it immediately
+				// 1. If cached and fresh (<24h), use it immediately
 				if (cached && now - cached.updatedAt < 24 * 60 * 60 * 1000) {
 					const data = cached.value as { dubbed?: number[] };
 					if (Array.isArray(data.dubbed)) {
@@ -73,9 +74,7 @@ class DubStore {
 			} finally {
 				this.isLoading = false;
 				this.isReady = true;
-				if (this.dubs.size === 0) {
-					this.#initPromise = null;
-				}
+				this.#hasInitialized = true;
 			}
 		})();
 

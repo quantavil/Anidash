@@ -23,7 +23,7 @@
 </script>
 
 <div
-	class="group relative flex flex-col rounded-2xl border border-white/10 bg-white/5 p-0.5 transition-all duration-500 ease-spring hover:bg-white/10 active:scale-[0.98] will-change-transform"
+	class="group relative flex flex-col rounded-2xl border border-white/10 bg-white/5 p-0.5 transition-all duration-500 ease-spring hover:bg-white/10 active:scale-[0.98]"
 >
 	<div
 		class="relative flex flex-col h-full overflow-hidden rounded-[14px] bg-surface-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"

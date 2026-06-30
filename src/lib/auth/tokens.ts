@@ -81,11 +81,11 @@ function acquireLock(): boolean {
 	if (existing && existing.tabId !== TAB_ID && Date.now() - existing.ts < LOCK_TTL_MS) {
 		return false;
 	}
-	localStorage.setItem(
-		STORAGE_KEYS.REFRESH_LOCK,
-		JSON.stringify({ ts: Date.now(), tabId: TAB_ID })
-	);
-	return true;
+	const lockData = { ts: Date.now(), tabId: TAB_ID };
+	localStorage.setItem(STORAGE_KEYS.REFRESH_LOCK, JSON.stringify(lockData));
+	// Re-read to detect TOCTOU race with another tab
+	const verify = getRefreshLock();
+	return verify?.tabId === TAB_ID;
 }
 
 function releaseLock(): void {
@@ -195,8 +195,12 @@ async function doRefresh(): Promise<Result<void>> {
 		const bodyPartial = body as { error?: string };
 
 		if (!response.ok) {
-			tokens.clear();
-			return err({ type: 'auth', message: bodyPartial.error || 'Token refresh failed' });
+			// Only clear tokens on definitive auth failures (4xx), not transient server errors
+			if (response.status >= 400 && response.status < 500) {
+				tokens.clear();
+				return err({ type: 'auth', message: bodyPartial.error || 'Token refresh failed' });
+			}
+			return err({ type: 'network', message: `Token refresh failed (HTTP ${response.status})` });
 		}
 
 		return parseAndSetTokens(body, data.refreshToken);

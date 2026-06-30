@@ -5,6 +5,7 @@ import { browser } from '$app/environment';
 function createConnectionStore() {
 	let isOnline = $state(true);
 	let wasOffline = $state(false);
+	let timerId: ReturnType<typeof setTimeout> | null = null;
 
 	if (browser) {
 		isOnline = navigator.onLine;
@@ -12,12 +13,21 @@ function createConnectionStore() {
 		const onOnline = () => {
 			isOnline = true;
 			wasOffline = true;
+			if (timerId) clearTimeout(timerId);
 			// Reset after 3 seconds
-			setTimeout(() => (wasOffline = false), 3000);
+			timerId = setTimeout(() => {
+				wasOffline = false;
+				timerId = null;
+			}, 3000);
 		};
 
 		const onOffline = () => {
 			isOnline = false;
+			if (timerId) {
+				clearTimeout(timerId);
+				timerId = null;
+			}
+			wasOffline = false;
 		};
 
 		window.addEventListener('online', onOnline);

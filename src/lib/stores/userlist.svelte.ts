@@ -158,13 +158,14 @@ function createUserListStore() {
 				import('svelte-sonner').then(({ toast }) => {
 					toast.error('Offline sync failed. Your changes could not be queued.');
 				});
-				pendingSyncs.delete(malId);
+				// Only remove ourselves if we're still the active sync for this malId
+				if (pendingSyncs.get(malId) === syncFn) pendingSyncs.delete(malId);
 				return;
 			}
 
 			// If explicitly offline, just leave it in queue
 			if (typeof navigator !== 'undefined' && !navigator.onLine) {
-				pendingSyncs.delete(malId);
+				if (pendingSyncs.get(malId) === syncFn) pendingSyncs.delete(malId);
 				return;
 			}
 
@@ -185,7 +186,8 @@ function createUserListStore() {
 					});
 				});
 			}
-			pendingSyncs.delete(malId);
+			// Only remove ourselves if we're still the active sync for this malId
+			if (pendingSyncs.get(malId) === syncFn) pendingSyncs.delete(malId);
 		}, 800);
 
 		pendingSyncs.set(malId, syncFn);
@@ -313,6 +315,10 @@ function createUserListStore() {
 		let finalEpisodes = 0;
 		if (detailResult.ok) {
 			finalEpisodes = detailResult.value.numEpisodes;
+		} else {
+			// Fallback: use cached list entry episode count if available
+			const existing = getEntry(malId);
+			if (existing) finalEpisodes = existing.numEpisodes;
 		}
 
 		const payload: Record<string, unknown> = { status };

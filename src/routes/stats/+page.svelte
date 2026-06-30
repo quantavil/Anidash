@@ -17,7 +17,7 @@
 		const scored = entries.filter((e) => e.score > 0);
 		const meanScore =
 			scored.length > 0 ? scored.reduce((sum, e) => sum + e.score, 0) / scored.length : 0;
-		const daysWatched = Math.round((totalEpisodes * 24) / 60) / 10; // rough estimate: 24min/ep
+		const daysWatched = Math.round((totalEpisodes / 60) * 10) / 10; // rough estimate: 24min/ep
 
 		return {
 			total: entries.length,

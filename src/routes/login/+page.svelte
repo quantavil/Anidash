@@ -2,8 +2,15 @@
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { page } from '$app/state';
 	import Logo from '$lib/ui/Logo.svelte';
+	import { goto } from '$app/navigation';
 
 	const errorCode = $derived(page.url.searchParams.get('error'));
+
+	$effect(() => {
+		if (authStore.isAuthenticated) {
+			goto('/', { replaceState: true });
+		}
+	});
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-surface-0 px-4">
@@ -20,9 +27,15 @@
 		</div>
 
 		<!-- Error display -->
-		{#if errorCode === 'access_denied'}
+		{#if errorCode}
 			<div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">
-				Authorization was denied. Please try again.
+				{#if errorCode === 'access_denied'}
+					Authorization was denied. Please try again.
+				{:else if errorCode === 'no_code_or_state'}
+					Authorization failed: missing state or code parameters.
+				{:else}
+					An error occurred during login: {errorCode}
+				{/if}
 			</div>
 		{/if}
 

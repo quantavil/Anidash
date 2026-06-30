@@ -9,49 +9,26 @@ AniDash is a personal anime tracker powered by MyAnimeList and Jikan APIs, provi
 anidash/
 ├── static/ # Static assets, icons, manifest
 ├── src/
-│ ├── lib/
-│ │ ├── api/ # Fetch wrappers, Config, Zod Schemas for Jikan/MAL
-│ │ ├── auth/ # PKCE generation, Bearer Tokens, Svelte Auth Store
-│ │ ├── cache/ # IDB wrapper, Cache handlers
-│ │ ├── stores/ # Svelte 5 Runes states for Sync and UserList
-│ │ ├── ui/ # Resusable Svelte UI components (Cards, Modals)
-│ │ └── utils/ # Debounce, String Formats, Online wrapper
-│ └── routes/ # SvelteKit App Pages (+page.svelte, +layout.svelte)
-│ ├── api/ # Cloudflare Pages Functions proxying MAL API
-│ └── auth/ # OAuth token exchange routes
+│   ├── lib/
+│   │   ├── api/ # Fetch wrappers, Config, Zod Schemas for Jikan/MAL
+│   │   ├── auth/ # PKCE generation, Bearer Tokens, Svelte Auth Store
+│   │   ├── cache/ # IDB wrapper, Cache handlers
+│   │   ├── stores/ # Svelte 5 Runes states for Sync and UserList
+│   │   ├── ui/ # Resusable Svelte UI components (Cards, Modals)
+│   │   └── utils/ # Debounce, String Formats, Online wrapper
+│   └── routes/ # SvelteKit App Pages (+page.svelte, +layout.svelte)
+│       ├── api/ # Cloudflare Pages Functions proxying MAL API
+│       └── auth/ # OAuth token exchange routes
 ├── package.json
 ├── vite.config.ts
 └── audit-report.md # Codebase audit report for design issues, bugs, and redundancies
 
 ### Structural Changes
 
-- Created `src/lib/ui/SearchInput.svelte` to unify search inputs and resolve design inconsistencies / DRY violations (2026-06-14).
-- Created `src/lib/ui/CharacterDetailModal.svelte` to show character details dialog (2026-06-14).
-- Removed deprecated `userListStore.markCompleted` and unified logic via `setStatus` (2026-06-14).
-- Revamped and refined `src/lib/ui/EpisodeCounter.svelte` to implement the Shimmer Aura Eclipse design (centered progress count, horizontal hover shimmer radial gradient, Lucide hover animations, adaptive compact/detail layout sizing) (2026-06-15).
-- Refactored `src/lib/ui/AnimeCard.svelte` to remove duplicated progress counter logic and reuse `EpisodeCounter` with `compact={true}` (2026-06-15).
-- Refactored `src/lib/ui/RecommenderWidgets.svelte` to implement persistent filters (Genre, Format, Min Rating slider) and title-cycling animation for the Plan to Watch (PTW) Roulette (2026-06-15).
-- Created `src/routes/auth/oauth.ts` to unify token exchange and refresh server boilerplate (2026-06-15).
-- Removed empty placeholder `src/lib/index.ts` and empty route `src/routes/anime/+page.svelte` (2026-06-15).
-- Removed stale planning files directory `docs/superpowers` (2026-06-15).
-- Refactored `AnimeRecord` to a discriminated union and cleaned up meta caching, token coordination, rate limiters, rating inputs, and async PKCE overhead (2026-06-15).
-- Cleaned up codebase inconsistencies: centralized localStorage keys under `STORAGE_KEYS`, standardized `typeof window` to `browser` guard, standardized schema null/optional chaining, removed dead cache code, renamed status formatting helpers, and cleaned up Jikan API rate-limiting queue wrapper (2026-06-15).
-- Removed unused @sveltejs/adapter-auto and secured Vite config environment scope by restricting loadEnv prefix to 'VITE_' (2026-06-15).
-- Hardened error handling across layout init, auth revalidation, local cache writes, format parsing, and user list fetch retries (2026-06-15).
-- Optimized Browse/Stats tab transitions, cached Jikan API responses (popular list, search, genres) in IndexedDB, and reused seasonal cache in recommender widgets to eliminate slow network requests (2026-06-15).
-- Made `alternative_titles` and its English title subfield nullable in `MalAnimeLeanSchema` to prevent validation errors on null/missing values during MAL sync (2026-06-20).
-- Added fallback for `titleEnglish` in `addToList` to preserve English title from search results if MAL detail API returns null/missing alternative titles (2026-06-20).
-- Created `src/lib/utils/search.ts` containing centralized `matchesFuzzy` and `getSearchKeyword` helpers for Romaji/English matching (2026-06-20).
-- Refactored dashboard search and Browse search pages to utilize the unified fuzzy search matching utility (2026-06-20).
-- Implemented immediate search on Enter key, client-side fuzzy filtering, and local list merging on the Browse page to resolve fuzzy search limits and Jikan API rate limits (2026-06-20).
-- Relaxed Zod schemas in `mal.schema.ts` and improved mappers in `mal.ts` to prevent silent sync failures on null/missing subfields. Implemented toast status feedback and SvelteKit invalidation on manual list syncs in `FluidNav.svelte` (2026-06-25).
-- Enforced Svelte 5 runes reactivity in `userlist.svelte.ts` via state re-assignments, and refactored `bulkPut` in `userlist.cache.ts` to surgically preserve explicit/NSFW and local-only anime entries from sync deletions (2026-06-25).
-- Deleted duplicate `src/lib/assets/favicon.svg` and updated `static/favicon.svg` with a modern gradient play-and-dash design (2026-06-28).
-- Resolved search race condition in `src/routes/browse/+page.svelte` by tracking request IDs (2026-06-30).
-- Cleaned up PTW Roulette interval in `src/lib/ui/RecommenderWidgets.svelte` during `onDestroy` (2026-06-30).
-- Restricted logout IndexedDB cleanup in `src/lib/cache/db.ts` to user-specific stores and keys (2026-06-30).
-- Swapped void database writes for `Result` error propagation in `src/lib/cache/userlist.cache.ts` and surfaced toasts (2026-06-30).
-
+- Centralized offline mutation sync to `syncQueue` IndexedDB store with navigator/retry flushing (2026-06-25).
+- Created centralized `src/lib/utils/search.ts` fuzzy Romaji/English search matcher (2026-06-20).
+- Fixed search race conditions in `src/routes/browse/+page.svelte` by tracking request IDs (2026-06-30).
+- Applied 6 critical/moderate fixes from code audit (TOCTOU locks, rate-limiting, layout, modal key accessibility) (2026-06-30).
 
 ## APIs & Fallbacks
 

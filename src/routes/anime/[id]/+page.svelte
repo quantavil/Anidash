@@ -562,6 +562,10 @@
 								<div class="h-28 animate-pulse rounded-xl bg-surface-1"></div>
 							{/each}
 						</div>
+					{:else if recsError}
+						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
+							<p class="text-xs text-text-muted">{recsError}</p>
+						</div>
 					{:else if recommendations.length > 0}
 						<div class="space-y-3">
 							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -640,6 +644,13 @@
 								</div>
 							</div>
 						{/each}
+					</div>
+				</div>
+			{:else if charactersError}
+				<div class="space-y-3">
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
+						<p class="text-xs text-text-muted">{charactersError}</p>
 					</div>
 				</div>
 			{:else if characters.length > 0}

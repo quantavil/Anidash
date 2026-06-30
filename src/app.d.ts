@@ -13,7 +13,7 @@ declare global {
 				MAL_CLIENT_SECRET: string;
 			};
 			context: {
-				waitUntil(promise: Promise<any>): void;
+				waitUntil(promise: Promise<unknown>): void;
 			};
 			caches: CacheStorage & { default: Cache };
 		}

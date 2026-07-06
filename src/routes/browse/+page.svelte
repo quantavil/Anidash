@@ -103,6 +103,11 @@
 	});
 
 	async function doSearch(page: number = 1, append: boolean = false) {
+		// Jikan requires q to be at least 3 characters; shorter queries return 400.
+		// Treat 1-2 char queries as empty (show popular anime instead).
+		const trimmedQuery = query.trim();
+		const effectiveQuery = trimmedQuery.length >= 3 ? trimmedQuery : undefined;
+
 		currentSearchId++;
 		const searchId = currentSearchId;
 
@@ -117,7 +122,7 @@
 		if (searchId !== currentSearchId) return;
 
 		const searchParams = {
-			q: query || undefined,
+			q: effectiveQuery,
 			type: filterType || undefined,
 			genres: filterGenre || undefined,
 			order_by:
@@ -141,9 +146,9 @@
 		if (searchId !== currentSearchId) return;
 
 		// Fallback fuzzy search: if full query had multiple words and returned 0 results
-		if (result.ok && result.value.anime.length === 0 && query) {
+		if (result.ok && result.value.anime.length === 0 && effectiveQuery) {
 			const keyword = getSearchKeyword(query);
-			if (keyword && keyword !== query.toLowerCase().trim()) {
+			if (keyword && keyword.length >= 3 && keyword !== query.toLowerCase().trim()) {
 				const fallbackResult = await searchAnime({
 					...searchParams,
 					q: keyword

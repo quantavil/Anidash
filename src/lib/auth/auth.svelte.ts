@@ -19,7 +19,6 @@ function createAuthStore() {
 	let user = $state<MalUser | null>(null);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
-	let isExchanging = $state(false);
 
 	const isAuthenticated = $derived(user !== null);
 	const userId = $derived(user?.id ?? null);
@@ -50,37 +49,39 @@ function createAuthStore() {
 		}
 
 		// Background revalidation (non-blocking)
-		fetchUserProfile().then(async (result) => {
-			if (result.ok) {
-				user = result.value;
-			} else {
-				// If it's a network/offline error, do NOT log out or refresh
-				if (result.error.type === 'network') {
-					isLoading = false;
-					return;
-				}
-
-				// Try refreshing the token if profile fetch failed (possible token expired)
-				const refreshed = await refreshTokens();
-				if (refreshed.ok) {
-					const retry = await fetchUserProfile();
-					if (retry.ok) {
-						user = retry.value;
-					} else {
-						logger.warn('Profile fetch failed after refresh:', retry.error);
-					}
+		fetchUserProfile()
+			.then(async (result) => {
+				if (result.ok) {
+					user = result.value;
 				} else {
-					// Only log out if the refresh failure was not a temporary network issue
-					if (refreshed.error.type !== 'network') {
-						logout();
+					// If it's a network/offline error, do NOT log out or refresh
+					if (result.error.type === 'network') {
+						isLoading = false;
+						return;
+					}
+
+					// Try refreshing the token if profile fetch failed (possible token expired)
+					const refreshed = await refreshTokens();
+					if (refreshed.ok) {
+						const retry = await fetchUserProfile();
+						if (retry.ok) {
+							user = retry.value;
+						} else {
+							logger.warn('Profile fetch failed after refresh:', retry.error);
+						}
+					} else {
+						// Only log out if the refresh failure was not a temporary network issue
+						if (refreshed.error.type !== 'network') {
+							logout();
+						}
 					}
 				}
-			}
-			isLoading = false;
-		}).catch((err) => {
-			logger.error('Background revalidation failed:', err);
-			isLoading = false;
-		});
+				isLoading = false;
+			})
+			.catch((err) => {
+				logger.error('Background revalidation failed:', err);
+				isLoading = false;
+			});
 	}
 
 	// ─── Fetch User Profile ───
@@ -158,12 +159,10 @@ function createAuthStore() {
 		if (exchangePromise) return exchangePromise;
 
 		exchangePromise = (async () => {
-			isExchanging = true;
 			error = null;
 
 			const storedData = sessionStorage.getItem(STORAGE_KEYS.PKCE_VERIFIER);
 			if (!storedData) {
-				isExchanging = false;
 				return err({
 					type: 'auth',
 					message: 'Missing login session data — please try logging in again'
@@ -173,21 +172,18 @@ function createAuthStore() {
 			let verifier, state, expiresAt;
 			try {
 				({ verifier, state, expiresAt } = JSON.parse(storedData));
-			} catch (e) {
+			} catch {
 				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
-				isExchanging = false;
 				return err({ type: 'auth', message: 'Corrupted login session data' });
 			}
 
 			if (Date.now() > expiresAt) {
 				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
-				isExchanging = false;
 				return err({ type: 'auth', message: 'Login session expired — please try again' });
 			}
 
 			if (state !== returnedState) {
 				sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
-				isExchanging = false;
 				return err({ type: 'auth', message: 'CSRF token mismatch' });
 			}
 
@@ -214,7 +210,6 @@ function createAuthStore() {
 				const bodyPartial = body as { error?: string };
 
 				if (!response.ok) {
-					isExchanging = false;
 					return err({
 						type: 'api',
 						status: response.status,
@@ -225,7 +220,6 @@ function createAuthStore() {
 				// Parse and save tokens
 				const parseResult = parseAndSetTokens(body);
 				if (!parseResult.ok) {
-					isExchanging = false;
 					return parseResult;
 				}
 
@@ -235,10 +229,8 @@ function createAuthStore() {
 					user = userResult.value;
 				}
 
-				isExchanging = false;
 				return ok(undefined);
 			} catch (e) {
-				isExchanging = false;
 				return err({
 					type: 'network',
 					message: 'Network error during authentication',
@@ -300,9 +292,6 @@ function createAuthStore() {
 		},
 		get error() {
 			return error;
-		},
-		get isExchanging() {
-			return isExchanging;
 		},
 
 		init,

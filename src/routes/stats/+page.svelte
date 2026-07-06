@@ -321,7 +321,7 @@
 			</div>
 
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each watching as entry, _idx (_idx)}
+				{#each watching as entry (entry.malId)}
 					<a
 						href="/anime/{entry.malId}"
 						class="group flex gap-3 rounded-xl border border-border bg-surface-1 p-3 transition-all hover:border-primary/40 hover:bg-surface-2"
@@ -387,7 +387,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
-						{#each recentlyUpdated as entry, _idx (_idx)}
+						{#each recentlyUpdated as entry (entry.malId)}
 							<tr class="bg-surface-0 transition-colors hover:bg-surface-1">
 								<td class="px-4 py-2.5">
 									<a href="/anime/{entry.malId}" class="text-text-primary hover:text-primary">

@@ -5,9 +5,8 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { Toaster, toast } from 'svelte-sonner';
+	import { Toaster } from 'svelte-sonner';
 
 	import FluidNav from '$lib/ui/FluidNav.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
@@ -15,7 +14,7 @@
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
 
-	import { tokens, refreshTokens, needsRefresh } from '$lib/auth/tokens';
+	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
 	import { STORAGE_KEYS } from '$lib/constants';
 
 	let { children } = $props();
@@ -56,12 +55,15 @@
 
 	onMount(() => {
 		// ─── Init ───
-		authStore.init()
+		authStore
+			.init()
 			.then(() => {
 				initialized = true;
 			})
 			.catch((err) => {
-				import('$lib/utils/logger').then(({ logger }) => logger.error('Auth store init failed:', err));
+				import('$lib/utils/logger').then(({ logger }) =>
+					logger.error('Auth store init failed:', err)
+				);
 				initialized = true;
 			});
 		settingsStore.init();
@@ -73,7 +75,7 @@
 				if (authStore.isAuthenticated && needsRefresh()) {
 					const result = await refreshTokens();
 					if (!result.ok && result.error.type !== 'network') {
-						tokens.clear();
+						// logout() clears tokens itself.
 						authStore.logout();
 					}
 				}
@@ -164,7 +166,9 @@
 		<div
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
 			onclick={closeLoginPrompt}
-			onkeydown={(e) => { if (e.key === 'Escape') closeLoginPrompt(); }}
+			onkeydown={(e) => {
+				if (e.key === 'Escape') closeLoginPrompt();
+			}}
 			role="dialog"
 			aria-modal="true"
 			aria-label="Login prompt"

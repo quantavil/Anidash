@@ -6,7 +6,8 @@
 	import { getSeasonal } from '$lib/api/mal';
 	import { getCurrentSeason } from '$lib/utils/season';
 	import { getSeasonalCache, setSeasonalCache } from '$lib/cache/meta.cache';
-	import { mapMalNodeToDisplay } from '$lib/utils/types';
+	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
+	import { logger } from '$lib/utils/logger';
 	import { Dialog } from 'bits-ui';
 	import { Dice5, Sparkles, LoaderCircle, Settings, ListFilter, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -51,7 +52,7 @@
 	const matchingPTW = $derived.by(() => {
 		return ptwEntries.filter((entry) => {
 			if (selectedGenres.length > 0) {
-				const entryGenreIds = entry.genres?.map((g: any) => g.id) || [];
+				const entryGenreIds = entry.genres?.map((g) => g.id) || [];
 				const hasAll = selectedGenres.every((id) => entryGenreIds.includes(id));
 				if (!hasAll) return false;
 			}
@@ -64,6 +65,25 @@
 			return true;
 		});
 	});
+
+	/** Load the current season's anime, from cache or MAL. Returns [] on failure. */
+	async function getSeasonalPool(): Promise<DisplayAnime[]> {
+		const current = getCurrentSeason();
+		const cacheKey = `seasonal:${current.year}:${current.season}`;
+		const cached = await getSeasonalCache(cacheKey);
+		if (cached && cached.value.length > 0) return cached.value;
+
+		const result = await getSeasonal(current.year, current.season, { limit: 50 });
+		if (!result.ok || result.value.data.length === 0) return [];
+
+		const fetched = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
+		await setSeasonalCache(cacheKey, fetched);
+		return fetched;
+	}
+
+	function randomFrom<T>(list: T[]): T | null {
+		return list.length > 0 ? list[Math.floor(Math.random() * list.length)] : null;
+	}
 
 	onMount(async () => {
 		initializing = true;
@@ -78,29 +98,15 @@
 				minScore = parsed.minScore || 0;
 			}
 		} catch (e) {
-			// Ignore localStorage errors
+			logger.warn('Failed to read PTW filters from localStorage:', e);
 		}
 
-		// Get random seasonal anime
+		// Preselect a random seasonal anime
 		try {
-			const current = getCurrentSeason();
-			const cacheKey = `seasonal:${current.year}:${current.season}`;
-			const cached = await getSeasonalCache(cacheKey);
-
-			if (cached && cached.value.length > 0) {
-				const random = cached.value[Math.floor(Math.random() * cached.value.length)];
-				selectedSeasonal = { malId: random.malId };
-			} else {
-				const result = await getSeasonal(current.year, current.season, { limit: 50 });
-				if (result.ok && result.value.data.length > 0) {
-					const fetchedAnime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
-					await setSeasonalCache(cacheKey, fetchedAnime);
-					const random = fetchedAnime[Math.floor(Math.random() * fetchedAnime.length)];
-					selectedSeasonal = { malId: random.malId };
-				}
-			}
-		} catch (error) {
-			// Silently fail if seasonal loading fails
+			const pick = randomFrom(await getSeasonalPool());
+			if (pick) selectedSeasonal = { malId: pick.malId };
+		} catch (e) {
+			logger.warn('Failed to preload seasonal anime:', e);
 		}
 
 		initializing = false;
@@ -117,7 +123,7 @@
 				})
 			);
 		} catch (e) {
-			// Ignore localStorage errors
+			logger.warn('Failed to save PTW filters to localStorage:', e);
 		}
 	}
 
@@ -173,37 +179,17 @@
 		try {
 			if (selectedSeasonal) {
 				goto(`/anime/${selectedSeasonal.malId}`);
-			} else {
-				const current = getCurrentSeason();
-				const cacheKey = `seasonal:${current.year}:${current.season}`;
-				const cached = await getSeasonalCache(cacheKey);
-
-				if (cached && cached.value.length > 0) {
-					const random = cached.value[Math.floor(Math.random() * cached.value.length)];
-					selectedSeasonal = { malId: random.malId };
-					goto(`/anime/${random.malId}`);
-				} else {
-					const result = await getSeasonal(current.year, current.season, { limit: 50 });
-
-					if (!result.ok) {
-						toast.error('Failed to load seasonal anime.');
-						return;
-					}
-
-					const animeList = result.value.data;
-					if (animeList.length === 0) {
-						toast.info('No seasonal anime found.');
-						return;
-					}
-
-					const fetchedAnime = animeList.map((item) => mapMalNodeToDisplay(item.node));
-					await setSeasonalCache(cacheKey, fetchedAnime);
-					const random = fetchedAnime[Math.floor(Math.random() * fetchedAnime.length)];
-					selectedSeasonal = { malId: random.malId };
-					goto(`/anime/${random.malId}`);
-				}
+				return;
 			}
-		} catch (error) {
+			const pick = randomFrom(await getSeasonalPool());
+			if (!pick) {
+				toast.error('Failed to load seasonal anime.');
+				return;
+			}
+			selectedSeasonal = { malId: pick.malId };
+			goto(`/anime/${pick.malId}`);
+		} catch (e) {
+			logger.error('Seasonal surprise failed:', e);
 			toast.error('An error occurred.');
 		} finally {
 			loading = false;
@@ -381,7 +367,7 @@
 						<p class="text-xs text-text-muted">No genres available in your backlog</p>
 					{:else}
 						<div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-							{#each availableMetadata.genres as genre, _idx (_idx)}
+							{#each availableMetadata.genres as genre (genre.id)}
 								{@const active = selectedGenres.includes(genre.id)}
 								<button
 									onclick={() => {
@@ -411,7 +397,7 @@
 						<p class="text-xs text-text-muted">No formats available in your backlog</p>
 					{:else}
 						<div class="flex flex-wrap gap-1.5">
-							{#each availableMetadata.formats as format, _idx (_idx)}
+							{#each availableMetadata.formats as format (format)}
 								{@const active = selectedFormats.includes(format)}
 								<button
 									onclick={() => {

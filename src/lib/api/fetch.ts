@@ -11,7 +11,9 @@ import { ok, err, type Result } from '$lib/api/result';
  * - Catches network errors into Result
  */
 export async function authFetch(url: string, options?: RequestInit): Promise<Result<Response>> {
-	// Proactive refresh
+	const method = (options?.method ?? 'GET').toUpperCase();
+
+	// Proactive refresh (no-op when there are no tokens)
 	if (needsRefresh()) {
 		const refreshed = await refreshTokens();
 		if (!refreshed.ok) {
@@ -21,6 +23,13 @@ export async function authFetch(url: string, options?: RequestInit): Promise<Res
 
 	const token = tokens.getAccessToken();
 	if (!token) {
+		// Unauthenticated GETs are allowed — the proxy injects the MAL client id so
+		// public data (search, seasonal) works for logged-out visitors. Mutations don't.
+		if (method === 'GET') {
+			const res = await safeFetch(url, options);
+			if (!res.ok) return res;
+			return toResult(res.value);
+		}
 		return err({ type: 'auth', message: 'Not authenticated' });
 	}
 
@@ -41,21 +50,25 @@ export async function authFetch(url: string, options?: RequestInit): Promise<Res
 			return err({ type: 'auth', message: 'Not authenticated after refresh' });
 		}
 
-		return safeFetch(url, withAuthHeader(options, newToken));
+		const retry = await safeFetch(url, withAuthHeader(options, newToken));
+		if (!retry.ok) return retry;
+		return toResult(retry.value);
 	}
 
 	// Other non-OK statuses
-	if (!result.value.ok) {
-		const body = await result.value.text().catch(() => '');
-		return err({
-			type: 'api',
-			status: result.value.status,
-			message: result.value.statusText || `HTTP ${result.value.status}`,
-			body: body || undefined
-		});
-	}
+	return toResult(result.value);
+}
 
-	return result;
+/** Map an HTTP Response to a Result, converting non-OK statuses to an api error. */
+async function toResult(response: Response): Promise<Result<Response>> {
+	if (response.ok) return ok(response);
+	const body = await response.text().catch(() => '');
+	return err({
+		type: 'api',
+		status: response.status,
+		message: response.statusText || `HTTP ${response.status}`,
+		body: body || undefined
+	});
 }
 
 /** Fetch that catches network errors into Result */

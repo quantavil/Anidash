@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { userListStore } from '$lib/stores/userlist.svelte';
-import { putSyncQueue, getSyncQueue, deleteSyncQueue } from '$lib/cache/userlist.cache';
+import { mergeSyncQueue, getSyncQueue, deleteSyncQueue } from '$lib/cache/userlist.cache';
 import { updateAnimeStatus, deleteAnimeStatus } from '$lib/api/mal';
 
 vi.mock('$lib/cache/userlist.cache', () => ({
 	getAllEntries: vi.fn().mockResolvedValue([]),
 	putEntry: vi.fn().mockResolvedValue({ ok: true }),
 	removeEntry: vi.fn().mockResolvedValue({ ok: true }),
-	putSyncQueue: vi.fn().mockResolvedValue({ ok: true }),
+	mergeSyncQueue: vi.fn().mockResolvedValue({ ok: true }),
 	getSyncQueue: vi.fn().mockResolvedValue([]),
 	deleteSyncQueue: vi.fn().mockResolvedValue({ ok: true })
 }));
@@ -23,7 +23,11 @@ vi.mock('$lib/cache/anime.cache', () => ({
 }));
 
 vi.mock('$lib/stores/sync.svelte', () => ({
-	syncStore: { fullSync: vi.fn().mockResolvedValue({ success: true }), syncError: null }
+	syncStore: {
+		fullSync: vi.fn().mockResolvedValue({ success: true }),
+		syncError: null,
+		reportError: vi.fn()
+	}
 }));
 
 describe('userlist.svelte.ts state', () => {
@@ -69,8 +73,8 @@ describe('userlist.svelte.ts state', () => {
 		// Entry should be removed locally
 		expect(userListStore.getEntry(4)).toBeUndefined();
 
-		// But putSyncQueue should be called to schedule a retry
-		expect(putSyncQueue).toHaveBeenCalledWith(
+		// But mergeSyncQueue should be called to schedule a retry
+		expect(mergeSyncQueue).toHaveBeenCalledWith(
 			expect.objectContaining({
 				malId: 4,
 				payload: { _delete: true }
@@ -113,7 +117,7 @@ describe('userlist.svelte.ts state', () => {
 		const now = Date.now();
 		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 		const expiredTime = now - (SEVEN_DAYS_MS + 1000); // 7 days + 1s ago
-		const validTime = now - (24 * 60 * 60 * 1000); // 1 day ago
+		const validTime = now - 24 * 60 * 60 * 1000; // 1 day ago
 
 		const { getSyncQueue, deleteSyncQueue } = await import('$lib/cache/userlist.cache');
 		vi.mocked(getSyncQueue).mockResolvedValueOnce([

@@ -19,7 +19,6 @@
 
 	let loaded = $state(false);
 	let error = $state(false);
-	let imgEl: HTMLImageElement | null = $state(null);
 
 	$effect(() => {
 		// Reset state when src changes
@@ -32,7 +31,6 @@
 <div class="relative overflow-hidden bg-surface-2 {className}" style="aspect-ratio: {aspectRatio};">
 	{#if src && !error}
 		<img
-			bind:this={imgEl}
 			{src}
 			{alt}
 			loading={index !== undefined && index < 5 ? 'eager' : 'lazy'}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { connection } from '$lib/utils/connection.svelte';
-	import { Wifi, WifiOff, CloudOff } from 'lucide-svelte';
+	import { Wifi, WifiOff } from 'lucide-svelte';
 </script>
 
 {#if !connection.isOnline}

@@ -2,6 +2,7 @@
 // Normalized from MAL or Jikan responses for UI consumption.
 
 import { formatSeason, capitalize } from './format';
+import type { UserListRecord } from '$lib/cache/db';
 
 export interface DisplayAnime {
 	malId: number;
@@ -17,6 +18,25 @@ export interface DisplayAnime {
 	animeStatus: string;
 	numListUsers: number;
 	synopsis: string | null;
+}
+
+/** Map a user's list entry to DisplayAnime (for merging local matches into search) */
+export function mapUserListRecordToDisplay(e: UserListRecord): DisplayAnime {
+	return {
+		malId: e.malId,
+		title: e.title,
+		titleEnglish: e.titleEnglish,
+		mainPicture: e.mainPicture?.large ?? e.mainPicture?.medium ?? null,
+		mean: e.mean,
+		numEpisodes: e.numEpisodes,
+		genres: e.genres.map((g) => g.name),
+		studios: e.studios.map((s) => s.name),
+		startSeason: e.startSeason ? formatSeason(e.startSeason.year, e.startSeason.season) : null,
+		mediaType: e.mediaType,
+		animeStatus: e.animeStatus,
+		numListUsers: e.numListUsers,
+		synopsis: null
+	};
 }
 
 /** Map a MAL search result node to DisplayAnime */

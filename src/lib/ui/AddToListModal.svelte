@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
-	import { Plus, Star } from 'lucide-svelte';
+	import { Plus } from 'lucide-svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { formatMediaType } from '$lib/utils/format';
 	import { toast } from 'svelte-sonner';

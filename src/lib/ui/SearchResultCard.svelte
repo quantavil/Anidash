@@ -10,7 +10,7 @@
 		formatListStatus,
 		STATUS_COLORS
 	} from '$lib/utils/format';
-	import { Star, Plus, Check, Mic, Users } from 'lucide-svelte';
+	import { Star, Plus, Mic } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';

@@ -3,17 +3,7 @@
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import {
-		List,
-		Search,
-		Calendar,
-		LogOut,
-		RefreshCw,
-		User,
-		Languages,
-		Mic,
-		Clock
-	} from 'lucide-svelte';
+	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages, Mic } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
@@ -31,7 +21,7 @@
 			} else {
 				toast.error(result.error.message || 'Sync failed', { id: 'manual-sync' });
 			}
-		} catch (err) {
+		} catch {
 			toast.error('Sync failed unexpectedly', { id: 'manual-sync' });
 		}
 	}

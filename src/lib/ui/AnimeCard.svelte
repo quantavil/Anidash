@@ -18,8 +18,6 @@
 	} = $props();
 
 	const imageUrl = $derived(entry.mainPicture?.large ?? entry.mainPicture?.medium ?? null);
-
-	const unknown = $derived(entry.numEpisodes === 0);
 </script>
 
 <div

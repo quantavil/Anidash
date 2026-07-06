@@ -1,6 +1,9 @@
+import type { ZodType } from 'zod';
+
 import { getDB } from '$lib/cache/db';
 import { logger } from '$lib/utils/logger';
 import { jikanLimiter } from './rate-limit';
+import { buildSearchParams } from './params';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
 import {
 	JikanCharactersResponseSchema,
@@ -13,18 +16,6 @@ import {
 } from './schemas/jikan.schema';
 
 const JIKAN_BASE = 'https://api.jikan.moe/v4';
-
-import type { ZodSchema } from 'zod';
-
-function buildSearchParams(obj: Record<string, unknown>): URLSearchParams {
-	const params = new URLSearchParams();
-	for (const [key, value] of Object.entries(obj)) {
-		if (value !== undefined && value !== null && value !== '') {
-			params.set(key, String(value));
-		}
-	}
-	return params;
-}
 
 function getTTLForUrl(url: string): number {
 	if (url.includes('/genres/anime')) {
@@ -48,7 +39,7 @@ function getTTLForUrl(url: string): number {
 	return 1 * 60 * 60 * 1000; // 1 hour default
 }
 
-async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
+async function jikanFetch<T>(url: string, schema: ZodType<T>): Promise<Result<T>> {
 	const cacheKey = `jikan:fetch:${url}`;
 	const ttl = getTTLForUrl(url);
 
@@ -60,7 +51,7 @@ async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<
 		if (cached && now - cached.updatedAt < ttl) {
 			const parsed = schema.safeParse(cached.value);
 			if (parsed.success) {
-				return ok(parsed.data!);
+				return ok(parsed.data);
 			}
 		}
 	} catch (e) {
@@ -93,7 +84,7 @@ async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<
 			return err({
 				type: 'validation',
 				message: 'Invalid response from Jikan API',
-				issues: zodIssuesToSummaries(parsed.error!.issues)
+				issues: zodIssuesToSummaries(parsed.error.issues)
 			});
 		}
 
@@ -108,7 +99,7 @@ async function jikanFetch<T>(url: string, schema: ZodSchema<T>): Promise<Result<
 			logger.warn('Failed to write Jikan cache:', cacheError);
 		}
 
-		return ok(parsed.data!);
+		return ok(parsed.data);
 	} catch (e: unknown) {
 		const error = e as { message?: string };
 		return err({

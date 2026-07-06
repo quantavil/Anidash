@@ -1,28 +1,15 @@
 // ─── User anime list cache (IndexedDB) ───
 // Always reflects the last-known MAL state. Sync on login.
 
-import { getDB, type UserListRecord, type SyncQueueRecord, type AnimeStatus } from './db';
+import { getDB, type UserListRecord, type SyncQueueRecord } from './db';
 import { ok, err, type Result } from '$lib/api/result';
 
 // ─── Read ───
-
-/** Get a single list entry */
-export async function getListEntry(malId: number): Promise<UserListRecord | null> {
-	const db = await getDB();
-	const val = await db.get('userList', malId);
-	return val ?? null;
-}
 
 /** Get all list entries */
 export async function getAllEntries(): Promise<UserListRecord[]> {
 	const db = await getDB();
 	return db.getAll('userList');
-}
-
-/** Get entries by status */
-export async function getEntriesByStatus(status: AnimeStatus): Promise<UserListRecord[]> {
-	const db = await getDB();
-	return db.getAllFromIndex('userList', 'by-status', status);
 }
 
 // ─── Write ───
@@ -33,6 +20,13 @@ export async function bulkPut(entries: UserListRecord[]): Promise<Result<void>> 
 		const db = await getDB();
 		const currentEntries = await db.getAll('userList');
 		const newIds = new Set(entries.map((e) => e.malId));
+
+		// Anime the user deleted locally but whose delete hasn't reached MAL yet — don't
+		// let the fresh server list resurrect them until the queued delete lands.
+		const queued = await db.getAll('syncQueue');
+		const pendingDeletes = new Set(
+			queued.filter((q) => q.payload._delete === true).map((q) => q.malId)
+		);
 
 		const tx = db.transaction('userList', 'readwrite');
 
@@ -48,8 +42,12 @@ export async function bulkPut(entries: UserListRecord[]): Promise<Result<void>> 
 			}
 		}
 
-		// 2. Put/overwrite the fresh entries
-		await Promise.all(entries.map((entry) => tx.store.put(entry)));
+		// 2. Put/overwrite the fresh entries, skipping ones pending deletion.
+		await Promise.all(
+			entries
+				.filter((entry) => !pendingDeletes.has(entry.malId))
+				.map((entry) => tx.store.put(entry))
+		);
 
 		await tx.done;
 		return ok(undefined);
@@ -89,31 +87,31 @@ export async function removeEntry(malId: number): Promise<Result<void>> {
 	}
 }
 
-/** Clear all list entries */
-export async function clearList(): Promise<Result<void>> {
-	try {
-		const db = await getDB();
-		await db.clear('userList');
-		return ok(undefined);
-	} catch (e) {
-		return err({
-			type: 'cache',
-			message: e instanceof Error ? e.message : 'IndexedDB clearList failed'
-		});
-	}
-}
-
 // ─── Sync Queue ───
 
-export async function putSyncQueue(record: SyncQueueRecord): Promise<Result<void>> {
+function isDeletePayload(payload: Record<string, unknown>): boolean {
+	return payload._delete === true;
+}
+
+/**
+ * Queue a change, merging its payload into any change already queued for the same
+ * anime. Without this, a second edit (e.g. score) would overwrite an earlier queued
+ * edit (e.g. episodes) that hadn't synced yet. A delete on either side supersedes.
+ */
+export async function mergeSyncQueue(record: SyncQueueRecord): Promise<Result<void>> {
 	try {
 		const db = await getDB();
-		await db.put('syncQueue', record);
+		const existing = await db.get('syncQueue', record.malId);
+		let next = record;
+		if (existing && !isDeletePayload(existing.payload) && !isDeletePayload(record.payload)) {
+			next = { ...record, payload: { ...existing.payload, ...record.payload } };
+		}
+		await db.put('syncQueue', next);
 		return ok(undefined);
 	} catch (e) {
 		return err({
 			type: 'cache',
-			message: e instanceof Error ? e.message : 'IndexedDB putSyncQueue failed'
+			message: e instanceof Error ? e.message : 'IndexedDB mergeSyncQueue failed'
 		});
 	}
 }

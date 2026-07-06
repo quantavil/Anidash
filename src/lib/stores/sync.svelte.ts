@@ -3,7 +3,12 @@
 
 import { bulkPut } from '$lib/cache/userlist.cache';
 import { getUserAnimeList } from '$lib/api/mal';
-import { getLastSync, setLastSync, setCachedProfile } from '$lib/cache/meta.cache';
+import {
+	getLastSync,
+	setLastSync,
+	setCachedProfile,
+	purgeStaleJikanCache
+} from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';
 import { authStore } from '$lib/auth/auth.svelte';
 import type { AppError } from '$lib/api/result';
@@ -53,8 +58,9 @@ function createSyncStore() {
 			await setLastSync(now);
 			lastSynced = now;
 
-			// 5. Purge stale anime cache in background
+			// 5. Purge stale caches in background
 			purgeStaleAnime().catch(() => {});
+			purgeStaleJikanCache().catch(() => {});
 
 			isSyncing = false;
 			return { success: true, entryCount: entries.length };
@@ -72,6 +78,11 @@ function createSyncStore() {
 		syncError = null;
 	}
 
+	/** Report an error observed by another store (e.g. a failed background sync). */
+	function reportError(error: AppError): void {
+		syncError = error;
+	}
+
 	return {
 		get isSyncing() {
 			return isSyncing;
@@ -82,12 +93,10 @@ function createSyncStore() {
 		get syncError() {
 			return syncError;
 		},
-		set syncError(val) {
-			syncError = val;
-		},
 		init,
 		fullSync,
-		clearError
+		clearError,
+		reportError
 	};
 }
 

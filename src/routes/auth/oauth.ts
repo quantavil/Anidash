@@ -1,4 +1,10 @@
+import { createIpRateLimiter, rateLimitedResponse } from '$lib/server/rate-limit';
+
 const MAL_TOKEN_URL = 'https://myanimelist.net/v1/oauth2/token';
+
+// Guard the credential-injecting token/refresh endpoints. 20 requests/min per IP is
+// generous for real login/refresh traffic but blunts abuse.
+const checkAuthRateLimit = createIpRateLimiter({ windowMs: 60_000, max: 20 });
 
 /**
  * Shared server-side helper to handle POST requests to MAL's OAuth token endpoint.
@@ -7,8 +13,13 @@ const MAL_TOKEN_URL = 'https://myanimelist.net/v1/oauth2/token';
 export async function handleOAuthRequest(
 	request: Request,
 	platform: App.Platform | undefined,
-	buildParams: (body: any) => URLSearchParams | Response
+	buildParams: (body: Record<string, string>) => URLSearchParams | Response
 ): Promise<Response> {
+	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
+	if (!checkAuthRateLimit(clientIp)) {
+		return rateLimitedResponse();
+	}
+
 	const env = platform?.env;
 
 	if (!env?.MAL_CLIENT_ID || !env?.MAL_CLIENT_SECRET) {
@@ -24,9 +35,9 @@ export async function handleOAuthRequest(
 		);
 	}
 
-	let body: any;
+	let body: Record<string, string>;
 	try {
-		body = await request.json();
+		body = (await request.json()) as Record<string, string>;
 	} catch {
 		return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), {
 			status: 400,
@@ -55,7 +66,7 @@ export async function handleOAuthRequest(
 			status: malRes.status,
 			headers: { 'Content-Type': 'application/json' }
 		});
-	} catch (e) {
+	} catch {
 		return new Response(JSON.stringify({ ok: false, error: 'Upstream request failed' }), {
 			status: 502,
 			headers: { 'Content-Type': 'application/json' }

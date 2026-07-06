@@ -5,20 +5,7 @@ import { getDB, type AnimeRecord } from './db';
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-function isStale(cachedAt: number): boolean {
-	return Date.now() - cachedAt > CACHE_TTL_MS;
-}
-
 // ─── Read ───
-
-/** Get an anime record from cache. Returns null if missing or stale. */
-export async function getAnime(malId: number): Promise<AnimeRecord | null> {
-	const db = await getDB();
-	const record = await db.get('anime', malId);
-	if (!record) return null;
-	if (isStale(record.cachedAt)) return null;
-	return record;
-}
 
 /** Get anime record, returning even if stale (for stale-while-revalidate). */
 export async function getAnimeAllowStale(malId: number): Promise<AnimeRecord | null> {

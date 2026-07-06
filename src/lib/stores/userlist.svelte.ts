@@ -4,11 +4,13 @@
 
 import { browser } from '$app/environment';
 
+import { toast } from 'svelte-sonner';
+
 import {
 	getAllEntries,
 	putEntry,
 	removeEntry,
-	putSyncQueue,
+	mergeSyncQueue,
 	getSyncQueue,
 	deleteSyncQueue
 } from '$lib/cache/userlist.cache';
@@ -18,9 +20,13 @@ import { syncStore } from './sync.svelte.ts';
 import { debounce, type DebouncedFn } from '$lib/utils/debounce';
 import { SvelteMap } from 'svelte/reactivity';
 import { ok, err, type Result } from '$lib/api/result';
-import type { AppError } from '$lib/api/result';
 import type { UserListRecord, AnimeStatus } from '$lib/cache/db';
 import { logger } from '$lib/utils/logger';
+
+/** Show an error toast. Centralizes what used to be repeated dynamic imports. */
+function notifyError(message: string, options?: { id?: string }): void {
+	toast.error(message, options);
+}
 
 // ─── Store ───
 
@@ -31,6 +37,9 @@ function createUserListStore() {
 
 	// Debounced MAL sync functions per anime (prevents rapid-fire PATCH)
 	const pendingSyncs = new SvelteMap<number, DebouncedFn<() => void>>();
+	// Accumulated MAL payloads per anime, merged across rapid edits and flushed
+	// when the debounce fires. Prevents a later edit from dropping an earlier one.
+	const pendingPayloads = new SvelteMap<number, Record<string, unknown>>();
 
 	// Global complete confirmation dialog state
 	let showCompleteDialog = $state(false);
@@ -115,7 +124,7 @@ function createUserListStore() {
 		const entry = entries[malId];
 		if (!entry) return;
 
-		// 1. Apply locally by mutating the proxied state object with full re-assignment
+		// 1. Apply locally with full re-assignment (Svelte 5 reactivity)
 		const updated = {
 			...entry,
 			...localChanges,
@@ -131,70 +140,63 @@ function createUserListStore() {
 			.then((res) => {
 				if (!res.ok) {
 					logger.error('Failed to update IndexedDB:', res.error);
-					import('svelte-sonner').then(({ toast }) => {
-						toast.error('Local database write failed. Changes may not be saved offline.');
-					});
+					notifyError('Local database write failed. Changes may not be saved offline.');
 				}
 			})
-			.catch((err) => {
-				logger.error('Failed to update IndexedDB:', err);
-				import('svelte-sonner').then(({ toast }) => {
-					toast.error('Local database write failed. Changes may not be saved offline.');
-				});
+			.catch((e) => {
+				logger.error('Failed to update IndexedDB:', e);
+				notifyError('Local database write failed. Changes may not be saved offline.');
 			});
 
-		// 3. Debounced MAL sync
-		cancelPendingSync(malId);
-		const syncFn = debounce(async () => {
-			// 3a. Save to persistent offline queue immediately
-			const queueRes = await putSyncQueue({
-				malId,
-				payload: malPayload,
-				timestamp: Date.now()
-			});
+		// 3. Merge this change into any pending payload for the anime so rapid edits
+		//    to different fields are all synced, not just the most recent one.
+		pendingPayloads.set(malId, { ...(pendingPayloads.get(malId) ?? {}), ...malPayload });
 
-			if (!queueRes.ok) {
-				logger.error('Failed to save to sync queue:', queueRes.error);
-				import('svelte-sonner').then(({ toast }) => {
-					toast.error('Offline sync failed. Your changes could not be queued.');
-				});
-				// Only remove ourselves if we're still the active sync for this malId
-				if (pendingSyncs.get(malId) === syncFn) pendingSyncs.delete(malId);
-				return;
-			}
-
-			// If explicitly offline, just leave it in queue
-			if (typeof navigator !== 'undefined' && !navigator.onLine) {
-				if (pendingSyncs.get(malId) === syncFn) pendingSyncs.delete(malId);
-				return;
-			}
-
-			// 3b. Attempt sync
-			const result = await updateAnimeStatus(malId, malPayload);
-			if (result.ok) {
-				// Success — remove from queue
-				const deleteRes = await deleteSyncQueue(malId);
-				if (!deleteRes.ok) {
-					logger.error('Failed to delete from sync queue after successful sync:', deleteRes.error);
-				}
-			} else {
-				// Show error, but LEAVE IN QUEUE. It will be flushed later.
-				syncStore.syncError = result.error;
-				import('svelte-sonner').then(({ toast }) => {
-					toast.error('Network error. Edit saved locally & will sync later.', {
-						id: 'offline-sync-error'
-					});
-				});
-			}
-			// Only remove ourselves if we're still the active sync for this malId
-			if (pendingSyncs.get(malId) === syncFn) pendingSyncs.delete(malId);
-		}, 800);
-
-		pendingSyncs.set(malId, syncFn);
+		// 4. Debounced MAL sync (one reused debounce per anime)
+		let syncFn = pendingSyncs.get(malId);
+		if (!syncFn) {
+			syncFn = debounce(() => {
+				void flushSync(malId);
+			}, 800);
+			pendingSyncs.set(malId, syncFn);
+		}
 		syncFn();
 	}
 
+	/** Flush the accumulated payload for an anime to the offline queue, then MAL. */
+	async function flushSync(malId: number): Promise<void> {
+		const payload = pendingPayloads.get(malId);
+		if (!payload) return;
+		pendingPayloads.delete(malId);
+
+		// Persist to the offline queue first, merging with any change already queued.
+		const queueRes = await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+		if (!queueRes.ok) {
+			logger.error('Failed to save to sync queue:', queueRes.error);
+			notifyError('Offline sync failed. Your changes could not be queued.');
+			return;
+		}
+
+		// If explicitly offline, leave it in the queue for later.
+		if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+
+		const result = await updateAnimeStatus(malId, payload);
+		if (result.ok) {
+			const deleteRes = await deleteSyncQueue(malId);
+			if (!deleteRes.ok) {
+				logger.error('Failed to delete from sync queue after successful sync:', deleteRes.error);
+			}
+		} else {
+			// Show error, but LEAVE IN QUEUE. It will be flushed later.
+			syncStore.reportError(result.error);
+			notifyError('Network error. Edit saved locally & will sync later.', {
+				id: 'offline-sync-error'
+			});
+		}
+	}
+
 	function cancelPendingSync(malId: number): void {
+		pendingPayloads.delete(malId);
 		const existing = pendingSyncs.get(malId);
 		if (existing) {
 			existing.cancel();
@@ -271,13 +273,11 @@ function createUserListStore() {
 		const newEntries = { ...entries };
 		delete newEntries[malId];
 		entries = newEntries;
-		
+
 		const removeRes = await removeEntry(malId);
 		if (!removeRes.ok) {
 			logger.error(`Failed to remove entry ${malId} from IndexedDB:`, removeRes.error);
-			import('svelte-sonner').then(({ toast }) => {
-				toast.error('Local database write failed. Entry could not be deleted.');
-			});
+			notifyError('Local database write failed. Entry could not be deleted.');
 			return err(removeRes.error);
 		}
 
@@ -286,13 +286,15 @@ function createUserListStore() {
 
 		if (!result.ok) {
 			logger.warn(`Failed to sync deletion for ${malId} to MAL:`, result.error);
-			// Queue for retry on next sync flush
-			const queueRes = await putSyncQueue({ malId, payload: { _delete: true }, timestamp: Date.now() });
+			// Queue for retry; a delete supersedes any pending edit for this anime.
+			const queueRes = await mergeSyncQueue({
+				malId,
+				payload: { _delete: true },
+				timestamp: Date.now()
+			});
 			if (!queueRes.ok) {
 				logger.error(`Failed to queue deletion for ${malId}:`, queueRes.error);
-				import('svelte-sonner').then(({ toast }) => {
-					toast.error('Offline sync failed. Deletion could not be queued.');
-				});
+				notifyError('Offline sync failed. Deletion could not be queued.');
 				return err(queueRes.error);
 			}
 		}
@@ -336,8 +338,8 @@ function createUserListStore() {
 			}
 			try {
 				await putAnime(detailResult.value);
-			} catch (err) {
-				logger.error('Failed to write anime detail to cache in addToList:', err);
+			} catch (e) {
+				logger.error('Failed to write anime detail to cache in addToList:', e);
 			}
 		}
 
@@ -401,9 +403,7 @@ function createUserListStore() {
 		const putRes = await putEntry($state.snapshot(newEntry));
 		if (!putRes.ok) {
 			logger.error(`Failed to add entry ${malId} to IndexedDB:`, putRes.error);
-			import('svelte-sonner').then(({ toast }) => {
-				toast.error('Local database write failed. Entry could not be added.');
-			});
+			notifyError('Local database write failed. Entry could not be added.');
 			return err(putRes.error);
 		}
 
@@ -420,7 +420,20 @@ function createUserListStore() {
 
 	// ─── Flush persistent offline queue ───
 
+	let isFlushingQueue = false;
+
 	async function flushPersistentQueue(): Promise<void> {
+		// Guard against concurrent flushes (online event, mount, manual sync).
+		if (isFlushingQueue) return;
+		isFlushingQueue = true;
+		try {
+			await flushPersistentQueueInner();
+		} finally {
+			isFlushingQueue = false;
+		}
+	}
+
+	async function flushPersistentQueueInner(): Promise<void> {
 		const queue = await getSyncQueue();
 		if (queue.length === 0) return;
 

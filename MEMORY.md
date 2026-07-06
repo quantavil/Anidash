@@ -2,37 +2,29 @@
 
 ## Overview
 
-AniDash is a personal anime tracker powered by MyAnimeList and Jikan APIs, providing a dark-minimal aesthetic dashboard, responsive client-side routing, offline support, and Cloudflare Worker-based backend to interact securely with MAL OAuth.
+AniDash is a personal anime tracker powered by MyAnimeList and Jikan APIs, providing a dark-minimal aesthetic dashboard, responsive client-side routing, offline support, and a same-origin SvelteKit proxy (on Cloudflare Pages) to interact securely with MAL OAuth.
 
 ## Structure
 
 anidash/
 ├── static/ # Static assets, icons, manifest
 ├── src/
-│   ├── lib/
-│   │   ├── api/ # Fetch wrappers, Config, Zod Schemas for Jikan/MAL
-│   │   ├── auth/ # PKCE generation, Bearer Tokens, Svelte Auth Store
-│   │   ├── cache/ # IDB wrapper, Cache handlers
-│   │   ├── stores/ # Svelte 5 Runes states for Sync and UserList
-│   │   ├── ui/ # Resusable Svelte UI components (Cards, Modals)
-│   │   └── utils/ # Debounce, String Formats, Online wrapper
-│   └── routes/ # SvelteKit App Pages (+page.svelte, +layout.svelte)
-│       ├── api/ # Cloudflare Pages Functions proxying MAL API
-│       └── auth/ # OAuth token exchange routes
+│ ├── lib/
+│ │ ├── api/ # Fetch wrappers, Config, Zod Schemas for Jikan/MAL
+│ │ ├── auth/ # PKCE generation, Bearer Tokens, Svelte Auth Store
+│ │ ├── cache/ # IDB wrapper, Cache handlers
+│ │ ├── stores/ # Svelte 5 Runes states for Sync and UserList
+│ │ ├── ui/ # Resusable Svelte UI components (Cards, Modals)
+│ │ └── utils/ # Debounce, String Formats, Online wrapper
+│ └── routes/ # SvelteKit App Pages (+page.svelte, +layout.svelte)
+│ ├── api/ # Cloudflare Pages Functions proxying MAL API
+│ └── auth/ # OAuth token exchange routes
 ├── package.json
-├── vite.config.ts
-└── audit-report.md # Codebase audit report for design issues, bugs, and redundancies
-
-### Structural Changes
-
-- Centralized offline mutation sync to `syncQueue` IndexedDB store with navigator/retry flushing (2026-06-25).
-- Created centralized `src/lib/utils/search.ts` fuzzy Romaji/English search matcher (2026-06-20).
-- Fixed search race conditions in `src/routes/browse/+page.svelte` by tracking request IDs (2026-06-30).
-- Applied 6 critical/moderate fixes from code audit (TOCTOU locks, rate-limiting, layout, modal key accessibility) (2026-06-30).
+└── vite.config.ts
 
 ## APIs & Fallbacks
 
-- **MyAnimeList (MAL) API v2**: The primary source of truth. Handles User Auth, List Syncing (Read/Update entries), Search, Seasonal, and Ranking. Uses worker proxy to bypass CORS.
+- **MyAnimeList (MAL) API v2**: The primary source of truth. Handles User Auth, List Syncing (Read/Update entries), Search, Seasonal, and Ranking. Uses the same-origin SvelteKit proxy to bypass CORS.
 - **Jikan API (v4)**: Unofficial community fallback data. Used to fetch richer details not natively found in MAL v2 without hassle, such as Characters and Community Recommendations. Note: "Episodes list" feature was removed as Jikan commonly rate-limits or fails for movies.
 - **Memory/IndexedDB Fallback**: All UI updates and API fetches are cached optimistically to `idb`. This serves as local offline memory. When modifying a list item, changes hit IndexedDB instantly, and sync to MAL is debounced in the background. If sync fails, the store reverts safely to the cached data in IDB.
 
@@ -63,15 +55,9 @@ anidash/
 - Adopting a high-contrast "Ethereal Glass" UI (glassmorphism buttons, backdrop-blur components, hover animations) universally elevates the aesthetic of personal dashboards.
 - Matching application filtering and sorting (e.g. MAL Rating, MAL standard status categories) ensures a familiar experience for legacy MyAnimeList users.
 - **Schema Integrity**: Extending base Zod schemas (MAL/Jikan) to include `num_list_users` and `num_scoring_users` ensures that community statistics are available across all reactive templates without extra fetch overhead.
-- **Micro-Copy Density**: Using short-form formatting (K/M) for large member counts maintains a clean interface even on small mobile screens.
-- **Native MAL English Titles**: Discovered that MAL provides English titles natively via the `alternative_titles` field when requested in the `fields` query parameter. This eliminates the need for a secondary fallback API (like Jikan) just to resolve English names, greatly improving performance and reducing rate-limit concerns.
-- **Glassmorphic Widgets**: Implementing interactive "Roulette" and "Surprise" glassmorphic widgets on empty states (like the Browse page) turns a dead-end UI into an engaging discovery feature without cluttering the main navigation.
-- **Virtualized Rendering (Infinite Scroll)**: Added infinite scrolling to `AnimeGrid` to prevent main-thread blocking when rendering large lists (e.g., "Completed" tab with 500+ items). Uses `IntersectionObserver` to progressively render chunks of 40.
-- **Fused Filtering Logic**: Optimized `+page.svelte` by consolidating chained filter calls into a single `O(N)` pass, reducing intermediate array allocations and GC pressure during user interaction.
-- **Offline Sync Queue**: Implemented a discrete `syncQueue` IndexedDB store (DB_VERSION 2) to natively sequester offline or failed user mutations. Ensures offline mutations are maintained optimistically and re-attempted sequentially upon resolving `navigator.onLine` or triggering `flushPersistentQueue`.
-- **Zero-Dependency Visuals**: Implemented score and media format distribution charts using pure CSS/Svelte logic, maintaining high performance and small bundle size while providing premium analytics.
-- **NSFW Search Visibility**: Removed the hardcoded `sfw: true` filter parameter in Jikan search queries to allow mature and explicit (NSFW) anime results to appear in Browse.
-- **ScoreInput Component**: Added custom 5-star (10-point scale) drag-and-tap rating input with native SVG linearGradient, borderless container, and unified button styles.
+- **Native MAL English Titles**: MAL provides English titles natively via the `alternative_titles` field when requested in the `fields` query parameter. This eliminates the need for a secondary fallback API (like Jikan) just to resolve English names, improving performance and reducing rate-limit concerns.
+- **Virtualized Rendering (Infinite Scroll)**: `AnimeGrid` uses `IntersectionObserver` to progressively render chunks of 40, preventing main-thread blocking on large lists (e.g. "Completed" with 500+ items).
+- **Offline Sync Queue**: A discrete `syncQueue` IndexedDB store (DB_VERSION 2) sequesters offline/failed mutations, re-attempted sequentially on `navigator.onLine` or `flushPersistentQueue`. Payloads for the same anime are merged so a later edit never drops an earlier queued one.
 - **Package Manager**: Use `bun` rather than `npm` for installing dependencies and running scripts to ensure lockfile consistency and speed.
 
 ## Blunders

@@ -3,7 +3,6 @@
 	import { Check, ChevronDown } from 'lucide-svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { formatListStatus, STATUS_COLORS } from '$lib/utils/format';
-	import { tick } from 'svelte';
 
 	import type { AnimeStatus } from '$lib/cache/db';
 

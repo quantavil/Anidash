@@ -4,8 +4,12 @@
 	import { goto } from '$app/navigation';
 	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
 	import { searchAnime, getAnimeGenres } from '$lib/api/jikan';
-	import { mapJikanToDisplay, type DisplayAnime } from '$lib/utils/types';
-	import { formatMediaType, formatSeason } from '$lib/utils/format';
+	import {
+		mapJikanToDisplay,
+		mapUserListRecordToDisplay,
+		type DisplayAnime
+	} from '$lib/utils/types';
+	import { formatMediaType } from '$lib/utils/format';
 	import { SlidersHorizontal, ChevronDown, LoaderCircle, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchInput from '$lib/ui/SearchInput.svelte';
@@ -33,7 +37,6 @@
 	let loading = $state(true);
 	let currentPage = $state(1);
 	let hasNextPage = $state(false);
-	let hasSearched = $state(false);
 	let loadingMore = $state(false);
 	let isDebouncing = $state(false);
 	let currentSearchId = 0;
@@ -75,28 +78,23 @@
 		}
 	}
 
+	// Local list entries that satisfy the active filters (type/genre/sfw), so
+	// prepended personal matches respect the same constraints as online results.
+	function localEntryPassesFilters(e: (typeof userListStore.allEntries)[number]): boolean {
+		if (filterType && e.mediaType.toLowerCase() !== filterType.toLowerCase()) return false;
+		if (filterGenre && !e.genres.some((g) => String(g.id) === filterGenre)) return false;
+		if (filterSfw && e.genres.some((g) => g.name === 'Hentai' || g.name === 'Erotica')) {
+			return false;
+		}
+		return true;
+	}
+
 	const filteredResults = $derived.by(() => {
 		if (!query.trim()) return results;
 
 		const localMatches = userListStore.allEntries
-			.filter((e) => matchesFuzzy(e.title, e.titleEnglish, query))
-			.map((e) => ({
-				malId: e.malId,
-				title: e.title,
-				titleEnglish: e.titleEnglish,
-				mainPicture: e.mainPicture?.large ?? e.mainPicture?.medium ?? null,
-				mean: e.mean,
-				numEpisodes: e.numEpisodes,
-				genres: e.genres.map((g) => g.name),
-				studios: e.studios.map((s) => s.name),
-				startSeason: e.startSeason
-					? formatSeason(e.startSeason.year, e.startSeason.season)
-					: null,
-				mediaType: e.mediaType,
-				animeStatus: e.animeStatus,
-				numListUsers: e.numListUsers,
-				synopsis: null
-			} as DisplayAnime));
+			.filter((e) => matchesFuzzy(e.title, e.titleEnglish, query) && localEntryPassesFilters(e))
+			.map(mapUserListRecordToDisplay);
 
 		const localIds = new Set(localMatches.map((m) => m.malId));
 		const uniqueOnline = results.filter((r) => !localIds.has(r.malId));
@@ -158,12 +156,9 @@
 		}
 
 		if (result.ok) {
+			// Trust Jikan's relevance ranking — a client-side title substring filter here
+			// wrongly discarded valid synonym/alt-title matches and could empty a page.
 			let mapped = result.value.anime.map(mapJikanToDisplay);
-
-			// Client-side fuzzy filter on API results
-			if (query) {
-				mapped = mapped.filter((a) => matchesFuzzy(a.title, a.titleEnglish, query));
-			}
 
 			if (dubStore.dubMode) {
 				mapped = mapped.filter((a) => dubStore.hasDub(a.malId));
@@ -184,7 +179,6 @@
 
 		loading = false;
 		loadingMore = false;
-		hasSearched = true;
 	}
 
 	// ─── URL Change Handler ───

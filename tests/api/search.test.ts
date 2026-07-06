@@ -59,11 +59,18 @@ describe('Search Keyword Extraction', () => {
 
 describe('Browse Page Fuzzy Merging & De-duplication', () => {
 	const userList = [
-		{ malId: 52578, title: 'Boku no Kokoro no Yabai Yatsu', titleEnglish: 'The Dangers in My Heart' },
+		{
+			malId: 52578,
+			title: 'Boku no Kokoro no Yabai Yatsu',
+			titleEnglish: 'The Dangers in My Heart'
+		},
 		{ malId: 1, title: 'Cowboy Bebop', titleEnglish: 'Cowboy Bebop' }
 	];
 
-	function getFilteredResults(query: string, onlineResults: { malId: number; title: string; titleEnglish: string | null }[]) {
+	function getFilteredResults(
+		query: string,
+		onlineResults: { malId: number; title: string; titleEnglish: string | null }[]
+	) {
 		if (!query.trim()) return onlineResults;
 
 		const localMatches = userList
@@ -86,7 +93,9 @@ describe('Browse Page Fuzzy Merging & De-duplication', () => {
 	});
 
 	it('should merge and prioritize matching local list entries', () => {
-		const online = [{ malId: 3, title: 'Go! Go! Loser Ranger!', titleEnglish: 'Go! Go! Loser Ranger!' }];
+		const online = [
+			{ malId: 3, title: 'Go! Go! Loser Ranger!', titleEnglish: 'Go! Go! Loser Ranger!' }
+		];
 		const merged = getFilteredResults('danger heart', online);
 
 		expect(merged.length).toBe(2);
@@ -96,7 +105,11 @@ describe('Browse Page Fuzzy Merging & De-duplication', () => {
 
 	it('should de-duplicate entries that appear in both local and online results', () => {
 		const online = [
-			{ malId: 52578, title: 'Boku no Kokoro no Yabai Yatsu', titleEnglish: 'The Dangers in My Heart' },
+			{
+				malId: 52578,
+				title: 'Boku no Kokoro no Yabai Yatsu',
+				titleEnglish: 'The Dangers in My Heart'
+			},
 			{ malId: 3, title: 'Go! Go! Loser Ranger!', titleEnglish: 'Go! Go! Loser Ranger!' }
 		];
 		const merged = getFilteredResults('danger heart', online);

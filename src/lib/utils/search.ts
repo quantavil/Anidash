@@ -1,9 +1,38 @@
 // ─── Search Utility Functions ───
 
 const STOP_WORDS = new Set([
-	'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'my', 'your',
-	'his', 'her', 'their', 'our', 'its', 'no', 'ni', 'na', 'de', 'wo', 'wa',
-	'is', 'are', 'was', 'were', 'with', 'about', 'by', 'out', 'from'
+	'the',
+	'a',
+	'an',
+	'in',
+	'on',
+	'at',
+	'to',
+	'for',
+	'of',
+	'and',
+	'my',
+	'your',
+	'his',
+	'her',
+	'their',
+	'our',
+	'its',
+	'no',
+	'ni',
+	'na',
+	'de',
+	'wo',
+	'wa',
+	'is',
+	'are',
+	'was',
+	'were',
+	'with',
+	'about',
+	'by',
+	'out',
+	'from'
 ]);
 
 /**
@@ -18,9 +47,7 @@ export function matchesFuzzy(title: string, titleEnglish: string | null, query: 
 	const titleLower = title.toLowerCase();
 	const titleEnglishLower = titleEnglish?.toLowerCase() ?? '';
 
-	return queryWords.every(
-		(word) => titleLower.includes(word) || titleEnglishLower.includes(word)
-	);
+	return queryWords.every((word) => titleLower.includes(word) || titleEnglishLower.includes(word));
 }
 
 /**

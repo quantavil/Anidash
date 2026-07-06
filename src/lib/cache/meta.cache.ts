@@ -39,7 +39,9 @@ export async function setCachedProfile(profile: MalUser): Promise<void> {
 
 // ─── Seasonal Cache ───
 
-export async function getSeasonalCache(key: string): Promise<{ value: DisplayAnime[]; updatedAt: number } | null> {
+export async function getSeasonalCache(
+	key: string
+): Promise<{ value: DisplayAnime[]; updatedAt: number } | null> {
 	const record = await getMetaRecord(key);
 	if (!record || !Array.isArray(record.value)) return null;
 	return {
@@ -51,4 +53,33 @@ export async function getSeasonalCache(key: string): Promise<{ value: DisplayAni
 export async function setSeasonalCache(key: string, animeList: DisplayAnime[]): Promise<void> {
 	const db = await getDB();
 	await db.put('meta', { key, value: animeList, updatedAt: Date.now() });
+}
+
+// ─── Maintenance ───
+
+// The meta store accumulates one record per distinct Jikan request URL. TTL is only
+// checked on read, so without this these records grow without bound. Purge anything
+// older than the longest TTL Jikan uses (7 days for genres).
+const JIKAN_CACHE_PREFIX = 'jikan:fetch:';
+const MAX_JIKAN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Delete stale Jikan request-cache records from the meta store. Returns count purged. */
+export async function purgeStaleJikanCache(): Promise<number> {
+	const db = await getDB();
+	const tx = db.transaction('meta', 'readwrite');
+	const threshold = Date.now() - MAX_JIKAN_TTL_MS;
+	let purged = 0;
+
+	let cursor = await tx.store.openCursor();
+	while (cursor) {
+		const { key, updatedAt } = cursor.value;
+		if (typeof key === 'string' && key.startsWith(JIKAN_CACHE_PREFIX) && updatedAt < threshold) {
+			await cursor.delete();
+			purged++;
+		}
+		cursor = await cursor.continue();
+	}
+
+	await tx.done;
+	return purged;
 }

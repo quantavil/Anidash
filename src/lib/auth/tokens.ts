@@ -156,7 +156,8 @@ export async function refreshTokens(): Promise<Result<void>> {
 		return ok(undefined);
 	}
 
-	const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('anidash_auth_refresh') : null;
+	const channel =
+		typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('anidash_auth_refresh') : null;
 	refreshPromise = doRefresh()
 		.then((res) => {
 			if (res.ok) {

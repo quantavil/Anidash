@@ -2,24 +2,25 @@
 // All MAL API interactions. Every call returns Result<T>.
 // Responses validated through zod schemas.
 
+import type { ZodType } from 'zod';
+
 import { authFetch } from './fetch';
 import { createRateLimiter } from './rate-limit';
+import { buildSearchParams } from './params';
 import { MAL_API_BASE, MAL_MIN_INTERVAL_MS } from './config';
 import { ok, err, type Result, zodIssuesToSummaries, type Err } from './result';
 import type { AppError } from './result';
 import {
-	MalUserSchema,
 	MalUserListResponseSchema,
 	MalAnimeDetailSchema,
 	MalAnimeSearchResponseSchema,
-	type MalUser,
 	type MalUserListEntry,
 	type MalAnimeDetail,
 	type MalAnimeSearchResponse,
 	type MalStatusUpdate,
 	type MalAnimeLean
 } from './schemas/mal.schema';
-import type { UserListRecord, AnimeRecord, DetailedAnimeRecord } from '$lib/cache/db';
+import type { UserListRecord, DetailedAnimeRecord } from '$lib/cache/db';
 
 // ─── Rate Limiter ───
 
@@ -27,19 +28,7 @@ const malLimiter = createRateLimiter(MAL_MIN_INTERVAL_MS);
 
 // ─── Helpers ───
 
-import type { ZodSchema } from 'zod';
-
-function buildSearchParams(obj: Record<string, unknown>): URLSearchParams {
-	const params = new URLSearchParams();
-	for (const [key, value] of Object.entries(obj)) {
-		if (value !== undefined && value !== null && value !== '') {
-			params.set(key, String(value));
-		}
-	}
-	return params;
-}
-
-async function malGet<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> {
+async function malGet<T>(url: string, schema: ZodType<T>): Promise<Result<T>> {
 	const fetchResult = await malLimiter.enqueue(() => authFetch(url));
 
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
@@ -52,11 +41,11 @@ async function malGet<T>(url: string, schema: ZodSchema<T>): Promise<Result<T>> 
 			return err({
 				type: 'validation',
 				message: 'Invalid response from MAL API',
-				issues: zodIssuesToSummaries(parsed.error!.issues)
+				issues: zodIssuesToSummaries(parsed.error.issues)
 			});
 		}
 
-		return ok(parsed.data!);
+		return ok(parsed.data);
 	} catch (e) {
 		return err({
 			type: 'network',

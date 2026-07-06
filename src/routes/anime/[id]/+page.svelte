@@ -153,8 +153,6 @@
 		recsLoading = false;
 	}
 
-	// ─── Complete Prompt ───
-
 	// ─── Lifecycle ───
 
 	// Load anime and Jikan details in parallel when route changes
@@ -327,7 +325,7 @@
 				<!-- Genres -->
 				{#if anime.genres.length > 0}
 					<div class="mt-3 flex flex-wrap gap-1.5">
-						{#each anime.genres as genre, _idx (_idx)}
+						{#each anime.genres as genre (genre.id)}
 							<GenreBadge name={genre.name} />
 						{/each}
 					</div>
@@ -476,7 +474,7 @@
 									{type}
 								</h4>
 								<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-									{#each items as item, _idx (_idx)}
+									{#each items as item (item.id)}
 										<a
 											href="/anime/{item.id}"
 											class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
@@ -519,7 +517,7 @@
 					<!-- MAL Recommendations -->
 					{#if anime.recommendations && anime.recommendations.length > 0}
 						<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-							{#each anime.recommendations.slice(0, 6) as rec, _idx (_idx)}
+							{#each anime.recommendations.slice(0, 6) as rec (rec.id)}
 								<a
 									href="/anime/{rec.id}"
 									class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
@@ -572,7 +570,7 @@
 								Community Insights
 							</h4>
 							<div class="grid gap-3 md:grid-cols-2">
-								{#each recommendations.slice(0, 4) as rec, _idx (_idx)}
+								{#each recommendations.slice(0, 4) as rec (rec.entry.mal_id)}
 									<div
 										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
 									>
@@ -662,7 +660,7 @@
 						<span class="text-xs text-text-muted">({characters.length} total)</span>
 					</div>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-						{#each displayedCharacters as entry, _idx (_idx)}
+						{#each displayedCharacters as entry (entry.character.mal_id)}
 							<button
 								type="button"
 								onclick={() => handleCharacterClick(entry)}

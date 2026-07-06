@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
+	import { getUrlParam } from '$lib/utils/url-state';
 	import { getSeasonal } from '$lib/api/mal';
 	import { getSeasonalCache, setSeasonalCache } from '$lib/cache/meta.cache';
 	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
 	import { formatMediaType, capitalize } from '$lib/utils/format';
-	import { ChevronLeft, ChevronRight, ArrowUpDown, Mic } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';

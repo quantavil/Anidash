@@ -169,13 +169,6 @@ export async function closeDB(): Promise<void> {
 	}
 }
 
-/** Delete the entire database (for logout or reset) */
-export async function deleteDB(): Promise<void> {
-	await closeDB();
-	dbPromise = null;
-	await indexedDB.deleteDatabase(DB_NAME);
-}
-
 /** Clear only user-specific data from IndexedDB on logout */
 export async function clearUserCache(): Promise<void> {
 	const db = await getDB();

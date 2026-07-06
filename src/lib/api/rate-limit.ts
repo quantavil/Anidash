@@ -2,7 +2,7 @@
 // Enqueues requests and processes them with a minimum interval.
 
 export function createRateLimiter(minIntervalMs: number) {
-	let queue: Promise<any> = Promise.resolve();
+	let queue: Promise<unknown> = Promise.resolve();
 	let lastRun = 0;
 
 	/** Enqueue a function — it will execute after the minimum interval elapses. */

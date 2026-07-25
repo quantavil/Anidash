@@ -7,10 +7,12 @@
 	let {
 		malId,
 		status,
+		showLabel = false,
 		class: className = ''
 	}: {
 		malId: number;
 		status: AnimeStatus;
+		showLabel?: boolean;
 		class?: string;
 	} = $props();
 
@@ -76,9 +78,9 @@
 <div onclick={(e) => e.stopPropagation()}>
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="group flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-xl shadow-md transition-all duration-300 ease-spring hover:scale-110 active:scale-95 focus:outline-none {STATUS_CONFIG[
-				status
-			]?.badgeClass} {className}"
+			class="group flex items-center justify-center border backdrop-blur-xl shadow-md transition-all duration-300 ease-spring hover:scale-105 active:scale-95 focus:outline-none {showLabel
+				? 'px-3 py-1.5 gap-2 rounded-xl'
+				: 'h-7 w-7 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
 			title="{STATUS_CONFIG[status]?.label} (Click to change status)"
 			aria-label="Status: {STATUS_CONFIG[status]?.label}"
 		>
@@ -86,8 +88,11 @@
 			<ActiveIcon
 				size={13}
 				fill={status === 'completed' || status === 'dropped' ? 'none' : 'currentColor'}
-				class="transition-transform group-hover:scale-110"
+				class="transition-transform group-hover:scale-110 shrink-0"
 			/>
+			{#if showLabel}
+				<span class="font-medium">{STATUS_CONFIG[status]?.label}</span>
+			{/if}
 		</DropdownMenu.Trigger>
 
 		<DropdownMenu.Portal>
@@ -128,4 +133,3 @@
 		</DropdownMenu.Portal>
 	</DropdownMenu.Root>
 </div>
-

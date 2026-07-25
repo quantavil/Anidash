@@ -4,6 +4,8 @@ import { bulkPut } from '$lib/cache/userlist.cache';
 import { getUserAnimeList } from '$lib/api/mal';
 import { setLastSync, setCachedProfile } from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';
+import type { UserListRecord } from '$lib/cache/db';
+import type { AppError } from '$lib/api/result';
 
 // Mock dependencies
 vi.mock('$lib/cache/userlist.cache', () => ({
@@ -42,7 +44,10 @@ describe('sync.svelte.ts', () => {
 			{ malId: 2, title: 'Anime 2', status: 'completed' }
 		];
 
-		vi.mocked(getUserAnimeList).mockResolvedValueOnce({ ok: true, value: mockEntries as any });
+		vi.mocked(getUserAnimeList).mockResolvedValueOnce({
+			ok: true,
+			value: mockEntries as unknown as UserListRecord[]
+		});
 
 		const result = await syncStore.fullSync();
 
@@ -58,8 +63,8 @@ describe('sync.svelte.ts', () => {
 	});
 
 	it('should handle API errors during sync', async () => {
-		const apiError = { type: 'api', status: 500, message: 'Server error' };
-		vi.mocked(getUserAnimeList).mockResolvedValueOnce({ ok: false, error: apiError as any });
+		const apiError: AppError = { type: 'api', status: 500, message: 'Server error' };
+		vi.mocked(getUserAnimeList).mockResolvedValueOnce({ ok: false, error: apiError });
 
 		const result = await syncStore.fullSync();
 

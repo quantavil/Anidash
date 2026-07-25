@@ -379,4 +379,3 @@ export async function getRanking(
 	const url = `${MAL_API_BASE}/anime/ranking?${params}`;
 	return malGet(url, MalAnimeSearchResponseSchema);
 }
-

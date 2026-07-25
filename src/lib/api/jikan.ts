@@ -327,4 +327,3 @@ export async function getAnimeGenres(): Promise<
 	// Fallback to default MAL anime genres if Jikan fails
 	return ok(DEFAULT_ANIME_GENRES);
 }
-

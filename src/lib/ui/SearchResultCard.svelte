@@ -4,10 +4,7 @@
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { toast } from 'svelte-sonner';
-	import {
-		formatMediaType,
-		formatNumberShort
-	} from '$lib/utils/format';
+	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
 	import { Star, Plus, Mic } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';

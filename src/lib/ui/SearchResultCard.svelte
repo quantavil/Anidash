@@ -6,14 +6,13 @@
 	import { toast } from 'svelte-sonner';
 	import {
 		formatMediaType,
-		formatNumberShort,
-		formatListStatus,
-		STATUS_COLORS
+		formatNumberShort
 	} from '$lib/utils/format';
 	import { Star, Plus, Mic } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
+	import StatusBadge from './StatusBadge.svelte';
 
 	let { anime, index = 0 }: { anime: DisplayAnime; index?: number } = $props();
 
@@ -80,20 +79,10 @@
 			</div>
 		{/if}
 
-		<!-- In-list indicator -->
+		<!-- Status badge overlay -->
 		{#if inList && listEntry}
-			<div
-				class={[
-					'absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-md z-10',
-					STATUS_COLORS[listEntry.status]?.solid
-				]}
-			>
-				{formatListStatus(listEntry.status)}
-				{#if listEntry.status === 'watching'}
-					<span class="opacity-75 font-bold ml-0.5"
-						>{listEntry.numWatchedEpisodes}/{anime.numEpisodes || '?'}</span
-					>
-				{/if}
+			<div class="absolute left-2 top-2 z-10">
+				<StatusBadge malId={listEntry.malId} status={listEntry.status} />
 			</div>
 		{/if}
 

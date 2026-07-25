@@ -359,3 +359,24 @@ export async function getSeasonal(
 	const url = `${MAL_API_BASE}/anime/season/${year}/${season}?${params}`;
 	return malGet(url, MalAnimeSearchResponseSchema);
 }
+
+// ─── Ranking / Popular ───
+
+export async function getRanking(
+	rankingType: string = 'bypopularity',
+	options?: {
+		offset?: number;
+		limit?: number;
+	}
+): Promise<Result<MalAnimeSearchResponse>> {
+	const params = buildSearchParams({
+		ranking_type: rankingType,
+		fields: SEARCH_FIELDS,
+		limit: options?.limit ?? 25,
+		offset: options?.offset
+	});
+
+	const url = `${MAL_API_BASE}/anime/ranking?${params}`;
+	return malGet(url, MalAnimeSearchResponseSchema);
+}
+

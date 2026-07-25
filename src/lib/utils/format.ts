@@ -64,32 +64,27 @@ export function formatListStatus(status: string): string {
 	return STATUS_LABELS[status] ?? status;
 }
 
-type StatusVariant = 'badge' | 'dot' | 'solid';
+type StatusVariant = 'badge' | 'dot';
 export const STATUS_COLORS: Record<string, Record<StatusVariant, string>> = {
 	watching: {
 		badge: 'bg-primary/20 text-[#bfb5ff] border-primary/40',
-		dot: 'bg-primary',
-		solid: 'bg-primary/90'
+		dot: 'bg-primary'
 	},
 	completed: {
 		badge: 'bg-success/15 text-success border-success/30',
-		dot: 'bg-success',
-		solid: 'bg-success/90'
+		dot: 'bg-success'
 	},
 	on_hold: {
 		badge: 'bg-warning/15 text-warning border-warning/30',
-		dot: 'bg-warning',
-		solid: 'bg-warning/90'
+		dot: 'bg-warning'
 	},
 	dropped: {
 		badge: 'bg-error/15 text-error border-error/30',
-		dot: 'bg-error',
-		solid: 'bg-error/90'
+		dot: 'bg-error'
 	},
 	plan_to_watch: {
 		badge: 'bg-info/15 text-info border-info/30',
-		dot: 'bg-info',
-		solid: 'bg-info/90'
+		dot: 'bg-info'
 	}
 };
 

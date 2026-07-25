@@ -40,7 +40,7 @@
 <div onclick={(e) => e.stopPropagation()}>
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all hover:opacity-80 focus:outline-none {STATUS_COLORS[
+			class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium backdrop-blur-md shadow-sm transition-all hover:opacity-80 focus:outline-none {STATUS_COLORS[
 				status
 			]?.badge} {className}"
 		>

@@ -108,7 +108,12 @@ async function jikanFetch<T>(url: string, schema: ZodType<T>): Promise<Result<T>
 	}
 
 	try {
-		const response = await jikanLimiter.enqueue(() => fetch(url));
+		let response = await jikanLimiter.enqueue(() => fetch(url));
+
+		if (response.status === 429 || response.status === 504 || response.status >= 500) {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			response = await jikanLimiter.enqueue(() => fetch(url));
+		}
 
 		if (response.status === 429) {
 			const retryAfter = Number(response.headers.get('Retry-After') ?? 2) * 1000;

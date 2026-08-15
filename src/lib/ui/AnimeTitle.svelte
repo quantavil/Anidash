@@ -50,11 +50,15 @@
 	tabindex={interactive && hasBothTitles ? 0 : undefined}
 	style:cursor={interactive && hasBothTitles ? 'pointer' : 'default'}
 >
-	{#key showingEnglish}
-		<span in:fade={{ duration: 200, easing: quintOut }}>
-			{displayTitle}
-		</span>
-	{/key}
+	{#if interactive && hasBothTitles}
+		{#key showingEnglish}
+			<span in:fade={{ duration: 150, easing: quintOut }}>
+				{displayTitle}
+			</span>
+		{/key}
+	{:else}
+		<span>{displayTitle}</span>
+	{/if}
 	{#if interactive && hasBothTitles}
 		<span
 			class="inline-flex items-center rounded bg-white/10 px-1 py-0.5 font-medium uppercase tracking-wider text-text-muted transition-opacity {tag ===

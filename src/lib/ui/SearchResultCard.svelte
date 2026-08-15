@@ -45,7 +45,7 @@
 </script>
 
 <div
-	class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface-1 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+	class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface-1 transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
 >
 	<a
 		href="/anime/{anime.malId}"

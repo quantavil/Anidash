@@ -23,14 +23,10 @@
 	// Keep card ordering stable while user interacts with episode counts/scores on the page,
 	// only re-sorting when active tab, sort method, search query, or item membership changes.
 
-	let orderedIds = $state<number[]>([]);
-	let lastFilterKey = $state('');
+	let lastSortContext = '';
+	let stableOrderedIds: number[] = [];
 
-	$effect(() => {
-		const filterKey = `${currentTab}|${currentSort}|${currentQuery}|${dubStore.dubMode}`;
-		const filterKeyChanged = filterKey !== lastFilterKey;
-
-		// Filter matching entries
+	const filteredEntries = $derived.by(() => {
 		const matching = userListStore.allEntries.filter((e) => {
 			if (currentTab !== 'all' && e.status !== currentTab) return false;
 			if (currentQuery && !matchesFuzzy(e.title, e.titleEnglish, currentQuery)) return false;
@@ -38,28 +34,25 @@
 			return true;
 		});
 
-		const currentMatchingIds = new Set(matching.map((e) => e.malId));
-		const knownOrderedIds = new Set(orderedIds);
+		const sortContext = `${currentTab}|${currentSort}|${currentQuery}|${dubStore.dubMode}`;
+		const contextChanged = sortContext !== lastSortContext;
 
+		const knownIds = new Set(stableOrderedIds);
 		const membershipChanged =
-			currentMatchingIds.size !== orderedIds.length ||
-			matching.some((e) => !knownOrderedIds.has(e.malId));
+			matching.length !== stableOrderedIds.length || matching.some((e) => !knownIds.has(e.malId));
 
-		if (filterKeyChanged || membershipChanged) {
-			lastFilterKey = filterKey;
-			orderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
+		if (contextChanged || membershipChanged || stableOrderedIds.length === 0) {
+			lastSortContext = sortContext;
+			stableOrderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
 		}
-	});
 
-	// Reconstruct reactive entry list preserving stable order
-	const filteredEntries = $derived(
-		orderedIds
+		return stableOrderedIds
 			.map((id) => userListStore.getEntry(id))
 			.filter(
 				(e): e is NonNullable<typeof e> =>
 					e !== undefined && (currentTab === 'all' || e.status === currentTab)
-			)
-	);
+			);
+	});
 </script>
 
 {#if !authStore.isAuthenticated}

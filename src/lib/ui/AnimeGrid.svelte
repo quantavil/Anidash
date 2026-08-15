@@ -34,12 +34,16 @@
 		if (!loaderRef) return;
 
 		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting) {
-					limit += PAGE_SIZE;
+			(intersectingEntries) => {
+				if (intersectingEntries[0]?.isIntersecting) {
+					untrack(() => {
+						if (limit < entries.length) {
+							limit += PAGE_SIZE;
+						}
+					});
 				}
 			},
-			{ rootMargin: '400px' }
+			{ rootMargin: '300px' }
 		);
 
 		observer.observe(loaderRef);

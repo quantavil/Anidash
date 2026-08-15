@@ -118,7 +118,7 @@
 	<title>Seasonal | AniDash</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-6">
+<div class="py-6">
 	<!-- Header -->
 	<div class="flex items-end justify-between gap-4">
 		<div>

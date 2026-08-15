@@ -222,13 +222,18 @@ export async function searchAnime(params: JikanSearchParams = {}): Promise<
 	const limit = params.limit ?? 25;
 	const offset = (page - 1) * limit;
 
+	const malFallbackOptions = {
+		limit,
+		offset,
+		type: params.type,
+		status: params.status,
+		genre: params.genres ? Number(params.genres.split(',')[0]) : undefined,
+		minScore: params.min_score
+	};
+
 	// For short queries (1-2 chars), Jikan API returns 400. Direct to MAL search.
 	if (params.q && params.q.trim().length > 0 && params.q.trim().length < 3) {
-		const malResult = await malSearchAnime(params.q.trim(), {
-			limit,
-			offset,
-			type: params.type
-		});
+		const malResult = await malSearchAnime(params.q.trim(), malFallbackOptions);
 		if (malResult.ok) {
 			const anime = malResult.value.data.map((item) => mapMalLeanToJikanAnime(item.node));
 			return ok({
@@ -272,11 +277,7 @@ export async function searchAnime(params: JikanSearchParams = {}): Promise<
 	logger.warn('Jikan search failed, falling back to MAL API:', result.error);
 
 	if (params.q && params.q.trim().length > 0) {
-		const malResult = await malSearchAnime(params.q.trim(), {
-			limit,
-			offset,
-			type: params.type
-		});
+		const malResult = await malSearchAnime(params.q.trim(), malFallbackOptions);
 
 		if (malResult.ok) {
 			const anime = malResult.value.data.map((item) => mapMalLeanToJikanAnime(item.node));

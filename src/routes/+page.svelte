@@ -19,26 +19,46 @@
 
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
-	// ─── Derived Data ───
+	// ─── Derived Data & Stable Sort State ───
+	// Keep card ordering stable while user interacts with episode counts/scores on the page,
+	// only re-sorting when active tab, sort method, search query, or item membership changes.
 
+	let orderedIds = $state<number[]>([]);
+	let lastFilterKey = $state('');
+
+	$effect(() => {
+		const filterKey = `${currentTab}|${currentSort}|${currentQuery}|${dubStore.dubMode}`;
+		const filterKeyChanged = filterKey !== lastFilterKey;
+
+		// Filter matching entries
+		const matching = userListStore.allEntries.filter((e) => {
+			if (currentTab !== 'all' && e.status !== currentTab) return false;
+			if (currentQuery && !matchesFuzzy(e.title, e.titleEnglish, currentQuery)) return false;
+			if (dubStore.dubMode && dubStore.isReady && !dubStore.hasDub(e.malId)) return false;
+			return true;
+		});
+
+		const currentMatchingIds = new Set(matching.map((e) => e.malId));
+		const knownOrderedIds = new Set(orderedIds);
+
+		const membershipChanged =
+			currentMatchingIds.size !== orderedIds.length ||
+			matching.some((e) => !knownOrderedIds.has(e.malId));
+
+		if (filterKeyChanged || membershipChanged) {
+			lastFilterKey = filterKey;
+			orderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
+		}
+	});
+
+	// Reconstruct reactive entry list preserving stable order
 	const filteredEntries = $derived(
-		sortEntries(
-			userListStore.allEntries.filter((e) => {
-				// 1. Status loop
-				if (currentTab !== 'all' && e.status !== currentTab) return false;
-
-				// 2. Query loop
-				if (currentQuery && !matchesFuzzy(e.title, e.titleEnglish, currentQuery)) {
-					return false;
-				}
-
-				// 3. Dub loop
-				if (dubStore.dubMode && dubStore.isReady && !dubStore.hasDub(e.malId)) return false;
-
-				return true;
-			}),
-			currentSort
-		)
+		orderedIds
+			.map((id) => userListStore.getEntry(id))
+			.filter(
+				(e): e is NonNullable<typeof e> =>
+					e !== undefined && (currentTab === 'all' || e.status === currentTab)
+			)
 	);
 </script>
 
@@ -75,7 +95,7 @@
 {:else if !userListStore.initialized}
 	<ListPageSkeleton />
 {:else}
-	<div class="mx-auto max-w-7xl px-4 py-6">
+	<div class="py-6">
 		<!-- Header -->
 		<div class="mb-5">
 			<h1 class="text-2xl font-bold text-text-primary">My Anime List</h1>

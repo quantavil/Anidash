@@ -266,16 +266,6 @@ export async function updateAnimeStatus(
 
 	if (!fetchResult.ok) return fetchResult as Err<AppError>;
 
-	if (!fetchResult.value.ok) {
-		const body = await fetchResult.value.text().catch(() => '');
-		return err({
-			type: 'api',
-			status: fetchResult.value.status,
-			message: `Failed to update anime ${id}`,
-			body: body || undefined
-		});
-	}
-
 	return ok(undefined);
 }
 
@@ -289,16 +279,12 @@ export async function deleteAnimeStatus(id: number): Promise<Result<void>> {
 		})
 	);
 
-	if (!fetchResult.ok) return fetchResult as Err<AppError>;
-
-	if (!fetchResult.value.ok && fetchResult.value.status !== 404) {
-		const body = await fetchResult.value.text().catch(() => '');
-		return err({
-			type: 'api',
-			status: fetchResult.value.status,
-			message: `Failed to delete anime ${id} from list`,
-			body: body || undefined
-		});
+	if (!fetchResult.ok) {
+		// Treat 404 (already not in list) as a successful delete
+		if (fetchResult.error.type === 'api' && fetchResult.error.status === 404) {
+			return ok(undefined);
+		}
+		return fetchResult as Err<AppError>;
 	}
 
 	return ok(undefined);

@@ -7,12 +7,14 @@
 		title,
 		titleEnglish,
 		class: className = '',
-		tag = 'span'
+		tag = 'span',
+		interactive = true
 	}: {
 		title: string;
 		titleEnglish: string | null;
 		class?: string;
 		tag?: 'span' | 'h1' | 'h2' | 'h3' | 'p';
+		interactive?: boolean;
 	} = $props();
 
 	// eslint-disable-next-line svelte/prefer-writable-derived
@@ -30,7 +32,7 @@
 	});
 
 	function handleFlip(e: Event) {
-		if (!hasBothTitles) return;
+		if (!hasBothTitles || !interactive) return;
 		e.preventDefault();
 		e.stopPropagation();
 		showingEnglish = !showingEnglish;
@@ -40,20 +42,20 @@
 <svelte:element
 	this={tag}
 	class={className}
-	onclick={handleFlip}
-	onkeydown={hasBothTitles
+	onclick={interactive && hasBothTitles ? handleFlip : undefined}
+	onkeydown={interactive && hasBothTitles
 		? (e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && handleFlip(e)
 		: undefined}
-	role={hasBothTitles ? 'button' : undefined}
-	tabindex={hasBothTitles ? 0 : undefined}
-	style:cursor={hasBothTitles ? 'pointer' : 'default'}
+	role={interactive && hasBothTitles ? 'button' : undefined}
+	tabindex={interactive && hasBothTitles ? 0 : undefined}
+	style:cursor={interactive && hasBothTitles ? 'pointer' : 'default'}
 >
 	{#key showingEnglish}
 		<span in:fade={{ duration: 200, easing: quintOut }}>
 			{displayTitle}
 		</span>
 	{/key}
-	{#if hasBothTitles}
+	{#if interactive && hasBothTitles}
 		<span
 			class="inline-flex items-center rounded bg-white/10 px-1 py-0.5 font-medium uppercase tracking-wider text-text-muted transition-opacity {tag ===
 			'h1'

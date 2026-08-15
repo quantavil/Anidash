@@ -157,7 +157,7 @@
 	<title>Stats | AniDash</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-6 pb-24 lg:pb-6">
+<div class="py-6 pb-24 lg:pb-6">
 	<!-- Greeting -->
 	<div class="mb-6">
 		<h1 class="text-2xl font-bold text-text-primary">
@@ -337,6 +337,7 @@
 								title={entry.title}
 								titleEnglish={entry.titleEnglish}
 								tag="h3"
+								interactive={false}
 								class="line-clamp-2 text-sm font-medium text-text-primary group-hover:text-primary"
 							/>
 							<div class="mt-1 flex items-center gap-2 text-xs text-text-muted">
@@ -395,6 +396,7 @@
 											title={entry.title}
 											titleEnglish={entry.titleEnglish}
 											tag="span"
+											interactive={false}
 											class=""
 										/>
 									</a>

@@ -47,6 +47,7 @@
 				? 'h-8 w-8'
 				: 'group h-9 w-9'} {dubStore.dubMode ? 'text-primary' : 'text-text-muted'}"
 			title="Toggle Dub Mode"
+			aria-label="Toggle Dub Mode"
 		>
 			<Mic size={isMobile ? 14 : 16} class={dubStore.dubMode ? 'animate-pulse' : ''} />
 		</button>
@@ -58,6 +59,7 @@
 				? 'h-8 w-8'
 				: 'group h-9 w-9'} {settingsStore.preferEnglish ? 'text-primary' : 'text-text-muted'}"
 			title="Toggle English/Romaji titles"
+			aria-label="Toggle language preference"
 		>
 			<Languages size={isMobile ? 14 : 16} />
 		</button>
@@ -70,6 +72,7 @@
 				? 'h-8 w-8'
 				: 'group h-9 w-9'}"
 			title="Sync"
+			aria-label="Sync list with MyAnimeList"
 		>
 			<RefreshCw
 				size={isMobile ? 14 : 16}
@@ -90,6 +93,7 @@
 					href="/stats"
 					class="flex items-center transition-transform hover:scale-105 active:scale-95"
 					title="View Profile Stats"
+					aria-label="View Profile Stats"
 				>
 					{#if authStore.user?.picture}
 						<img

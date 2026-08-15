@@ -261,7 +261,7 @@
 	<title>Browse | AniDash</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 py-6">
+<div class="py-6">
 	<!-- Header -->
 	<h1 class="text-2xl font-bold text-text-primary">Browse Anime</h1>
 	<p class="mt-1 text-sm text-text-secondary">Search and discover anime to add to your list</p>

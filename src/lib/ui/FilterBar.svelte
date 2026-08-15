@@ -107,6 +107,7 @@
 				onkeydown={handleSortKeydown}
 				aria-haspopup="true"
 				aria-expanded={showSortMenu}
+				aria-label="Sort anime list: currently {sortLabel}"
 				class="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
 			>
 				<ArrowUpDown size={14} />

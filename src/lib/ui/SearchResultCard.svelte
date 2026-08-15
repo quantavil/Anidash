@@ -97,6 +97,7 @@
 			title={anime.title}
 			titleEnglish={anime.titleEnglish}
 			tag="h3"
+			interactive={false}
 			class="line-clamp-2 text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
 		/>
 
@@ -126,6 +127,7 @@
 			<button
 				onclick={handleAdd}
 				disabled={adding}
+				aria-label="Add {anime.title} to Plan to Watch"
 				class="relative z-[2] mt-2 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
 			>
 				{#if adding}

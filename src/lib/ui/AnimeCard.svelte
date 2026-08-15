@@ -87,6 +87,7 @@
 				title={entry.title}
 				titleEnglish={entry.titleEnglish ?? null}
 				tag="h3"
+				interactive={false}
 				class="line-clamp-2 text-sm font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
 			/>
 

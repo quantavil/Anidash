@@ -2,7 +2,7 @@
 	import AnimeCardSkeleton from './AnimeCardSkeleton.svelte';
 </script>
 
-<div class="mx-auto max-w-7xl px-4 py-6">
+<div class="py-6">
 	<!-- Header skeleton -->
 	<div class="mb-6 animate-pulse">
 		<div class="h-8 w-48 rounded bg-surface-2"></div>
@@ -24,7 +24,7 @@
 	</div>
 
 	<!-- Grid skeleton -->
-	<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		<AnimeCardSkeleton count={10} />
 	</div>
 </div>

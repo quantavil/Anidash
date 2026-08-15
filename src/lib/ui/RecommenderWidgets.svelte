@@ -15,7 +15,6 @@
 
 	let loading = $state(false);
 	let initializing = $state(false);
-	let selectedSeasonal = $state<{ malId: number } | null>(null);
 
 	let filterDialogOpen = $state(false);
 	let selectedGenres = $state<number[]>([]);
@@ -101,10 +100,9 @@
 			logger.warn('Failed to read PTW filters from localStorage:', e);
 		}
 
-		// Preselect a random seasonal anime
+		// Pre-warm seasonal pool cache
 		try {
-			const pick = randomFrom(await getSeasonalPool());
-			if (pick) selectedSeasonal = { malId: pick.malId };
+			await getSeasonalPool();
 		} catch (e) {
 			logger.warn('Failed to preload seasonal anime:', e);
 		}
@@ -177,16 +175,12 @@
 		if (loading || initializing) return;
 		loading = true;
 		try {
-			if (selectedSeasonal) {
-				goto(`/anime/${selectedSeasonal.malId}`);
-				return;
-			}
-			const pick = randomFrom(await getSeasonalPool());
+			const pool = await getSeasonalPool();
+			const pick = randomFrom(pool);
 			if (!pick) {
 				toast.error('Failed to load seasonal anime.');
 				return;
 			}
-			selectedSeasonal = { malId: pick.malId };
 			goto(`/anime/${pick.malId}`);
 		} catch (e) {
 			logger.error('Seasonal surprise failed:', e);

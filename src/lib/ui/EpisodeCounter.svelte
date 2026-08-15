@@ -62,6 +62,7 @@
 		disabled={watched <= 0}
 		class="pill-btn pill-btn-minus"
 		title="Decrease episode"
+		aria-label="Decrease episode count"
 	>
 		<div class="minus-wrapper">
 			<Minus size={compact ? 12 : 14} strokeWidth={2.5} />
@@ -86,6 +87,7 @@
 		disabled={isComplete}
 		class="pill-btn pill-btn-plus {isComplete ? 'complete' : ''}"
 		title="Increase episode"
+		aria-label="Increase episode count"
 	>
 		{#if isComplete}
 			<div class="animate-complete-pop">

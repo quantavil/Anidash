@@ -23,10 +23,9 @@
 	// Keep card ordering stable while user interacts with episode counts/scores on the page,
 	// only re-sorting when active tab, sort method, search query, or item membership changes.
 
-	let lastSortContext = '';
-	let stableOrderedIds: number[] = [];
+	let orderedIds = $state<number[]>([]);
 
-	const filteredEntries = $derived.by(() => {
+	$effect(() => {
 		const matching = userListStore.allEntries.filter((e) => {
 			if (currentTab !== 'all' && e.status !== currentTab) return false;
 			if (currentQuery && !matchesFuzzy(e.title, e.titleEnglish, currentQuery)) return false;
@@ -34,25 +33,23 @@
 			return true;
 		});
 
-		const sortContext = `${currentTab}|${currentSort}|${currentQuery}|${dubStore.dubMode}`;
-		const contextChanged = sortContext !== lastSortContext;
+		// Explicitly track reactive context inputs
+		void currentTab;
+		void currentSort;
+		void currentQuery;
+		void dubStore.dubMode;
 
-		const knownIds = new Set(stableOrderedIds);
-		const membershipChanged =
-			matching.length !== stableOrderedIds.length || matching.some((e) => !knownIds.has(e.malId));
+		orderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
+	});
 
-		if (contextChanged || membershipChanged || stableOrderedIds.length === 0) {
-			lastSortContext = sortContext;
-			stableOrderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
-		}
-
-		return stableOrderedIds
+	const filteredEntries = $derived(
+		orderedIds
 			.map((id) => userListStore.getEntry(id))
 			.filter(
 				(e): e is NonNullable<typeof e> =>
 					e !== undefined && (currentTab === 'all' || e.status === currentTab)
-			);
-	});
+			)
+	);
 </script>
 
 {#if !authStore.isAuthenticated}

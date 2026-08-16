@@ -86,16 +86,10 @@ a,
 	-webkit-tap-highlight-color: transparent;
 }
 
-/* ── Animate-in for toasts ── */
-@keyframes slide-in-from-right {
-	from {
-		transform: translateX(100%);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
+/* ── Performance Containment for Feed & Cards ── */
+.feed-card-contain {
+	content-visibility: auto;
+	contain-intrinsic-size: 200px 300px;
 }
 
 /* ── UI Components (DRY) ── */
@@ -115,7 +109,7 @@ a,
 }
 
 .glass-badge {
-	@apply flex items-center justify-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)];
+	@apply flex items-center justify-center rounded-full border border-white/10 bg-black/70 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)];
 }
 
 .glass-icon-wrapper {

@@ -113,12 +113,12 @@
 		padding: 4px 12px;
 		position: relative;
 		overflow: hidden;
-		backdrop-filter: blur(12px);
 		transition:
-			border-color 0.3s,
-			box-shadow 0.3s;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
+			border-color 0.2s ease,
+			background-color 0.2s ease,
+			box-shadow 0.2s ease;
+		background: rgba(18, 18, 20, 0.8);
+		border: 1px solid rgba(255, 255, 255, 0.08);
 		box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 	}
 
@@ -130,49 +130,14 @@
 		padding: 2px 6px;
 	}
 
-	.pill-base::before {
-		content: '';
-		position: absolute;
-		inset: -30px;
-		background: radial-gradient(
-			circle at center,
-			rgba(139, 126, 248, 0.18) 0%,
-			rgba(0, 240, 255, 0.06) 50%,
-			transparent 70%
-		);
-		opacity: 0.3;
-		transition: opacity 0.5s ease;
-		pointer-events: none;
-		z-index: 0;
-	}
-
-	.pill-base:hover::before {
-		opacity: 1;
-		animation: radialShimmer 5s ease infinite alternate;
-	}
-
-	@keyframes radialShimmer {
-		0% {
-			transform: translate(-15px, -2px) scale(1);
-		}
-		50% {
-			transform: translate(0px, 2px) scale(1.05);
-		}
-		100% {
-			transform: translate(15px, -2px) scale(1.1);
-		}
-	}
-
 	.pill-base:hover {
-		border-color: rgba(139, 126, 248, 0.2);
+		border-color: rgba(139, 126, 248, 0.3);
+		background: rgba(26, 26, 28, 0.9);
 	}
 
 	.pill-base.complete {
-		border-color: rgba(52, 211, 153, 0.25);
-	}
-
-	.pill-base.complete::before {
-		background: radial-gradient(circle, rgba(52, 211, 153, 0.18) 0%, transparent 70%);
+		border-color: rgba(52, 211, 153, 0.3);
+		background: rgba(18, 28, 24, 0.85);
 	}
 
 	.pill-btn {
@@ -186,7 +151,7 @@
 		border: 1px solid transparent;
 		background: transparent;
 		color: #a3a3a3; /* text-secondary */
-		transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+		transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
 		outline: none;
 		z-index: 1;
 	}
@@ -197,12 +162,12 @@
 	}
 
 	.pill-btn:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.12);
 		color: #f8f8f8; /* text-primary */
 	}
 
 	.pill-btn:disabled {
-		opacity: 0.15;
+		opacity: 0.2;
 		cursor: not-allowed;
 	}
 

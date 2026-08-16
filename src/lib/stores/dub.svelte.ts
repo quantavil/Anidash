@@ -5,9 +5,10 @@ import { browser } from '$app/environment';
 import { getDB } from '$lib/cache/db';
 import { logger } from '$lib/utils/logger';
 import { STORAGE_KEYS } from '$lib/constants';
+import { SvelteSet } from 'svelte/reactivity';
 
 class DubStore {
-	dubs = $state<Set<number>>(new Set());
+	dubs = $state<SvelteSet<number>>(new SvelteSet());
 	dubMode = $state(false);
 	isLoading = $state(false);
 	isReady = $state(false);
@@ -33,7 +34,7 @@ class DubStore {
 				if (cached && now - cached.updatedAt < 24 * 60 * 60 * 1000) {
 					const data = cached.value as { dubbed?: number[] };
 					if (Array.isArray(data.dubbed)) {
-						this.dubs = new Set(data.dubbed);
+						this.dubs = new SvelteSet(data.dubbed);
 						return;
 					}
 				}
@@ -48,7 +49,7 @@ class DubStore {
 					const data = (await res.json()) as { dubbed?: number[] };
 
 					if (data && Array.isArray(data.dubbed)) {
-						this.dubs = new Set(data.dubbed);
+						this.dubs = new SvelteSet(data.dubbed);
 
 						// Save to cache
 						await db.put('meta', {
@@ -65,7 +66,7 @@ class DubStore {
 					if (cached) {
 						const data = cached.value as { dubbed?: number[] };
 						if (Array.isArray(data.dubbed)) {
-							this.dubs = new Set(data.dubbed);
+							this.dubs = new SvelteSet(data.dubbed);
 						}
 					}
 				}

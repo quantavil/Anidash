@@ -78,7 +78,7 @@
 <div onclick={(e) => e.stopPropagation()}>
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="group flex items-center justify-center border backdrop-blur-xl shadow-md transition-all duration-300 ease-spring hover:scale-105 active:scale-95 focus:outline-none {showLabel
+			class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 focus:outline-none {showLabel
 				? 'px-3 py-1.5 gap-2 rounded-xl'
 				: 'h-7 w-7 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
 			title="{STATUS_CONFIG[status]?.label} (Click to change status)"

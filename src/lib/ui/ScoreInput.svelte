@@ -55,12 +55,15 @@
 			userListStore.setScore(malId, 0);
 		}
 	}
+
+	const instanceId = Math.random().toString(36).slice(2, 7);
+	const gradId = $derived(`halfGrad-${malId}-${instanceId}`);
 </script>
 
 <!-- SVG Gradient definition for half-stars -->
 <svg width="0" height="0" class="absolute pointer-events-none">
 	<defs>
-		<linearGradient id="halfGrad-{malId}" x1="0%" y1="0%" x2="100%" y2="0%">
+		<linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
 			<stop offset="50%" stop-color="var(--color-warning)" />
 			<stop offset="50%" stop-color="transparent" stop-opacity="0" />
 		</linearGradient>
@@ -149,7 +152,7 @@
 					<Star
 						{size}
 						class={fill === 0.5 ? 'text-warning' : 'text-white/10'}
-						fill={fill === 0.5 ? `url(#halfGrad-${malId})` : 'none'}
+						fill={fill === 0.5 ? `url(#${gradId})` : 'none'}
 						stroke={fill === 0.5 ? 'var(--color-warning)' : 'currentColor'}
 						stroke-width={1.5}
 					/>

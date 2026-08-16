@@ -255,6 +255,8 @@
 			>
 				{#if rollingPTW}
 					Spinning...
+				{:else if ptwEntries.length === 0}
+					Backlog is empty
 				{:else if selectedGenres.length > 0 || selectedFormats.length > 0 || minScore > 0}
 					{matchingPTW.length} match{matchingPTW.length === 1 ? '' : 'es'} ({selectedGenres.length +
 						selectedFormats.length +

@@ -31,7 +31,7 @@ function notifyError(message: string, options?: { id?: string }): void {
 // ─── Store ───
 
 function createUserListStore() {
-	let entries = $state<Record<number, UserListRecord>>({});
+	let entries = $state.raw<Record<number, UserListRecord>>({});
 	let loading = $state(true);
 	let initialized = $state(false);
 

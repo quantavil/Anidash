@@ -40,7 +40,7 @@
 
 	// ─── State ───
 
-	let anime = $state<DetailedAnimeRecord | null>(null);
+	let anime = $state.raw<DetailedAnimeRecord | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -49,11 +49,11 @@
 
 	// ─── Tab Data (loaded in background) ───
 
-	let characters = $state<JikanCharacterEntry[]>([]);
+	let characters = $state.raw<JikanCharacterEntry[]>([]);
 	let charactersLoading = $state(false);
 	let charactersError = $state<string | null>(null);
 
-	let recommendations = $state<JikanRecommendationEntry[]>([]);
+	let recommendations = $state.raw<JikanRecommendationEntry[]>([]);
 	let recsLoading = $state(false);
 	let recsError = $state<string | null>(null);
 

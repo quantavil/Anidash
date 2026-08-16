@@ -23,7 +23,7 @@
 	// Keep card ordering stable while user interacts with episode counts/scores on the page,
 	// only re-sorting when active tab, sort method, search query, or item membership changes.
 
-	let orderedIds = $state<number[]>([]);
+	let orderedIds = $state.raw<number[]>([]);
 
 	$effect(() => {
 		const matching = userListStore.allEntries.filter((e) => {

@@ -33,7 +33,7 @@
 
 	// ─── State ───
 
-	let results = $state<DisplayAnime[]>([]);
+	let results = $state.raw<DisplayAnime[]>([]);
 	let loading = $state(true);
 	let currentPage = $state(1);
 	let hasNextPage = $state(false);
@@ -43,7 +43,7 @@
 
 	// ─── Genres ───
 
-	let genres = $state<Array<{ id: number; name: string }>>([]);
+	let genres = $state.raw<Array<{ id: number; name: string }>>([]);
 	let genresLoaded = $state(false);
 	let showFilters = $state(false);
 

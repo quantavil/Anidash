@@ -32,7 +32,7 @@
 
 	// ─── Data ───
 
-	let anime = $state<DisplayAnime[]>([]);
+	let anime = $state.raw<DisplayAnime[]>([]);
 	let loading = $state(true);
 	let filterType = $state('');
 	let sortByRating = $state(false);

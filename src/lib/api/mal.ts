@@ -78,7 +78,10 @@ const LIST_FIELDS = [
 
 export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 	const allEntries: UserListRecord[] = [];
-	let url: string | null = `${MAL_API_BASE}/users/@me/animelist?fields=${LIST_FIELDS}&limit=1000`;
+	// MAL excludes "gray" nsfw entries by default (causing false positives like
+	// Lycoris Recoil, Spy x Family S2 to disappear). nsfw=true includes all
+	// list entries regardless of MAL's internal nsfw flag.
+	let url: string | null = `${MAL_API_BASE}/users/@me/animelist?fields=${LIST_FIELDS}&limit=1000&nsfw=true`;
 
 	while (url) {
 		const currentUrl = url;

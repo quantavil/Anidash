@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import '@fontsource-variable/outfit';
 @import 'tailwindcss';
 
 /* ── AniDash High-End Theme ── */
@@ -71,6 +71,56 @@ body {
 :focus-visible {
 	outline: 2px solid var(--color-primary);
 	outline-offset: 2px;
+}
+
+/* ── Native <dialog> primitive ── */
+.anidash-dialog {
+	margin: auto;
+	width: min(calc(100vw - 2rem), var(--dialog-max-w, 28rem));
+	max-height: min(86vh, 44rem);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 1rem;
+	padding: 1.5rem;
+	background: linear-gradient(to bottom, color-mix(in srgb, #0a0a0c 95%, transparent), #121214);
+	color: var(--color-text-primary);
+	box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+	overflow-y: auto;
+
+	opacity: 0;
+	transform: translateY(10px) scale(0.98);
+	transition:
+		opacity 0.18s ease-out,
+		transform 0.18s ease-out,
+		overlay 0.18s allow-discrete,
+		display 0.18s allow-discrete;
+}
+.anidash-dialog-wide {
+	--dialog-max-w: 32rem;
+}
+.anidash-dialog[open] {
+	opacity: 1;
+	transform: none;
+}
+@starting-style {
+	.anidash-dialog[open] {
+		opacity: 0;
+		transform: translateY(10px) scale(0.98);
+	}
+}
+.anidash-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.65);
+	backdrop-filter: blur(8px);
+	transition: overlay 0.18s allow-discrete;
+}
+
+/* Keep toasters clear of the floating pill nav / mobile header */
+[data-sonner-toaster] {
+	top: 68px !important;
+}
+@media (min-width: 768px) {
+	[data-sonner-toaster] {
+		top: 88px !important;
+	}
 }
 
 /* ── Selection ── */

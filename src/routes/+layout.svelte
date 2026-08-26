@@ -13,6 +13,7 @@
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
+	import { logger } from '$lib/utils/logger';
 
 	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
 	import { STORAGE_KEYS } from '$lib/constants';
@@ -45,7 +46,7 @@
 					}
 				})
 				.catch((e) => {
-					import('$lib/utils/logger').then(({ logger }) => logger.error('Data loading failed:', e));
+					logger.error('Data loading failed:', e);
 					dataLoaded = false;
 				});
 		} else if (!authStore.isAuthenticated && dataLoaded) {
@@ -61,9 +62,7 @@
 				initialized = true;
 			})
 			.catch((err) => {
-				import('$lib/utils/logger').then(({ logger }) =>
-					logger.error('Auth store init failed:', err)
-				);
+				logger.error('Auth store init failed:', err);
 				initialized = true;
 			});
 		settingsStore.init();

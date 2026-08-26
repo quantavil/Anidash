@@ -301,7 +301,9 @@ export async function searchAnime(
 		type?: string;
 		status?: string;
 		minScore?: number;
-		sort?: string;
+		orderBy?: string;
+		sortDir?: string;
+		sfw?: boolean;
 		offset?: number;
 		limit?: number;
 	}
@@ -315,7 +317,9 @@ export async function searchAnime(
 		type: options?.type,
 		status: options?.status,
 		min_score: options?.minScore,
-		sort: options?.sort
+		order_by: options?.orderBy,
+		sort: options?.sortDir,
+		sfw: options?.sfw ? 'true' : undefined
 	});
 
 	const url = `${MAL_API_BASE}/anime?${params}`;

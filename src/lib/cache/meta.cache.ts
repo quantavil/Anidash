@@ -17,6 +17,11 @@ async function getMetaRecord(key: string): Promise<MetaRecord | null> {
 	return (await db.get('meta', key)) ?? null;
 }
 
+async function putMetaRecord(key: string, value: unknown): Promise<void> {
+	const db = await getDB();
+	await db.put('meta', { key, value: JSON.parse(JSON.stringify(value)), updatedAt: Date.now() });
+}
+
 // ─── Last Sync ───
 
 export async function getLastSync(): Promise<number | null> {
@@ -32,9 +37,22 @@ export async function setLastSync(timestamp: number): Promise<void> {
 // ─── User Profile ───
 
 export async function setCachedProfile(profile: MalUser): Promise<void> {
-	const db = await getDB();
-	const cleanProfile = JSON.parse(JSON.stringify(profile));
-	await db.put('meta', { key: KEY_USER_PROFILE, value: cleanProfile, updatedAt: Date.now() });
+	await putMetaRecord(KEY_USER_PROFILE, profile);
+}
+
+// ─── Browse Popular (stale-while-revalidate) ───
+
+/** Returns the cached popular grid, or null when absent/invalid. */
+export async function getPopularCache(
+	key: string
+): Promise<{ value: DisplayAnime[]; updatedAt: number } | null> {
+	const record = await getMetaRecord(key);
+	if (!record || !Array.isArray(record.value)) return null;
+	return { value: record.value as DisplayAnime[], updatedAt: record.updatedAt };
+}
+
+export async function setPopularCache(key: string, animeList: DisplayAnime[]): Promise<void> {
+	await putMetaRecord(key, animeList);
 }
 
 // ─── Seasonal Cache ───
@@ -44,15 +62,11 @@ export async function getSeasonalCache(
 ): Promise<{ value: DisplayAnime[]; updatedAt: number } | null> {
 	const record = await getMetaRecord(key);
 	if (!record || !Array.isArray(record.value)) return null;
-	return {
-		value: record.value as DisplayAnime[],
-		updatedAt: record.updatedAt
-	};
+	return { value: record.value as DisplayAnime[], updatedAt: record.updatedAt };
 }
 
 export async function setSeasonalCache(key: string, animeList: DisplayAnime[]): Promise<void> {
-	const db = await getDB();
-	await db.put('meta', { key, value: animeList, updatedAt: Date.now() });
+	await putMetaRecord(key, animeList);
 }
 
 // ─── Maintenance ───

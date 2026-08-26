@@ -24,9 +24,10 @@ anidash/
 
 ## APIs & Fallbacks
 
-- **MyAnimeList (MAL) API v2**: The primary source of truth. Handles User Auth, List Syncing (Read/Update entries), Search, Seasonal, and Ranking. Uses the same-origin SvelteKit proxy to bypass CORS.
-- **Jikan API (v4)**: Unofficial community fallback data. Used to fetch richer details not natively found in MAL v2 without hassle, such as Characters and Community Recommendations. Note: "Episodes list" feature was removed as Jikan commonly rate-limits or fails for movies.
+- **MyAnimeList (MAL) API v2**: The primary source of truth for ALL browse/search data. Handles User Auth, List Syncing (Read/Update entries), Search, Seasonal, Ranking, and the popular landing grid. Uses the same-origin SvelteKit proxy to bypass CORS. MAL v2 requires `q` (min 2 chars) on `/anime`; blank-query browsing uses `/anime/ranking` (`bypopularity`/`tv`/`movie`/`ova`/`special`, supports `sfw` + offset pagination).
+- **Jikan API (v4)**: Used ONLY for characters and community recommendations on the anime detail page — the two things MAL v2 doesn't provide. All Jikan search/browse fallback chains were removed (2026-08). Note: "Episodes list" feature was removed as Jikan commonly rate-limits or fails for movies.
 - **Memory/IndexedDB Fallback**: All UI updates and API fetches are cached optimistically to `idb`. This serves as local offline memory. When modifying a list item, changes hit IndexedDB instantly, and sync to MAL is debounced in the background. If sync fails, the store reverts safely to the cached data in IDB.
+- **Popular grid SWR**: The default Browse landing payload is cached in the IDB meta store (`browse:popular:v1`, 24h TTL) and painted instantly; a silent background revalidation refreshes it when stale.
 
 ## Conventions
 
@@ -38,8 +39,9 @@ anidash/
 
 - Core: SvelteKit, Vite, TypeScript, Tailwind CSS v4
 - Validation: Zod
-- Components/UI: bits-ui, lucide-svelte, svelte-sonner
+- Components/UI: lucide-svelte, svelte-sonner (native `<dialog>` primitive for modals — bits-ui removed)
 - Storage: idb
+- Fonts: `@fontsource-variable/outfit` (self-hosted)
 - Deploy Target: Cloudflare Pages (Frontend + Backend Proxy). `adapter-cloudflare` handles build output.
 
 ## Critical Information
@@ -71,3 +73,5 @@ anidash/
 - [2026-06-15] Auto-logout when opening app offline → ROOT CAUSE: Fails fetchUserProfile/refreshTokens due to lack of connection, entering the token-failed catch blocks which deleted stored tokens and DB. → FIX: Checks if the failure type is 'network' (offline) and bypasses the logout/clearing logic.
 - [2026-06-29] Failed to store user profile in IndexedDB → ROOT CAUSE: authStore.user is a Svelte 5 reactive Proxy, which the structured clone algorithm cannot clone. → FIX: Wrapped authStore.user in $state.snapshot() before caching, and deep-cloned it via JSON serialization in setCachedProfile.
 - [2026-07-25] Search Anime failed on blank/query search → ROOT CAUSE: Jikan API v4 endpoint returned 504 BadResponseException ("Jikan failed to connect to MyAnimeList") or 400 for <3 char queries, with no API fallback mechanism. → FIX: Added automatic MyAnimeList API v2 (`searchAnime` & `getRanking`) fallback in `jikan.ts` when Jikan returns an error/rate-limit, and enabled 1-2 char query support.
+- [2026-08-26] Browse took 4-7s to show popular anime → ROOT CAUSE: cold/stale Jikan popular cache (4h TTL) + Jikan 504/429 → 1s sleep retry → second failure → slow MAL ranking fallback, all while `loading` blocked the grid; dub-mode also awaited a multi-MB GitHub JSON before searching. → FIX: Made the MAL worker proxy the primary browse source (ranking for landing, search with `order_by`/`sort`/`sfw`/genres/type for queries), added stale-while-revalidate popular cache (instant paint, silent 24h revalidation), made dub filtering reactive instead of blocking, replaced genre fetch with a static list (MAL v2 has no genres endpoint), and deleted all Jikan search/fallback machinery.
+- [2026-08-26] Modal/dropdown fragmentation & bits-ui single-purpose dependency → ROOT CAUSE: four hand-rolled modal implementations plus bits-ui Dialog used in one file and DropdownMenu in StatusBadge. → FIX: Introduced native `<dialog>` primitive (`lib/ui/Dialog.svelte`, focus-managed, scroll-locked, `@starting-style` animations) and migrated AddToListModal, CharacterDetailModal, ConfirmDialog, PTW filters; rewrote StatusBadge menu as a lightweight popover; removed bits-ui entirely. Self-hosted Outfit via `@fontsource-variable/outfit` (removes render-blocking Google Fonts import).

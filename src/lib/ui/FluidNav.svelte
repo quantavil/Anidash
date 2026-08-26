@@ -2,22 +2,20 @@
 	import { page } from '$app/state';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
+	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages, Mic } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
 
 	async function handleSync() {
 		toast.loading('Syncing list with MAL...', { id: 'manual-sync' });
 		try {
-			const m = await import('$lib/stores/userlist.svelte');
-			const result = await m.userListStore.syncFromRemote();
+			const result = await userListStore.syncFromRemote();
 			if (result.ok) {
 				toast.success('Sync complete!', { id: 'manual-sync' });
-				await invalidateAll();
 			} else {
 				toast.error(result.error.message || 'Sync failed', { id: 'manual-sync' });
 			}

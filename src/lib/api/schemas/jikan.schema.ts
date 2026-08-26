@@ -1,4 +1,5 @@
 // ─── Zod schemas for Jikan v4 API responses ───
+// Jikan is only used for characters and recommendations.
 
 import { z } from 'zod';
 
@@ -88,58 +89,3 @@ export const JikanRecommendationsResponseSchema = z.object({
 });
 
 export type JikanRecommendationEntry = z.infer<typeof JikanRecommendationEntrySchema>;
-
-// ─── Anime Search (Jikan) ───
-
-export const JikanAnimeSchema = z.object({
-	mal_id: z.number(),
-	url: z.string().url().optional(),
-	images: JikanImagesSchema.nullable().optional(),
-	title: z.string(),
-	title_english: z.string().nullable().optional(),
-	type: z.string().nullable().optional(),
-	episodes: z.number().nullable().optional(),
-	status: z.string().nullable().optional(),
-	score: z.number().nullable().optional(),
-	synopsis: z.string().nullable().optional(),
-	genres: z
-		.array(
-			z.object({
-				mal_id: z.number(),
-				name: z.string()
-			})
-		)
-		.optional(),
-	studios: z
-		.array(
-			z.object({
-				mal_id: z.number(),
-				name: z.string()
-			})
-		)
-		.optional(),
-	season: z.string().nullable().optional(),
-	year: z.number().nullable().optional(),
-	rating: z.string().nullable().optional(),
-	members: z.number().optional()
-});
-
-export type JikanAnime = z.infer<typeof JikanAnimeSchema>;
-
-export const JikanSearchResponseSchema = z.object({
-	data: z.array(JikanAnimeSchema),
-	pagination: JikanPaginationSchema.optional()
-});
-
-// ─── Genres ───
-
-export const JikanGenreSchema = z.object({
-	mal_id: z.number(),
-	name: z.string(),
-	url: z.string().url().optional(),
-	count: z.number().optional()
-});
-
-export const JikanGenresResponseSchema = z.object({
-	data: z.array(JikanGenreSchema)
-});

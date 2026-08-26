@@ -4,6 +4,7 @@
 	let {
 		value = $bindable(''),
 		placeholder = 'Search...',
+		id,
 		loading = false,
 		isDebouncing = false,
 		oninput,
@@ -12,6 +13,7 @@
 	}: {
 		value: string;
 		placeholder?: string;
+		id?: string;
 		loading?: boolean;
 		isDebouncing?: boolean;
 		oninput?: (e: Event) => void;
@@ -47,6 +49,7 @@
 	<input
 		type="text"
 		{placeholder}
+		{id}
 		{value}
 		oninput={handleInput}
 		{onkeydown}

@@ -1,7 +1,7 @@
 // ─── Shared display types for browse/seasonal/search results ───
 // Normalized from MAL or Jikan responses for UI consumption.
 
-import { formatSeason, capitalize } from './format';
+import { formatSeason } from './format';
 import type { UserListRecord } from '$lib/cache/db';
 
 export interface DisplayAnime {
@@ -59,36 +59,5 @@ export function mapMalNodeToDisplay(
 		animeStatus: node.status ?? 'unknown',
 		numListUsers: node.num_list_users ?? 0,
 		synopsis: null
-	};
-}
-
-/** Map a Jikan anime result to DisplayAnime */
-export function mapJikanToDisplay(
-	anime: import('$lib/api/schemas/jikan.schema').JikanAnime
-): DisplayAnime {
-	return {
-		malId: anime.mal_id,
-		title: anime.title,
-		titleEnglish: anime.title_english ?? null,
-		mainPicture:
-			anime.images?.webp?.large_image_url ??
-			anime.images?.webp?.image_url ??
-			anime.images?.jpg?.large_image_url ??
-			anime.images?.jpg?.image_url ??
-			null,
-		mean: anime.score ?? null,
-		numEpisodes: anime.episodes ?? 0,
-		genres: anime.genres?.map((g) => g.name) ?? [],
-		studios: anime.studios?.map((s) => s.name) ?? [],
-		startSeason:
-			anime.season && anime.year
-				? `${capitalize(anime.season)} ${anime.year}`
-				: anime.year
-					? String(anime.year)
-					: null,
-		mediaType: anime.type ?? 'unknown',
-		animeStatus: anime.status ?? 'unknown',
-		numListUsers: anime.members ?? 0,
-		synopsis: anime.synopsis ?? null
 	};
 }

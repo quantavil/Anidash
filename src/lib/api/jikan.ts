@@ -20,16 +20,24 @@ const JIKAN_BASE = 'https://api.jikan.moe/v4';
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// Jikan 504/429s are often transient within seconds — retry twice with growing pauses.
+const RETRY_DELAYS_MS = [1000, 3000];
+
 async function jikanFetch<T>(url: string, schema: ZodType<T>): Promise<Result<T>> {
 	const cacheKey = `jikan:fetch:${url}`;
+	let stale: T | undefined;
 
 	try {
 		const db = await getDB();
 		const cached = await db.get('meta', cacheKey);
 
-		if (cached && Date.now() - cached.updatedAt < CACHE_TTL_MS) {
+		if (cached) {
 			const parsed = schema.safeParse(cached.value);
-			if (parsed.success) return ok(parsed.data);
+			if (parsed.success) {
+				if (Date.now() - cached.updatedAt < CACHE_TTL_MS) return ok(parsed.data);
+				// Expired but parseable — keep as a fallback in case the fetch fails.
+				stale = parsed.data;
+			}
 		}
 	} catch (e) {
 		logger.warn('Failed to read Jikan cache:', e);
@@ -38,23 +46,27 @@ async function jikanFetch<T>(url: string, schema: ZodType<T>): Promise<Result<T>
 	try {
 		let response = await jikanLimiter.enqueue(() => fetch(url));
 
-		// Single retry after a brief pause on transient failures.
-		if (response.status === 429 || response.status >= 500) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+		for (const delay of RETRY_DELAYS_MS) {
+			if (response.status !== 429 && response.status < 500) break;
+			await new Promise((resolve) => setTimeout(resolve, delay));
 			response = await jikanLimiter.enqueue(() => fetch(url));
 		}
 
 		if (!response.ok) {
-			return err({ type: 'network', message: `Jikan HTTP ${response.status}` });
+			return stale !== undefined
+				? ok(stale)
+				: err({ type: 'network', message: `Jikan HTTP ${response.status}` });
 		}
 
 		const parsed = schema.safeParse(await response.json());
 		if (!parsed.success) {
-			return err({
-				type: 'validation',
-				message: 'Invalid response from Jikan API',
-				issues: zodIssuesToSummaries(parsed.error.issues)
-			});
+			return stale !== undefined
+				? ok(stale)
+				: err({
+						type: 'validation',
+						message: 'Invalid response from Jikan API',
+						issues: zodIssuesToSummaries(parsed.error.issues)
+					});
 		}
 
 		try {
@@ -66,6 +78,7 @@ async function jikanFetch<T>(url: string, schema: ZodType<T>): Promise<Result<T>
 
 		return ok(parsed.data);
 	} catch (e: unknown) {
+		if (stale !== undefined) return ok(stale);
 		const error = e as { message?: string };
 		return err({ type: 'network', message: error.message || 'Jikan request failed' });
 	}

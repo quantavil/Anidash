@@ -6,7 +6,7 @@
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { Toaster } from 'svelte-sonner';
+	import { Toaster, toast } from 'svelte-sonner';
 
 	import FluidNav from '$lib/ui/FluidNav.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
@@ -42,6 +42,11 @@
 						const result = await syncStore.fullSync();
 						if (result.success) {
 							userListStore.loadFromCache();
+						} else {
+							logger.error('Background sync failed:', syncStore.syncError);
+							toast.error('Sync failed — showing cached data', {
+								description: 'Your list may be out of date. It will retry next load.'
+							});
 						}
 					}
 				})

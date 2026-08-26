@@ -564,6 +564,12 @@
 					{:else if recsError}
 						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
 							<p class="text-xs text-text-muted">{recsError}</p>
+							<button
+								onclick={() => loadRecommendations(Number(page.params.id))}
+								class="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+							>
+								Retry
+							</button>
 						</div>
 					{:else if recommendations.length > 0}
 						<div class="space-y-3">
@@ -650,6 +656,12 @@
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
 						<p class="text-xs text-text-muted">{charactersError}</p>
+						<button
+							onclick={() => loadCharacters(Number(page.params.id))}
+							class="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+						>
+							Retry
+						</button>
 					</div>
 				</div>
 			{:else if characters.length > 0}

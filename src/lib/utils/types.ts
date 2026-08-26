@@ -61,3 +61,26 @@ export function mapMalNodeToDisplay(
 		synopsis: null
 	};
 }
+
+/**
+ * Fill gaps in a stale locally-cached record with fresh online data.
+ * Online wins whenever it has a real value; local only backfills missing
+ * fields (null / '' / 'unknown' / 0 / empty array).
+ */
+export function mergeLocalWithOnline(local: DisplayAnime, online: DisplayAnime): DisplayAnime {
+	return {
+		malId: local.malId,
+		title: online.title || local.title,
+		titleEnglish: online.titleEnglish ?? local.titleEnglish,
+		mainPicture: online.mainPicture ?? local.mainPicture,
+		mean: online.mean ?? local.mean,
+		numEpisodes: online.numEpisodes || local.numEpisodes,
+		genres: online.genres.length > 0 ? online.genres : local.genres,
+		studios: online.studios.length > 0 ? online.studios : local.studios,
+		startSeason: online.startSeason ?? local.startSeason,
+		mediaType: online.mediaType !== 'unknown' ? online.mediaType : local.mediaType,
+		animeStatus: online.animeStatus !== 'unknown' ? online.animeStatus : local.animeStatus,
+		numListUsers: online.numListUsers || local.numListUsers,
+		synopsis: online.synopsis ?? local.synopsis
+	};
+}

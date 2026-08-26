@@ -8,6 +8,7 @@
 	import {
 		mapMalNodeToDisplay,
 		mapUserListRecordToDisplay,
+		mergeLocalWithOnline,
 		type DisplayAnime
 	} from '$lib/utils/types';
 	import { SlidersHorizontal, LoaderCircle, SearchX } from 'lucide-svelte';
@@ -26,6 +27,8 @@
 		POPULAR_CACHE_TTL_MS
 	} from '$lib/constants';
 	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { putEntry } from '$lib/cache/userlist.cache';
+	import { logger } from '$lib/utils/logger';
 	import { matchesFuzzy, getSearchKeyword } from '$lib/utils/search';
 	import { getPopularCache, setPopularCache } from '$lib/cache/meta.cache';
 
@@ -137,8 +140,37 @@
 			.filter((e) => matchesFuzzy(e.title, e.titleEnglish, query) && localEntryPassesFilters(e))
 			.map(mapUserListRecordToDisplay);
 
-		const localIds = new Set(localMatches.map((m) => m.malId));
-		return [...localMatches, ...online.filter((r) => !localIds.has(r.malId))];
+		// Locally cached records can be stale (e.g. missing covers from failed syncs) —
+		// enrich them with the fresh online node instead of discarding it.
+		const onlineById = new Map(online.map((r) => [r.malId, r]));
+		const merged = localMatches.map((m) => {
+			const hit = onlineById.get(m.malId);
+			return hit ? mergeLocalWithOnline(m, hit) : m;
+		});
+
+		const localIds = new Set(merged.map((m) => m.malId));
+		return [...merged, ...online.filter((r) => !localIds.has(r.malId))];
+	});
+
+	// Self-heal: persist enriched covers so My List repairs itself too.
+	// Plain record (deliberately non-reactive) — mutating reactive state here would retrigger the effect.
+	const healedIds: Record<number, true> = {};
+	$effect(() => {
+		const byId = new Map(userListStore.allEntries.map((e) => [e.malId, e]));
+		for (const a of filteredResults) {
+			if (healedIds[a.malId] || !a.mainPicture) continue;
+			const rec = byId.get(a.malId);
+			if (!rec || rec.mainPicture) continue;
+			healedIds[a.malId] = true;
+			putEntry({
+				...$state.snapshot(rec),
+				mainPicture: { medium: a.mainPicture, large: a.mainPicture }
+			})
+				.then((res) => {
+					if (!res.ok) logger.warn('Failed to self-heal record cover:', res.error);
+				})
+				.catch((e) => logger.warn('Failed to self-heal record cover:', e));
+		}
 	});
 
 	async function fetchOnline(

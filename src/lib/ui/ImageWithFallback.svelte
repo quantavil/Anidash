@@ -19,18 +19,26 @@
 
 	let loaded = $state(false);
 	let error = $state(false);
+	let imgEl = $state<HTMLImageElement | null>(null);
 
 	$effect(() => {
 		// Reset state when src changes
 		void src;
 		loaded = false;
 		error = false;
+		// Cached/decoded images can lose their load event across keyed
+		// re-renders — sync from the element instead of trusting the event.
+		if (imgEl?.complete) {
+			loaded = imgEl.naturalWidth > 0;
+			error = imgEl.naturalWidth === 0;
+		}
 	});
 </script>
 
 <div class="relative overflow-hidden bg-surface-2 {className}" style="aspect-ratio: {aspectRatio};">
 	{#if src && !error}
 		<img
+			bind:this={imgEl}
 			{src}
 			{alt}
 			loading={index !== undefined && index < 5 ? 'eager' : 'lazy'}

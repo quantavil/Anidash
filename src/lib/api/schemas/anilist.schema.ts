@@ -22,8 +22,7 @@ export const AnilistCoverSchema = z
 export const AnilistTagSchema = z.object({
 	name: z.string(),
 	rank: z.number().nullable().optional(),
-	isAdult: z.boolean().nullable().optional(),
-	isGeneral: z.boolean().nullable().optional()
+	isAdult: z.boolean().nullable().optional()
 });
 
 export const AnilistCharacterEdgeSchema = z.object({

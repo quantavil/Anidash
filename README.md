@@ -13,13 +13,13 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **Zero-Dependency Visuals**: Implemented score and media format distribution charts using pure CSS/Svelte logic, maintaining high performance and small bundle size while providing premium analytics.
 - **Bi-Directional Sync**: Modern MAL API v2 integration with proper PKCE OAuth, real-time status updates, and permanent list deletion support.
 - **MAL-Dubs Integration**: Instantly identify which anime have English dubs available using the MAL-Dubs dataset with a persistent 7-day TTL cache.
-- **Advanced Recommendations**: Dual-source suggestions from both MyAnimeList and the Jikan community, unified into a premium suggested gallery.
+- **Advanced Recommendations**: Dual-source suggestions from MyAnimeList + AniList (GraphQL `https://graphql.anilist.co`, no-auth). AniList is the single primary enrichment source (no Jikan, no title-search fallback): characters + Japanese VAs, recommendations, reviews, tags, trailer, airing schedule, relations & nextAiring — direct `Media(idMal)` only.
 - **Dynamic Stats & Sorting**: Comprehensive dashboard tracking your watching habits, episode distribution, and rating history with responsive visualizations. Enhanced data navigation with "MAL Rating" sorting for your personal list and seasonal anime.
 - **Smart Data Insights**: Community rating and member statistics (e.g., "8.3 | 250K") displayed on poster overlays using short-scale formatting (K/M) for maximum density.
 - **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
 - **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
-- **Enhanced Detail Gallery**: Lazy-loaded characters, community recommendations from Jikan, and a "Quick Stats" row with precise scoring user counts.
-- **Integrated Airing Schedules**: Stay ahead of the season with native MAL broadcast times (e.g. "Airs Mondays at 23:30 JST") displayed directly on anime detail pages for accurate airing information.
+- **Enhanced Detail Gallery**: Lazily-loaded AniList enrichment — characters (with favourites & VA), curated recommendations, reviews, ranked tags, YouTube trailer (validated), and next-airing countdown — plus a "Quick Stats" row with precise scoring user counts. Trailer IDs validated via `^[a-zA-Z0-9_-]{11}$`.
+- **Integrated Airing Schedules**: Native MAL broadcast + AniList `nextAiringEpisode{episode airingAt timeUntilAiring}` countdown displayed on detail pages.
 - **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
 - **Detailed Search Context**: Search and browse results now explicitly show your list status (Watching, Completed, etc.) and real-time watch progress (e.g. 12/24) directly on the posters.
 - **Type-Safe OAuth**: End-to-end Zod schema validation ensures authentication logic is resilient to unexpected API changes.
@@ -30,8 +30,9 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 AniDash is a unified SvelteKit application optimized for **Cloudflare Pages**.
 
 1. **Frontend**: SvelteKit SPA using Svelte 5's fine-grained reactivity (Runes).
-2. **Backend**: Serverless Edge Functions that handle secure MAL token exchange and CORS proxying.
-3. **Database**: Client-side IndexedDB for lightning-fast performance and offline availability.
+2. **Backend**: Serverless Edge Functions (`src/routes/api/[...path]/+server.ts`) that handle secure MAL token exchange and CORS proxying for `https://api.myanimelist.net`. AniList enrichment bypasses the proxy and hits `https://graphql.anilist.co` directly from the browser (no auth, Zod-validated, `anilistLimiter` 700ms / 90→30 req/min).
+3. **Database**: Client-side IndexedDB (meta: `anilist:fetch:` 7d TTL + `browse:popular:v1` 24h SWR, `seasonal:YYYY:season`; anime details stale-while-revalidate).
+4. **Enrichment**: AniList GraphQL is the **only** detail enrichment source. `Media(idMal type:ANIME)` direct lookup — if `null`, show empty (no `Page{media(search)}` fallback, no Jikan). Query: `tags{name rank isAdult}` (no `isGeneral`), `characters(voiceActors:JAPANESE)`, `recommendations`, `reviews`, `trailer`, `nextAiringEpisode`. CSP `connect-src` + `preconnect` for `graphql.anilist.co` in `svelte.config.js` / `app.html`.
 
 ---
 

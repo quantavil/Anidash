@@ -1,6 +1,8 @@
 // ─── AniList GraphQL API (no-auth) ───
 // Public queries only. Single endpoint, Zod-validated.
 
+import { z } from 'zod';
+
 import { anilistLimiter } from './rate-limit';
 import { AnilistMediaSchema, AnilistPageMediaSchema, type AnilistMedia } from './schemas/anilist.schema';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
@@ -40,7 +42,25 @@ async function gqlFetch<T>(query: string, variables: Record<string, unknown>, sc
 	const r: any = fetchResult;
 	if (r && r.ok === false && typeof r.status === 'number') {
 		if (r.status === 429) {
-			return err({ type: 'api', message: 'AniList rate limited', status: 429 } as AppError);
+			const rawRetry = typeof r.retryAfter === 'string' ? r.retryAfter : null;
+			const rawReset = typeof r.reset === 'string' ? r.reset : null;
+			let retryAfterMs = 60_000;
+			if (rawRetry) {
+				const secs = parseInt(rawRetry, 10);
+				if (!Number.isNaN(secs)) retryAfterMs = secs * 1000;
+			} else if (rawReset) {
+				const resetSecs = parseInt(rawReset, 10);
+				if (!Number.isNaN(resetSecs)) {
+					const resetMs = resetSecs * 1000;
+					retryAfterMs = Math.max(0, resetMs - Date.now());
+					if (retryAfterMs === 0) retryAfterMs = 60_000;
+				}
+			}
+			return err({
+				type: 'rate_limit',
+				retryAfter: retryAfterMs,
+				message: 'AniList rate limited'
+			} as AppError);
 		}
 		return err({ type: 'api', message: `AniList HTTP ${r.status}`, status: r.status } as AppError);
 	}
@@ -102,7 +122,7 @@ export async function fetchAnilistMediaByMalId(malId: number): Promise<Result<An
 		MEDIA_DETAIL_QUERY,
 		{ malId },
 		// Inline schema for {Media}
-		(await import('zod')).z.object({ Media: AnilistMediaSchema.nullable() })
+		z.object({ Media: AnilistMediaSchema.nullable() })
 	);
 	if (!result.ok) return result as unknown as Result<AnilistMedia | null>;
 	// unwrap

@@ -184,6 +184,13 @@
 		finished_airing: 'text-info',
 		not_yet_aired: 'text-warning'
 	};
+
+	const YT_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
+	const safeTrailerId = $derived.by(() => {
+		const raw = anilistEnriched?.trailer?.id?.trim() ?? '';
+		if (anilistEnriched?.trailer?.site !== 'youtube' || !raw) return null;
+		return YT_ID_RE.test(raw) ? raw : null;
+	});
 </script>
 
 <svelte:head>
@@ -458,12 +465,12 @@
 
 			<!-- AniList Enrichment: Trailer / Airing / Tags -->
 			{#if anilistEnriched}
-				{#if anilistEnriched.trailer?.site === 'youtube' && anilistEnriched.trailer?.id}
+				{#if safeTrailerId}
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
 						<h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Trailer</h3>
 						<div class="aspect-video overflow-hidden rounded-lg">
 							<iframe
-								src="https://www.youtube.com/embed/{anilistEnriched.trailer.id.trim()}"
+								src="https://www.youtube.com/embed/{safeTrailerId}"
 								title="Trailer"
 								class="h-full w-full"
 								allowfullscreen

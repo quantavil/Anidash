@@ -12,7 +12,7 @@ const config = {
 				'connect-src': [
 					'self',
 					'https://api.myanimelist.net',
-					'https://api.jikan.moe',
+					'https://graphql.anilist.co',
 					'https://cdn.myanimelist.net',
 					'https://raw.githubusercontent.com'
 				],

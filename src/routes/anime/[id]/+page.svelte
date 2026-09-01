@@ -456,6 +456,46 @@
 				{/if}
 			</div>
 
+			<!-- AniList Enrichment: Trailer / Airing / Tags -->
+			{#if anilistEnriched}
+				{#if anilistEnriched.trailer?.site === 'youtube' && anilistEnriched.trailer?.id}
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
+						<h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Trailer</h3>
+						<div class="aspect-video overflow-hidden rounded-lg">
+							<iframe
+								src="https://www.youtube.com/embed/{anilistEnriched.trailer.id.trim()}"
+								title="Trailer"
+								class="h-full w-full"
+								allowfullscreen
+								loading="lazy"
+							></iframe>
+						</div>
+					</div>
+				{/if}
+				{#if anilistEnriched.nextAiring}
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 flex items-center gap-3">
+						<span class="text-xs font-bold uppercase tracking-wider text-text-muted">Next Episode</span>
+						<span class="text-sm text-text-primary">EP {anilistEnriched.nextAiring.episode}</span>
+						<span class="text-xs text-text-muted">
+							{new Date(anilistEnriched.nextAiring.airingAt * 1000).toLocaleString()}
+							{#if anilistEnriched.nextAiring.timeUntilAiring}
+								· {Math.floor(anilistEnriched.nextAiring.timeUntilAiring / 3600)}h left
+							{/if}
+						</span>
+					</div>
+				{/if}
+				{#if anilistEnriched.tagsRanked.length > 0}
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
+						<h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">Tags</h3>
+						<div class="flex flex-wrap gap-1.5">
+							{#each anilistEnriched.tagsRanked.slice(0, 20) as t (t.name)}
+								<span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-text-secondary">{t.name} <span class="text-text-muted">{t.rank}%</span></span>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			{/if}
+
 			<!-- Section 2: Related Anime -->
 			{#if relatedGrouped}
 				<div class="space-y-4">
@@ -675,6 +715,25 @@
 								: `Show All ${characters.length} Characters ↓`}
 						</button>
 					{/if}
+				</div>
+			{/if}
+
+			<!-- AniList Reviews (if available) -->
+			{#if anilistEnriched?.reviews && anilistEnriched.reviews.length > 0}
+				<div class="space-y-3">
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Reviews</h3>
+					<div class="grid gap-3 md:grid-cols-2">
+						{#each anilistEnriched.reviews.slice(0, 4) as r (r.summary)}
+							<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
+								<div class="flex items-center justify-between">
+									<p class="truncate text-xs font-semibold text-text-primary">{r.summary ?? 'Review'}</p>
+									{#if r.rating}<span class="text-xs font-bold text-warning">★ {r.rating}</span>{/if}
+								</div>
+								{#if r.body}<p class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary">{r.body.slice(0, 280)}</p>{/if}
+								{#if r.user}<p class="mt-2 text-[10px] text-text-muted">— {r.user}</p>{/if}
+							</div>
+						{/each}
+					</div>
 				</div>
 			{/if}
 		</div>

@@ -15,8 +15,7 @@ async function gqlFetch<T>(query: string, variables: Record<string, unknown>, sc
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Accept: 'application/json',
-					'User-Agent': 'AniDash/0.1 (https://anidash.app)'
+					Accept: 'application/json'
 				},
 				body: JSON.stringify({ query, variables })
 			});
@@ -84,7 +83,7 @@ query($malId:Int){
     id idMal title{romaji english native} description
     coverImage{extraLarge large medium color} bannerImage
     format status episodes duration season seasonYear isAdult
-    genres synonyms tags{name rank isAdult isGeneral}
+    genres synonyms tags{name rank isAdult}
     averageScore meanScore popularity favourites trending
     nextAiringEpisode{episode airingAt timeUntilAiring}
     trailer{id site} externalLinks{site url} streamingEpisodes{title thumbnail url}
@@ -112,7 +111,7 @@ export async function fetchAnilistMediaByMalId(malId: number): Promise<Result<An
 
 // ─── Page (trending / search) ───
 const PAGE_QUERY = `
-query($page:Int $perPage:Int $search:String $sort:[MediaSort]){
+query($page:Int $perPage:Int $search:String $sort:MediaSort){
   Page(page:$page perPage:$perPage){
     pageInfo{total currentPage lastPage hasNextPage perPage}
     media(search:$search type:ANIME sort:$sort isAdult:false){

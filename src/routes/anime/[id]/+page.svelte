@@ -3,10 +3,12 @@
 	import { untrack } from 'svelte';
 
 	import { getAnimeDetail } from '$lib/api/mal';
-	import { getRecommendations, getCharacters } from '$lib/api/jikan';
+	import { fetchAnilistMediaByMalId } from '$lib/api/anilist';
+	import { mapAnilistToEnriched } from '$lib/utils/types';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import type { DetailedAnimeRecord } from '$lib/cache/db';
+	import type { AnilistEnriched } from '$lib/utils/types';
 	import type {
 		JikanRecommendationEntry,
 		JikanCharacterEntry
@@ -48,7 +50,7 @@
 	const inList = $derived(listEntry !== undefined);
 
 	// ─── Tab Data (loaded in background) ───
-
+	// Primary source: AniList (no-auth). Jikan kept only as type shim.
 	let characters = $state.raw<JikanCharacterEntry[]>([]);
 	let charactersLoading = $state(false);
 	let charactersError = $state<string | null>(null);
@@ -56,6 +58,8 @@
 	let recommendations = $state.raw<JikanRecommendationEntry[]>([]);
 	let recsLoading = $state(false);
 	let recsError = $state<string | null>(null);
+
+	let anilistEnriched = $state.raw<AnilistEnriched | null>(null);
 
 	// ─── Modals ───
 
@@ -119,43 +123,71 @@
 		loading = false;
 	}
 
-	// ─── Background Fetch Data ───
+	// ─── Background Fetch Data (AniList primary) ───
 
-	async function loadCharacters(id: number) {
-		if (charactersLoading) return;
+	async function loadAnilistData(id: number) {
 		charactersLoading = true;
-		charactersError = null;
-
-		const result = await getCharacters(id);
-		if (id !== Number(page.params.id)) return;
-
-		if (result.ok) {
-			characters = result.value.characters;
-		} else {
-			charactersError = 'Failed to load characters';
-		}
-		charactersLoading = false;
-	}
-
-	async function loadRecommendations(id: number) {
-		if (recsLoading) return;
 		recsLoading = true;
+		charactersError = null;
 		recsError = null;
 
-		const result = await getRecommendations(id);
+		const result = await fetchAnilistMediaByMalId(id);
 		if (id !== Number(page.params.id)) return;
 
-		if (result.ok) {
-			recommendations = result.value;
+		if (result.ok && result.value) {
+			const enriched = mapAnilistToEnriched(result.value);
+			anilistEnriched = enriched;
+			// Map to Jikan-like shape for existing UI (no fallback)
+			characters = enriched.characters.map((c) => ({
+				character: {
+					mal_id: c.id,
+					url: `https://anilist.co/character/${c.id}`,
+					images: { jpg: { image_url: c.image ?? '' }, webp: { image_url: c.image ?? '' } },
+					name: c.name,
+					name_kanji: null,
+					nicknames: [],
+					favorites: c.favourites,
+					about: null
+				},
+				role: c.role ?? 'UNKNOWN',
+				favorites: c.favourites ?? 0,
+				voice_actors: c.voiceActor ? [{ person: { mal_id: 0, url: '', images: { jpg: { image_url: '' } }, name: c.voiceActor }, language: 'Japanese' }] : []
+			})) as unknown as JikanCharacterEntry[];
+
+			// AniList recommendations mapped to Jikan shape for UI reuse where possible, else keep raw
+			if (enriched.recommendations.length > 0) {
+				recommendations = enriched.recommendations.map((r) => ({
+					entry: {
+						mal_id: r.idMal ?? r.id,
+						url: `https://anilist.co/anime/${r.id}`,
+						images: { jpg: { image_url: r.cover ?? '' } },
+						title: r.title
+					},
+					url: `https://anilist.co/anime/${r.id}`,
+					votes: r.rating ?? 0,
+					content: null,
+					user: { url: '', username: 'AniList' }
+				})) as unknown as JikanRecommendationEntry[];
+			} else {
+				recommendations = [];
+			}
+		} else if (result.ok && !result.value) {
+			// Direct hit miss - no AniList entry for this MAL id, show empty (no fallback per spec)
+			characters = [];
+			recommendations = [];
+			charactersError = null;
+			recsError = null;
 		} else {
+			charactersError = 'Failed to load characters';
 			recsError = 'Failed to load recommendations';
 		}
+		charactersLoading = false;
 		recsLoading = false;
 	}
 
 	// ─── Lifecycle ───
 
-	// Load anime and Jikan details in parallel when route changes
+	// Load anime and AniList enrichment in parallel when route changes
 	$effect(() => {
 		const id = Number(page.params.id);
 		const currentMalId = untrack(() => anime?.malId);
@@ -174,8 +206,7 @@
 				recsLoading = false;
 
 				loadAnime(id);
-				loadCharacters(id);
-				loadRecommendations(id);
+				loadAnilistData(id);
 			});
 		}
 	});
@@ -565,7 +596,7 @@
 						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
 							<p class="text-xs text-text-muted">{recsError}</p>
 							<button
-								onclick={() => loadRecommendations(Number(page.params.id))}
+								onclick={() => loadAnilistData(Number(page.params.id))}
 								class="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
 							>
 								Retry
@@ -657,7 +688,7 @@
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
 						<p class="text-xs text-text-muted">{charactersError}</p>
 						<button
-							onclick={() => loadCharacters(Number(page.params.id))}
+							onclick={() => loadAnilistData(Number(page.params.id))}
 							class="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
 						>
 							Retry

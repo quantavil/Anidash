@@ -137,14 +137,16 @@ export function mapAnilistToEnriched(media: AnilistMedia): AnilistEnriched {
 		recommendations: (media.recommendations?.nodes ?? [])
 			.map((n) => ({
 				id: n.mediaRecommendation?.id ?? 0,
-				idMal: n.mediaRecommendation?.idMal ?? (n.mediaRecommendation as unknown as { idMal?: number })?.idMal ?? null,
+				idMal: (n.mediaRecommendation as unknown as { idMal?: number | null })?.idMal ?? null,
 				title: n.mediaRecommendation?.title?.romaji ?? n.mediaRecommendation?.title?.english ?? '',
 				cover: n.mediaRecommendation?.coverImage?.large ?? n.mediaRecommendation?.coverImage?.medium ?? null,
 				rating: n.rating ?? null
 			}))
 			.filter((r) => r.id !== 0),
 		reviews: (media.reviews?.nodes ?? []).map((r) => ({ summary: r.summary ?? null, rating: r.rating ?? null, body: r.body ?? null, user: r.user?.name ?? null })),
-		nextAiring: media.nextAiringEpisode ?? null,
+		nextAiring: media.nextAiringEpisode
+			? { episode: media.nextAiringEpisode.episode, airingAt: media.nextAiringEpisode.airingAt, timeUntilAiring: media.nextAiringEpisode.timeUntilAiring ?? null }
+			: null,
 		trailer: media.trailer?.id && media.trailer?.site ? { id: media.trailer.id, site: media.trailer.site } : null,
 		streamingEpisodes: (media.streamingEpisodes ?? []).map((s) => ({ title: s.title ?? null, thumbnail: s.thumbnail ?? null }))
 	};

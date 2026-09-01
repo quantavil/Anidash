@@ -14,7 +14,7 @@
 
 	// ─── URL State ───
 
-	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching'));
+	const currentTab = $derived(getUrlParam(page.url, 'tab', 'all'));
 	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
 
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));

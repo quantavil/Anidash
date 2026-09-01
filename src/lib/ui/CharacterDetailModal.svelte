@@ -2,15 +2,23 @@
 	import { Heart, ExternalLink, X } from 'lucide-svelte';
 	import Dialog from './Dialog.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
-	import type { JikanCharacterEntry } from '$lib/api/schemas/jikan.schema';
 	import { formatCharacterName } from '$lib/utils/format';
+
+	type AnilistCharacterEntry = {
+		id: number;
+		name: string;
+		image: string | null;
+		role: string | null;
+		voiceActor: string | null;
+		favourites: number | null;
+	};
 
 	let {
 		open = $bindable(false),
 		entry
 	}: {
 		open: boolean;
-		entry: JikanCharacterEntry | null;
+		entry: AnilistCharacterEntry | null;
 	} = $props();
 </script>
 
@@ -31,8 +39,8 @@
 				class="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/10 shadow-lg bg-surface-2"
 			>
 				<ImageWithFallback
-					src={entry.character.images?.jpg?.image_url || entry.character.images?.webp?.image_url}
-					alt={entry.character.name}
+					src={entry.image}
+					alt={entry.name}
 					aspectRatio="3/4"
 					fallbackIcon="user"
 					class="h-full w-full"
@@ -42,7 +50,7 @@
 				<div
 					class="absolute bottom-3 left-3 glass-badge px-2.5 py-1 text-xs font-semibold capitalize"
 				>
-					{entry.role}
+					{entry.role ?? 'UNKNOWN'}
 				</div>
 			</div>
 
@@ -50,22 +58,20 @@
 			<div class="space-y-3">
 				<div>
 					<h2 class="text-xl font-bold text-text-primary">
-						{formatCharacterName(entry.character.name)}
+						{formatCharacterName(entry.name)}
 					</h2>
-					{#if entry.character.name_kanji}
-						<p class="text-sm text-text-muted mt-0.5 font-medium">
-							{entry.character.name_kanji}
-						</p>
+					{#if entry.voiceActor}
+						<p class="text-sm text-text-muted mt-0.5 font-medium">VA: {entry.voiceActor}</p>
 					{/if}
 				</div>
 
 				<div class="flex flex-wrap items-center gap-3 text-xs text-text-secondary">
-					{#if entry.character.favorites}
+					{#if entry.favourites}
 						<div
 							class="flex items-center gap-1 bg-white/5 border border-white/5 px-2.5 py-1 rounded-full text-warning font-semibold"
 						>
 							<Heart size={12} fill="currentColor" class="text-warning" />
-							<span>{entry.character.favorites.toLocaleString()} favorites</span>
+							<span>{entry.favourites.toLocaleString()} favourites</span>
 						</div>
 					{/if}
 				</div>
@@ -73,17 +79,15 @@
 
 			<!-- Action Buttons -->
 			<div class="mt-2 flex gap-3">
-				{#if entry.character.url}
-					<a
-						href={entry.character.url}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/20 text-primary py-2.5 text-sm font-semibold tracking-wide hover:bg-primary/20 transition-colors"
-					>
-						<ExternalLink size={16} />
-						View on MAL
-					</a>
-				{/if}
+				<a
+					href="https://anilist.co/character/{entry.id}"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/20 text-primary py-2.5 text-sm font-semibold tracking-wide hover:bg-primary/20 transition-colors"
+				>
+					<ExternalLink size={16} />
+					View on AniList
+				</a>
 
 				<button
 					onclick={() => (open = false)}

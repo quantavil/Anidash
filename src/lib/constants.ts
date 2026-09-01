@@ -20,7 +20,7 @@ export const MEDIA_TYPE_FILTER_OPTIONS = [
 	{ value: 'ona', label: 'ONA' }
 ] as const;
 
-/** MAL v2 has no genres-listing endpoint — this static list mirrors MAL/Jikan genre IDs. */
+/** MAL v2 has no genres-listing endpoint — this static list mirrors MAL/AniList genre IDs. */
 export const ANIME_GENRES: Array<{ id: number; name: string }> = [
 	{ id: 1, name: 'Action' },
 	{ id: 2, name: 'Adventure' },

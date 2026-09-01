@@ -23,5 +23,6 @@ export function createRateLimiter(minIntervalMs: number) {
 	return { enqueue };
 }
 
-/** Jikan free-tier: ~3 req/s → 340ms minimum between requests */
-export const jikanLimiter = createRateLimiter(340);
+/** AniList: 90/min (667ms), degraded 30/min still safe with 700ms */
+export const ANILIST_MIN_INTERVAL_MS = 700;
+export const anilistLimiter = createRateLimiter(ANILIST_MIN_INTERVAL_MS);

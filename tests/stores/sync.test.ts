@@ -20,7 +20,7 @@ vi.mock('$lib/cache/meta.cache', () => ({
 	getLastSync: vi.fn().mockResolvedValue(null),
 	setLastSync: vi.fn().mockResolvedValue(undefined),
 	setCachedProfile: vi.fn().mockResolvedValue(undefined),
-	purgeStaleJikanCache: vi.fn().mockResolvedValue(0)
+	purgeStaleAnilistCache: vi.fn().mockResolvedValue(0)
 }));
 
 vi.mock('$lib/cache/anime.cache', () => ({

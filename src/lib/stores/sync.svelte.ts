@@ -7,7 +7,7 @@ import {
 	getLastSync,
 	setLastSync,
 	setCachedProfile,
-	purgeStaleJikanCache
+	purgeStaleAnilistCache
 } from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';
 import { authStore } from '$lib/auth/auth.svelte';
@@ -60,7 +60,7 @@ function createSyncStore() {
 
 			// 5. Purge stale caches in background
 			purgeStaleAnime().catch(() => {});
-			purgeStaleJikanCache().catch(() => {});
+			purgeStaleAnilistCache().catch(() => {});
 
 			isSyncing = false;
 			return { success: true, entryCount: entries.length };

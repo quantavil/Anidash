@@ -1,5 +1,5 @@
 // ─── Shared display types for browse/seasonal/search results ───
-// Normalized from MAL or Jikan responses for UI consumption.
+// Normalized from MAL or AniList responses for UI consumption.
 
 import { formatSeason } from './format';
 import type { UserListRecord } from '$lib/cache/db';

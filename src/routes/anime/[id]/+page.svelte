@@ -9,10 +9,6 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import type { DetailedAnimeRecord } from '$lib/cache/db';
 	import type { AnilistEnriched } from '$lib/utils/types';
-	import type {
-		JikanRecommendationEntry,
-		JikanCharacterEntry
-	} from '$lib/api/schemas/jikan.schema';
 
 	import {
 		formatMediaType,
@@ -50,12 +46,11 @@
 	const inList = $derived(listEntry !== undefined);
 
 	// ─── Tab Data (loaded in background) ───
-	// Primary source: AniList (no-auth). Jikan kept only as type shim.
-	let characters = $state.raw<JikanCharacterEntry[]>([]);
+	let characters = $state.raw<AnilistEnriched['characters']>([]);
 	let charactersLoading = $state(false);
 	let charactersError = $state<string | null>(null);
 
-	let recommendations = $state.raw<JikanRecommendationEntry[]>([]);
+	let recommendations = $state.raw<AnilistEnriched['recommendations']>([]);
 	let recsLoading = $state(false);
 	let recsError = $state<string | null>(null);
 
@@ -65,7 +60,7 @@
 
 	let showAddModal = $state(false);
 	let showCharacterModal = $state(false);
-	let selectedCharacter = $state<JikanCharacterEntry | null>(null);
+	let selectedCharacter = $state<AnilistEnriched['characters'][number] | null>(null);
 
 	// ─── Read More / Expansion States ───
 
@@ -137,40 +132,8 @@
 		if (result.ok && result.value) {
 			const enriched = mapAnilistToEnriched(result.value);
 			anilistEnriched = enriched;
-			// Map to Jikan-like shape for existing UI (no fallback)
-			characters = enriched.characters.map((c) => ({
-				character: {
-					mal_id: c.id,
-					url: `https://anilist.co/character/${c.id}`,
-					images: { jpg: { image_url: c.image ?? '' }, webp: { image_url: c.image ?? '' } },
-					name: c.name,
-					name_kanji: null,
-					nicknames: [],
-					favorites: c.favourites,
-					about: null
-				},
-				role: c.role ?? 'UNKNOWN',
-				favorites: c.favourites ?? 0,
-				voice_actors: c.voiceActor ? [{ person: { mal_id: 0, url: '', images: { jpg: { image_url: '' } }, name: c.voiceActor }, language: 'Japanese' }] : []
-			})) as unknown as JikanCharacterEntry[];
-
-			// AniList recommendations mapped to Jikan shape for UI reuse where possible, else keep raw
-			if (enriched.recommendations.length > 0) {
-				recommendations = enriched.recommendations.map((r) => ({
-					entry: {
-						mal_id: r.idMal ?? r.id,
-						url: `https://anilist.co/anime/${r.id}`,
-						images: { jpg: { image_url: r.cover ?? '' } },
-						title: r.title
-					},
-					url: `https://anilist.co/anime/${r.id}`,
-					votes: r.rating ?? 0,
-					content: null,
-					user: { url: '', username: 'AniList' }
-				})) as unknown as JikanRecommendationEntry[];
-			} else {
-				recommendations = [];
-			}
+			characters = enriched.characters;
+			recommendations = enriched.recommendations;
 		} else if (result.ok && !result.value) {
 			// Direct hit miss - no AniList entry for this MAL id, show empty (no fallback per spec)
 			characters = [];
@@ -211,7 +174,7 @@
 		}
 	});
 
-	function handleCharacterClick(entry: JikanCharacterEntry) {
+	function handleCharacterClick(entry: AnilistEnriched['characters'][number]) {
 		selectedCharacter = entry;
 		showCharacterModal = true;
 	}
@@ -604,59 +567,35 @@
 						</div>
 					{:else if recommendations.length > 0}
 						<div class="space-y-3">
-							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">
-								Community Insights
-							</h4>
+							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">AniList Recommendations</h4>
 							<div class="grid gap-3 md:grid-cols-2">
-								{#each recommendations.slice(0, 4) as rec (rec.entry.mal_id)}
-									<div
-										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
-									>
-										{#if rec.entry}
-											<a
-												href="/anime/{rec.entry.mal_id}"
-												class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity"
-											>
-												<ImageWithFallback
-													src={rec.entry.images?.jpg?.image_url}
-													alt={rec.entry.title}
-													class="h-full w-full object-cover"
-												/>
-											</a>
-										{/if}
+								{#each recommendations.slice(0, 4) as rec (rec.id)}
+									<div class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0">
+										<a
+											href="https://anilist.co/anime/{rec.id}"
+											target="_blank"
+											rel="noopener noreferrer"
+											class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity"
+										>
+											<ImageWithFallback src={rec.cover} alt={rec.title} class="h-full w-full object-cover" />
+										</a>
 										<div class="min-w-0 flex-1 flex flex-col justify-between">
 											<div>
 												<div class="flex items-start justify-between gap-2 min-w-0 w-full">
-													{#if rec.entry}
-														<a
-															href="/anime/{rec.entry.mal_id}"
-															class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors"
-														>
-															{rec.entry.title}
-														</a>
-													{/if}
-													{#if rec.votes}
-														<span
-															class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted"
-														>
-															♥ {rec.votes}
-														</span>
+													<a
+														href="https://anilist.co/anime/{rec.id}"
+														target="_blank"
+														rel="noopener noreferrer"
+														class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors"
+													>
+														{rec.title}
+													</a>
+													{#if rec.rating}
+														<span class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted">★ {rec.rating}</span>
 													{/if}
 												</div>
-												{#if rec.content}
-													<p
-														class="mt-1 line-clamp-3 text-[11px] leading-relaxed text-text-secondary break-words"
-													>
-														{rec.content}
-													</p>
-												{/if}
 											</div>
-											{#if rec.user}
-												<p class="text-[9px] text-text-muted mt-1 truncate">
-													By <span class="text-text-secondary font-medium">{rec.user.username}</span
-													>
-												</p>
-											{/if}
+											<p class="text-[9px] text-text-muted mt-1">AniList • {rec.idMal ? `MAL ${rec.idMal}` : `AniList ${rec.id}`}</p>
 										</div>
 									</div>
 								{/each}
@@ -704,31 +643,23 @@
 						<span class="text-xs text-text-muted">({characters.length} total)</span>
 					</div>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-						{#each displayedCharacters as entry (entry.character.mal_id)}
+						{#each displayedCharacters as entry (entry.id)}
 							<button
 								type="button"
 								onclick={() => handleCharacterClick(entry)}
 								class="w-full flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus:bg-white/10"
 							>
-								<ImageWithFallback
-									src={entry.character.images?.jpg?.image_url}
-									alt={entry.character.name}
-									aspectRatio="1/1"
-									fallbackIcon="user"
-									class="h-10 w-10 shrink-0 rounded-full"
-								/>
+								<ImageWithFallback src={entry.image} alt={entry.name} aspectRatio="1/1" fallbackIcon="user" class="h-10 w-10 shrink-0 rounded-full" />
 								<div class="min-w-0 flex-1">
-									<p
-										class="truncate text-xs font-semibold text-text-primary"
-										title={formatCharacterName(entry.character.name)}
-									>
-										{formatCharacterName(entry.character.name)}
+									<p class="truncate text-xs font-semibold text-text-primary" title={formatCharacterName(entry.name)}>
+										{formatCharacterName(entry.name)}
 									</p>
 									<p class="text-[10px] capitalize text-text-muted truncate">{entry.role}</p>
-									{#if entry.character.favorites}
-										<p class="mt-0.5 text-[9px] text-text-muted">
-											♥ {entry.character.favorites.toLocaleString()}
-										</p>
+									{#if entry.favourites}
+										<p class="mt-0.5 text-[9px] text-text-muted">♥ {entry.favourites.toLocaleString()}</p>
+									{/if}
+									{#if entry.voiceActor}
+										<p class="text-[9px] text-text-muted truncate">VA: {entry.voiceActor}</p>
 									{/if}
 								</div>
 							</button>

@@ -71,23 +71,20 @@ export async function setSeasonalCache(key: string, animeList: DisplayAnime[]): 
 
 // ─── Maintenance ───
 
-// The meta store accumulates one record per distinct Jikan request URL. TTL is only
-// checked on read, so without this these records grow without bound. Purge anything
-// older than the longest TTL Jikan uses (7 days for genres).
-const JIKAN_CACHE_PREFIX = 'jikan:fetch:';
-const MAX_JIKAN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const ANILIST_CACHE_PREFIX = 'anilist:fetch:';
+const MAX_ANILIST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** Delete stale Jikan request-cache records from the meta store. Returns count purged. */
-export async function purgeStaleJikanCache(): Promise<number> {
+/** Delete stale AniList cache records. Returns count purged. */
+export async function purgeStaleAnilistCache(): Promise<number> {
 	const db = await getDB();
 	const tx = db.transaction('meta', 'readwrite');
-	const threshold = Date.now() - MAX_JIKAN_TTL_MS;
+	const threshold = Date.now() - MAX_ANILIST_TTL_MS;
 	let purged = 0;
 
 	let cursor = await tx.store.openCursor();
 	while (cursor) {
 		const { key, updatedAt } = cursor.value;
-		if (typeof key === 'string' && key.startsWith(JIKAN_CACHE_PREFIX) && updatedAt < threshold) {
+		if (typeof key === 'string' && key.startsWith(ANILIST_CACHE_PREFIX) && updatedAt < threshold) {
 			await cursor.delete();
 			purged++;
 		}

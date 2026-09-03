@@ -334,12 +334,14 @@
 
 				<!-- ─── User List Controls ─── -->
 				<div
-					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 backdrop-blur-xl p-5 shadow-2xl relative overflow-hidden"
+					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 backdrop-blur-xl p-5 shadow-2xl relative z-20"
 				>
 					<!-- Glowing accent effect in background -->
-					<div
-						class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"
-					></div>
+					<div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+						<div
+							class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
+						></div>
+					</div>
 
 					{#if inList && listEntry}
 						<!-- Responsive layout: side-by-side on large screens, stacked on mobile -->

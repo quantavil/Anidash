@@ -133,7 +133,7 @@
 		<div
 			role="menu"
 			transition:fade={{ duration: 120 }}
-			class="absolute left-0 top-full z-50 mt-1.5 min-w-[130px] rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl backdrop-blur-2xl"
+			class="absolute left-0 top-full z-50 mt-1.5 min-w-[140px] whitespace-nowrap rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl backdrop-blur-2xl"
 		>
 			{#each ALL_STATUSES as s (s)}
 				{@const cfg = STATUS_CONFIG[s]}

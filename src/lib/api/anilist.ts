@@ -4,7 +4,7 @@
 import { z } from 'zod';
 
 import { anilistLimiter } from './rate-limit';
-import { AnilistMediaSchema, AnilistPageMediaSchema, type AnilistMedia } from './schemas/anilist.schema';
+import { AnilistMediaSchema, type AnilistMedia } from './schemas/anilist.schema';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
 import type { AppError } from './result';
 
@@ -144,18 +144,6 @@ query($page:Int $perPage:Int $search:String $sort:MediaSort){
   }
 }
 `;
-
-export async function fetchAnilistTrending(page = 1, perPage = 25): Promise<Result<{ media: AnilistMedia[]; hasNextPage: boolean }>> {
-	const res = await gqlFetch(PAGE_QUERY, { page, perPage, sort: 'POPULARITY_DESC' }, AnilistPageMediaSchema);
-	if (!res.ok) return res as unknown as Result<{ media: AnilistMedia[]; hasNextPage: boolean }>;
-	return ok({ media: res.value.Page.media, hasNextPage: !!res.value.Page.pageInfo?.hasNextPage });
-}
-
-export async function searchAnilist(search: string, page = 1, perPage = 25): Promise<Result<{ media: AnilistMedia[]; hasNextPage: boolean }>> {
-	const res = await gqlFetch(PAGE_QUERY, { page, perPage, search, sort: 'POPULARITY_DESC' }, AnilistPageMediaSchema);
-	if (!res.ok) return res as unknown as Result<{ media: AnilistMedia[]; hasNextPage: boolean }>;
-	return ok({ media: res.value.Page.media, hasNextPage: !!res.value.Page.pageInfo?.hasNextPage });
-}
 
 // re-export for tests
 export const _pageQuery = PAGE_QUERY;

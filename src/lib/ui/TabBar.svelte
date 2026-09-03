@@ -30,10 +30,10 @@
 		plan_to_watch: 'bg-info/15 text-info'
 	};
 
-	const currentTab = $derived(getUrlParam(page.url, 'tab', 'all') as TabKey);
+	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching') as TabKey);
 
 	function selectTab(key: TabKey) {
-		goto(setUrlParam(page.url, 'tab', key === 'all' ? '' : key), {
+		goto(setUrlParam(page.url, 'tab', key === 'watching' ? '' : key), {
 			keepFocus: true,
 			noScroll: true
 		});

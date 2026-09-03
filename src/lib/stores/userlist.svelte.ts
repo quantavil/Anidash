@@ -237,6 +237,11 @@ function createUserListStore() {
 		const entry = entries[malId];
 		if (!entry) return null;
 
+		// Guard: do not increment past total episodes if known
+		if (entry.numEpisodes > 0 && entry.numWatchedEpisodes >= entry.numEpisodes) {
+			return { watched: entry.numWatchedEpisodes, total: entry.numEpisodes };
+		}
+
 		const newCount = entry.numWatchedEpisodes + 1;
 		optimisticUpdate(
 			malId,
@@ -253,12 +258,17 @@ function createUserListStore() {
 		const entry = entries[malId];
 		if (!entry) return;
 
+		let validCount = Math.max(0, count);
+		if (entry.numEpisodes > 0 && validCount > entry.numEpisodes) {
+			validCount = entry.numEpisodes;
+		}
+
 		optimisticUpdate(
 			malId,
 			{
-				numWatchedEpisodes: count
+				numWatchedEpisodes: validCount
 			},
-			{ num_watched_episodes: count }
+			{ num_watched_episodes: validCount }
 		);
 	}
 
@@ -312,36 +322,8 @@ function createUserListStore() {
 		fallbackPicture?: string | null,
 		genres?: string[] | { id: number; name: string }[]
 	): Promise<Result<void>> {
-		// Fetch anime detail first so we have the episode count for completed status
-		const detailResult = await getAnimeDetail(malId);
-		let finalEpisodes = 0;
-		if (detailResult.ok) {
-			finalEpisodes = detailResult.value.numEpisodes;
-		} else {
-			// Fallback: use cached list entry episode count if available
-			const existing = getEntry(malId);
-			if (existing) finalEpisodes = existing.numEpisodes;
-		}
-
-		const payload: Record<string, unknown> = { status };
-		if (status === 'completed' && finalEpisodes > 0) {
-			payload.num_watched_episodes = finalEpisodes;
-		}
-
-		// First, update MAL
-		const result = await updateAnimeStatus(malId, payload);
-		if (!result.ok) return result;
-
-		if (detailResult.ok) {
-			if (titleEnglish) {
-				detailResult.value.titleEnglish = titleEnglish;
-			}
-			try {
-				await putAnime(detailResult.value);
-			} catch (e) {
-				logger.error('Failed to write anime detail to cache in addToList:', e);
-			}
-		}
+		const existing = getEntry(malId);
+		let finalEpisodes = existing?.numEpisodes ?? 0;
 
 		const normalizedGenres: { id: number; name: string }[] = [];
 		if (genres) {
@@ -355,57 +337,112 @@ function createUserListStore() {
 			}
 		}
 
-		// Create a local list entry
+		// 1. Create the local list entry immediately (optimistic UI)
 		const newEntry: UserListRecord = {
 			malId,
-			title: fallbackTitle ?? '',
-			titleEnglish: titleEnglish ?? null,
-			mainPicture: fallbackPicture ? { medium: fallbackPicture, large: fallbackPicture } : null,
-			mean: null,
+			title: fallbackTitle ?? existing?.title ?? '',
+			titleEnglish: titleEnglish ?? existing?.titleEnglish ?? null,
+			mainPicture: fallbackPicture
+				? { medium: fallbackPicture, large: fallbackPicture }
+				: (existing?.mainPicture ?? null),
+			mean: existing?.mean ?? null,
 			numEpisodes: finalEpisodes,
-			genres: normalizedGenres,
-			studios: [],
-			startSeason: { year: null, season: null },
-			mediaType: 'unknown',
-			animeStatus: 'unknown',
-			numListUsers: 0,
-			numScoringUsers: 0,
+			genres: normalizedGenres.length > 0 ? normalizedGenres : (existing?.genres ?? []),
+			studios: existing?.studios ?? [],
+			startSeason: existing?.startSeason ?? { year: null, season: null },
+			mediaType: existing?.mediaType ?? 'unknown',
+			animeStatus: existing?.animeStatus ?? 'unknown',
+			numListUsers: existing?.numListUsers ?? 0,
+			numScoringUsers: existing?.numScoringUsers ?? 0,
 			status,
-			score: 0,
-			numWatchedEpisodes: status === 'completed' && finalEpisodes > 0 ? finalEpisodes : 0,
+			score: existing?.score ?? 0,
+			numWatchedEpisodes:
+				status === 'completed' && finalEpisodes > 0
+					? finalEpisodes
+					: (existing?.numWatchedEpisodes ?? 0),
 			isRewatching: false,
 			updatedAt: new Date().toISOString(),
 			startDate: null,
 			finishDate: null,
-			isLocalOnly: !detailResult.ok
+			isLocalOnly: true
 		};
-
-		// If we got detail, use it (overrides fallbacks)
-		if (detailResult.ok) {
-			const d = detailResult.value;
-			newEntry.title = d.title;
-			newEntry.titleEnglish = d.titleEnglish || titleEnglish || null;
-			newEntry.mainPicture = d.mainPicture;
-			newEntry.mean = d.mean;
-			newEntry.genres = d.genres;
-			newEntry.studios = d.studios;
-			newEntry.startSeason = d.startSeason;
-			newEntry.mediaType = d.mediaType;
-			newEntry.animeStatus = d.animeStatus;
-			newEntry.numListUsers = d.numListUsers;
-			newEntry.numScoringUsers = d.numScoringUsers;
-		}
 
 		entries = {
 			...entries,
 			[malId]: newEntry
 		};
+
+		// 2. Persist to IndexedDB
 		const putRes = await putEntry($state.snapshot(newEntry));
 		if (!putRes.ok) {
 			logger.error(`Failed to add entry ${malId} to IndexedDB:`, putRes.error);
 			notifyError('Local database write failed. Entry could not be added.');
 			return err(putRes.error);
 		}
+
+		// 3. Prepare payload for MAL
+		const payload: Record<string, unknown> = { status };
+		if (status === 'completed' && finalEpisodes > 0) {
+			payload.num_watched_episodes = finalEpisodes;
+		}
+
+		// If explicitly offline, queue for later sync and complete
+		if (typeof navigator !== 'undefined' && !navigator.onLine) {
+			await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+			return ok(undefined);
+		}
+
+		// 4. Update MAL with offline queue fallback
+		const result = await updateAnimeStatus(malId, payload);
+		if (!result.ok) {
+			await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+			notifyError('Sync delayed. Edit saved locally & queued for sync.', {
+				id: 'offline-sync-error'
+			});
+		}
+
+		// 5. Background detail enrichment
+		void (async () => {
+			try {
+				const detailResult = await getAnimeDetail(malId);
+				if (detailResult.ok) {
+					const d = detailResult.value;
+					if (titleEnglish) d.titleEnglish = titleEnglish;
+					finalEpisodes = d.numEpisodes;
+					if (status === 'completed' && finalEpisodes > 0) {
+						payload.num_watched_episodes = finalEpisodes;
+						await updateAnimeStatus(malId, payload);
+					}
+
+					const enrichedEntry: UserListRecord = {
+						...newEntry,
+						title: d.title,
+						titleEnglish: d.titleEnglish || titleEnglish || null,
+						mainPicture: d.mainPicture,
+						mean: d.mean,
+						numEpisodes: d.numEpisodes,
+						genres: d.genres,
+						studios: d.studios,
+						startSeason: d.startSeason,
+						mediaType: d.mediaType,
+						animeStatus: d.animeStatus,
+						numListUsers: d.numListUsers,
+						numScoringUsers: d.numScoringUsers,
+						numWatchedEpisodes:
+							status === 'completed' && finalEpisodes > 0
+								? finalEpisodes
+								: newEntry.numWatchedEpisodes,
+						isLocalOnly: false
+					};
+
+					entries = { ...entries, [malId]: enrichedEntry };
+					await putEntry($state.snapshot(enrichedEntry));
+					await putAnime(d);
+				}
+			} catch (e) {
+				logger.error('Background detail sync failed in addToList:', e);
+			}
+		})();
 
 		return ok(undefined);
 	}

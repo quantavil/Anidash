@@ -9,6 +9,7 @@
 		confirmLabel = 'Confirm',
 		cancelLabel = 'Cancel',
 		variant = 'default',
+		dismissible = true,
 		onConfirm
 	}: {
 		open?: boolean;
@@ -18,6 +19,7 @@
 		confirmLabel?: string;
 		cancelLabel?: string;
 		variant?: 'default' | 'danger';
+		dismissible?: boolean;
 		onConfirm?: () => void;
 	} = $props();
 
@@ -32,7 +34,7 @@
 	}
 </script>
 
-<Dialog {open} onclose={() => setOpen(false)} dismissible={false}>
+<Dialog {open} onclose={() => setOpen(false)} {dismissible}>
 	<h2 class="text-lg font-semibold text-text-primary">{title}</h2>
 	<p class="mt-2 text-sm text-text-secondary">{description}</p>
 	<div class="mt-6 flex justify-end gap-3">

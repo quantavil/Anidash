@@ -22,7 +22,6 @@
 	import {
 		MEDIA_TYPE_FILTER_OPTIONS,
 		ANIME_GENRES,
-		NSFW_GENRE_NAMES,
 		POPULAR_CACHE_KEY,
 		POPULAR_CACHE_TTL_MS
 	} from '$lib/constants';
@@ -71,7 +70,6 @@
 	const filterType = $derived(getUrlParam(page.url, 'type', ''));
 	const filterGenre = $derived(getUrlParam(page.url, 'genre', ''));
 	const filterSort = $derived(getUrlParam(page.url, 'sort', query ? 'relevance' : 'popularity'));
-	const filterSfw = $derived(getUrlParam(page.url, 'sfw', 'true') === 'true');
 
 	const hasQuery = $derived(query.length >= MIN_QUERY_LEN);
 	const isLandingView = $derived(!query);
@@ -106,11 +104,10 @@
 		}
 	}
 
-	/** Local list entries that satisfy the active filters (type/genre/sfw). */
+	/** Local list entries that satisfy the active filters (type/genre). */
 	function localEntryPassesFilters(e: (typeof userListStore.allEntries)[number]): boolean {
 		if (filterType && e.mediaType.toLowerCase() !== filterType.toLowerCase()) return false;
 		if (filterGenre && !e.genres.some((g) => String(g.id) === filterGenre)) return false;
-		if (filterSfw && e.genres.some((g) => NSFW_GENRE_NAMES.includes(g.name))) return false;
 		return true;
 	}
 
@@ -125,9 +122,8 @@
 		if (!hasQuery) {
 			// Landing view: cover what MAL ranking can't express server-side (ONA + genre).
 			const genreName = GENRES.find((g) => g.id === Number(filterGenre))?.name;
-			if (filterType === 'ona' || genreName || !filterSfw) {
+			if (filterType === 'ona' || genreName) {
 				online = online.filter((a) => {
-					if (filterSfw && NSFW_GENRE_NAMES.some((n) => a.genres.includes(n))) return false;
 					if (filterType === 'ona' && a.mediaType !== 'ona') return false;
 					if (genreName && !a.genres.includes(genreName)) return false;
 					return true;
@@ -189,7 +185,6 @@
 		const type = filterType;
 		const genre = filterGenre;
 		const sort = filterSort;
-		const sfw = filterSfw;
 
 		function commit(mapped: DisplayAnime[], next: boolean) {
 			results = append ? [...results, ...mapped] : mapped;
@@ -215,7 +210,7 @@
 			const mapped = res.value.data.map((item) => mapMalNodeToDisplay(item.node));
 
 			// Cache only the default landing payload for instant future visits.
-			if (p === 1 && !type && !genre && sfw && mapped.length > 0) {
+			if (p === 1 && !type && !genre && mapped.length > 0) {
 				setPopularCache(POPULAR_CACHE_KEY, mapped).catch(() => {});
 			}
 
@@ -230,7 +225,6 @@
 				genre: genre ? Number(genre) : undefined,
 				orderBy: sortMap.orderBy,
 				sortDir: sortMap.sortDir,
-				sfw,
 				offset: (p - 1) * PAGE_SIZE,
 				limit: PAGE_SIZE
 			});
@@ -244,7 +238,6 @@
 					res = await malSearchAnime(keyword, {
 						type: type || undefined,
 						genre: genre ? Number(genre) : undefined,
-						sfw,
 						offset: (p - 1) * PAGE_SIZE,
 						limit: PAGE_SIZE
 					});
@@ -302,11 +295,11 @@
 	}
 
 	function isDefaultLanding(): boolean {
-		return !query.trim() && !filterType && !filterGenre && filterSfw;
+		return !query.trim() && !filterType && !filterGenre;
 	}
 
 	$effect(() => {
-		const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}&d=${dubStore.dubMode}&sfw=${filterSfw}`;
+		const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}&d=${dubStore.dubMode}`;
 		if (params !== prevSearchParams) {
 			prevSearchParams = params;
 			runSearch();
@@ -342,8 +335,7 @@
 				{ key: 'q', value: '' },
 				{ key: 'type', value: '' },
 				{ key: 'genre', value: '' },
-				{ key: 'sort', value: '' },
-				{ key: 'sfw', value: 'true' }
+				{ key: 'sort', value: '' }
 			]),
 			{ keepFocus: true, noScroll: true }
 		);
@@ -456,28 +448,6 @@
 				</button>
 			{/each}
 		</div>
-
-		<span class="h-5 w-px bg-white/10" aria-hidden="true"></span>
-
-		<!-- Safe Search toggle -->
-		<label
-			for="browse-sfw"
-			class="flex shrink-0 cursor-pointer select-none items-center gap-2 rounded-full border px-3 py-1.5 transition-colors {filterSfw
-				? 'border-primary/50 bg-primary/15'
-				: 'border-white/5 bg-white/5'}"
-		>
-			<input
-				id="browse-sfw"
-				type="checkbox"
-				checked={filterSfw}
-				onchange={(e) => setFilter('sfw', String((e.target as HTMLInputElement).checked))}
-				class="sr-only peer"
-			/>
-			<div
-				class="relative h-4 w-7 rounded-full bg-white/10 transition-colors peer-checked:bg-primary/40 after:absolute after:left-[2px] after:top-[2px] after:h-3 after:w-3 after:rounded-full after:bg-text-secondary after:transition-all peer-checked:after:translate-x-3 peer-checked:after:bg-primary"
-			></div>
-			<span class="text-xs font-medium {filterSfw ? 'text-primary' : 'text-text-muted'}">SFW</span>
-		</label>
 	</div>
 
 	<!-- Results -->

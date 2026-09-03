@@ -306,7 +306,7 @@ export async function searchAnime(
 		minScore?: number;
 		orderBy?: string;
 		sortDir?: string;
-		sfw?: boolean;
+		nsfw?: boolean;
 		offset?: number;
 		limit?: number;
 	}
@@ -322,7 +322,7 @@ export async function searchAnime(
 		min_score: options?.minScore,
 		order_by: options?.orderBy,
 		sort: options?.sortDir,
-		sfw: options?.sfw ? 'true' : undefined
+		nsfw: options?.nsfw ?? true
 	});
 
 	const url = `${MAL_API_BASE}/anime?${params}`;
@@ -339,6 +339,7 @@ export async function getSeasonal(
 		filter?: string;
 		offset?: number;
 		limit?: number;
+		nsfw?: boolean;
 	}
 ): Promise<Result<MalAnimeSearchResponse>> {
 	const params = buildSearchParams({
@@ -346,7 +347,8 @@ export async function getSeasonal(
 		limit: options?.limit ?? 100,
 		sort: options?.sort,
 		filter: options?.filter,
-		offset: options?.offset
+		offset: options?.offset,
+		nsfw: options?.nsfw ?? true
 	});
 
 	const url = `${MAL_API_BASE}/anime/season/${year}/${season}?${params}`;
@@ -360,13 +362,15 @@ export async function getRanking(
 	options?: {
 		offset?: number;
 		limit?: number;
+		nsfw?: boolean;
 	}
 ): Promise<Result<MalAnimeSearchResponse>> {
 	const params = buildSearchParams({
 		ranking_type: rankingType,
 		fields: SEARCH_FIELDS,
 		limit: options?.limit ?? 25,
-		offset: options?.offset
+		offset: options?.offset,
+		nsfw: options?.nsfw ?? true
 	});
 
 	const url = `${MAL_API_BASE}/anime/ranking?${params}`;

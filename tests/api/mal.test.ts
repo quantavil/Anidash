@@ -1,5 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { mapBaseAnimeNode, mapListEntryToRecord, mapDetailToRecord } from '$lib/api/mal';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import {
+	mapBaseAnimeNode,
+	mapListEntryToRecord,
+	mapDetailToRecord,
+	searchAnime,
+	getSeasonal,
+	getRanking
+} from '$lib/api/mal';
 import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from '$lib/api/schemas/mal.schema';
 
 describe('MAL API Mappers', () => {
@@ -212,3 +219,52 @@ describe('MAL API Mappers', () => {
 		});
 	});
 });
+
+describe('MAL API NSFW Defaults', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('includes nsfw=true by default in searchAnime', async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: async () => ({ data: [] })
+		} as unknown as Response);
+		vi.stubGlobal('fetch', fetchMock);
+
+		await searchAnime('naruto');
+		expect(fetchMock).toHaveBeenCalled();
+		const requestedUrl = fetchMock.mock.calls[0][0] as string;
+		expect(requestedUrl).toContain('nsfw=true');
+	});
+
+	it('includes nsfw=true by default in getSeasonal', async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: async () => ({ data: [] })
+		} as unknown as Response);
+		vi.stubGlobal('fetch', fetchMock);
+
+		await getSeasonal(2024, 'fall');
+		expect(fetchMock).toHaveBeenCalled();
+		const requestedUrl = fetchMock.mock.calls[0][0] as string;
+		expect(requestedUrl).toContain('nsfw=true');
+	});
+
+	it('includes nsfw=true by default in getRanking', async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: async () => ({ data: [] })
+		} as unknown as Response);
+		vi.stubGlobal('fetch', fetchMock);
+
+		await getRanking('bypopularity');
+		expect(fetchMock).toHaveBeenCalled();
+		const requestedUrl = fetchMock.mock.calls[0][0] as string;
+		expect(requestedUrl).toContain('nsfw=true');
+	});
+});
+

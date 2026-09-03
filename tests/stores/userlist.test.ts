@@ -60,6 +60,24 @@ describe('userlist.svelte.ts state', () => {
 		expect(userListStore.getEntry(3)?.numWatchedEpisodes).toBe(1);
 	});
 
+	it('should not increment episodes beyond total episodes when total is known', async () => {
+		await userListStore.addToList(30, 'watching', 'Test 30', 'Test 30', null);
+		const entry = userListStore.getEntry(30);
+		if (entry) entry.numEpisodes = 12;
+
+		userListStore.setEpisodeCount(30, 12);
+		expect(userListStore.getEntry(30)?.numWatchedEpisodes).toBe(12);
+
+		userListStore.incrementEpisode(30);
+		expect(userListStore.getEntry(30)?.numWatchedEpisodes).toBe(12);
+
+		userListStore.setEpisodeCount(30, 999);
+		expect(userListStore.getEntry(30)?.numWatchedEpisodes).toBe(12);
+
+		userListStore.setEpisodeCount(30, -5);
+		expect(userListStore.getEntry(30)?.numWatchedEpisodes).toBe(0);
+	});
+
 	it('should queue failed deletions to the sync queue', async () => {
 		// Mock deletion failure
 		vi.mocked(deleteAnimeStatus).mockResolvedValueOnce({

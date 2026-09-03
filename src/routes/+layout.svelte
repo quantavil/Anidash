@@ -22,7 +22,7 @@
 
 	let initialized = $state(false);
 
-	let dataLoaded = false;
+	let dataLoaded = $state(false);
 
 	$effect(() => {
 		if (authStore.isAuthenticated && !dataLoaded) {

@@ -11,7 +11,7 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 - **Cache**: `anilist:fetch:{malId}` 7d TTL via `purgeStaleAnilistCache()`; `browse:popular:v1` + `seasonal:YYYY:season` are single-key SWR (24h), not GC'd by the AniList purger. Do not broaden prefix.
 - **Trailer**: YouTube embed only if `site==='youtube'` + `id` passes `^[a-zA-Z0-9_-]{11}$` (trim + regex) → `safeTrailerId`. Prevents `?autoplay` injection.
 - **Synopsis**: Render MAL `anime.synopsis` as plain `{}`. AniList `description` (HTML) is never `{@html}`'d — no DOMPurify needed.
-- **Tab default**: `TabBar` + `+page.svelte` default `all` (empty URL param = `all` via `getUrlParam` `??` + `setUrlParam` delete). Never `watching`.
+- **Tab default**: `TabBar` + `+page.svelte` default `watching` (empty URL param = `watching` via `getUrlParam` `??` + `setUrlParam` delete).
 - **Query correctness**: AniList `MediaTag` has `isAdult` not `isGeneral`. Never query `isGeneral` (400). Tags query is `tags{name rank isAdult}`.
 
 ## File Map

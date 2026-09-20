@@ -210,17 +210,17 @@
 		</button>
 	</div>
 {:else if anime}
-	<div class="mx-auto max-w-5xl px-4 py-6">
+	<div class="mx-auto max-w-5xl px-4 py-6 overflow-x-hidden">
 		<!-- ─── Header ─── -->
 		<div class="flex flex-col gap-6 sm:flex-row">
 			<!-- Cover -->
 			<div
-				class="shrink-0 w-full sm:w-[200px] relative rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5"
+				class="shrink-0 w-full sm:w-[200px] relative rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5 max-h-[320px] sm:max-h-none"
 			>
 				<ImageWithFallback
 					src={anime.mainPicture?.large ?? anime.mainPicture?.medium}
 					alt={anime.title}
-					class="w-full sm:w-[200px] h-full"
+					class="w-full sm:w-[200px] h-full object-cover"
 				/>
 				{#if listEntry}
 					<ProgressLine watched={listEntry.numWatchedEpisodes} total={listEntry.numEpisodes} />
@@ -250,7 +250,7 @@
 
 				<!-- Quick stats row -->
 				<div
-					class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary max-w-full [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+					class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
 				>
 					{#if anime.mean}
 						<div
@@ -301,12 +301,12 @@
 
 				<!-- Studios & Broadcast row -->
 				<div
-					class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted max-w-full [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+					class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
 				>
 					{#if anime.studios.length > 0}
-						<div class="flex items-center gap-1 shrink-0">
-							<Users size={12} />
-							{anime.studios.map((s) => s.name).join(', ')}
+						<div class="flex items-center gap-1 min-w-0">
+							<Users size={12} class="shrink-0" />
+							<span class="truncate">{anime.studios.map((s) => s.name).join(', ')}</span>
 						</div>
 					{/if}
 					{#if anime.broadcast?.day_of_the_week}
@@ -482,23 +482,23 @@
 					</div>
 				{/if}
 				{#if anilistEnriched.nextAiring}
-					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 flex items-center gap-3">
-						<span class="text-xs font-bold uppercase tracking-wider text-text-muted">Next Episode</span>
-						<span class="text-sm text-text-primary">EP {anilistEnriched.nextAiring.episode}</span>
-						<span class="text-xs text-text-muted">
-							{new Date(anilistEnriched.nextAiring.airingAt * 1000).toLocaleString()}
-							{#if anilistEnriched.nextAiring.timeUntilAiring}
-								· {Math.floor(anilistEnriched.nextAiring.timeUntilAiring / 3600)}h left
-							{/if}
-						</span>
-					</div>
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+					<span class="text-xs font-bold uppercase tracking-wider text-text-muted shrink-0">Next Episode</span>
+					<span class="text-sm text-text-primary shrink-0">EP {anilistEnriched.nextAiring.episode}</span>
+					<span class="text-xs text-text-muted min-w-0 break-words">
+						{new Date(anilistEnriched.nextAiring.airingAt * 1000).toLocaleString()}
+						{#if anilistEnriched.nextAiring.timeUntilAiring}
+							· {Math.floor(anilistEnriched.nextAiring.timeUntilAiring / 3600)}h left
+						{/if}
+					</span>
+				</div>
 				{/if}
 				{#if anilistEnriched.tagsRanked.length > 0}
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
 						<h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">Tags</h3>
 						<div class="flex flex-wrap gap-1.5">
 							{#each anilistEnriched.tagsRanked.slice(0, 20) as t (t.name)}
-								<span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-text-secondary">{t.name} <span class="text-text-muted">{t.rank}%</span></span>
+								<span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-text-secondary max-w-full break-all">{t.name} <span class="text-text-muted">{t.rank}%</span></span>
 							{/each}
 						</div>
 					</div>
@@ -733,12 +733,12 @@
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Reviews</h3>
 					<div class="grid gap-3 md:grid-cols-2">
 						{#each anilistEnriched.reviews.slice(0, 4) as r (r.summary)}
-							<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
-								<div class="flex items-center justify-between">
-									<p class="truncate text-xs font-semibold text-text-primary">{r.summary ?? 'Review'}</p>
-									{#if r.rating}<span class="text-xs font-bold text-warning">★ {r.rating}</span>{/if}
+							<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 min-w-0 overflow-hidden">
+								<div class="flex items-center justify-between gap-2 min-w-0">
+									<p class="truncate text-xs font-semibold text-text-primary min-w-0">{r.summary ?? 'Review'}</p>
+									{#if r.rating}<span class="text-xs font-bold text-warning shrink-0">★ {r.rating}</span>{/if}
 								</div>
-								{#if r.body}<p class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary">{r.body.slice(0, 280)}</p>{/if}
+								{#if r.body}<p class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary break-words">{r.body.slice(0, 280)}</p>{/if}
 								{#if r.user}<p class="mt-2 text-[10px] text-text-muted">— {r.user}</p>{/if}
 							</div>
 						{/each}

@@ -72,8 +72,8 @@
 
 <div class="flex flex-col gap-2 w-full">
 	<!-- Label, Score, and Clear Button in one row -->
-	<div class="flex items-center justify-between w-full">
-		<div class="flex items-center gap-2">
+	<div class="flex flex-wrap items-center justify-between gap-1 w-full">
+		<div class="flex items-center gap-2 min-w-0 flex-wrap">
 			<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
 				Your Rating
 			</span>

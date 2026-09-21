@@ -2,7 +2,7 @@
 
 ![AniDash Preview](static/screenshots/preview.png)
 
-AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**. Current release: **0.1.1**.
+AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**. Current release: **0.1.2**.
 
 ## ✨ Features
 
@@ -62,6 +62,8 @@ MAL_CLIENT_SECRET=your_mal_client_secret
 
 ### 3. Running Locally
 
+Use Node.js 24.15.0 (declared in `.node-version`) or another version allowed by `package.json`.
+
 ```sh
 npm install
 npm run dev
@@ -87,6 +89,7 @@ AniDash is optimized for Cloudflare Pages.
    - **Framework preset**: `SvelteKit`
    - **Build command**: `npm run build`
    - **Build output directory**: `.svelte-kit/cloudflare`
+   - **Node.js version**: Cloudflare reads `24.15.0` from `.node-version`
 3. **Environment Variables**:
    In the Cloudflare Dashboard, go to **Settings > Variables and Secrets** and add:
 

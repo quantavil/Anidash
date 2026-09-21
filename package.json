@@ -1,9 +1,12 @@
 {
 	"name": "anidash",
 	"private": true,
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"license": "GPL-3.0-or-later",
 	"type": "module",
+	"engines": {
+		"node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

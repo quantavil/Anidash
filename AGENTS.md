@@ -1,4 +1,4 @@
-# AGENTS.md — AniDash 0.1.1 Engineering Contract
+# AGENTS.md — AniDash 0.1.2 Engineering Contract
 
 ## Stack
 
@@ -43,7 +43,7 @@ Commit style: `type(scope): subject` (e.g. `fix(anilist): reject invalid trailer
 
 ## Dependency Policy
 
-Use the newest versions supported by the active SvelteKit toolchain. Keep TypeScript on 6.x until `@sveltejs/kit`, `svelte-check`, and `typescript-eslint` all declare TypeScript 7 support; do not add a second compiler alias.
+Use the newest versions supported by the active SvelteKit toolchain. Cloudflare Pages must use the Node version pinned in `.node-version`; keep `package.json#engines.node` aligned with it and all direct dependency engine floors. Keep TypeScript on 6.x until `@sveltejs/kit`, `svelte-check`, and `typescript-eslint` all declare TypeScript 7 support; do not add a second compiler alias.
 
 ## Context7
 

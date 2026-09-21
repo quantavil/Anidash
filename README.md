@@ -2,7 +2,7 @@
 
 ![AniDash Preview](static/screenshots/preview.png)
 
-AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**.
+AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**. Current release: **0.1.1**.
 
 ## ✨ Features
 
@@ -18,7 +18,7 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 - **Smart Data Insights**: Community rating and member statistics (e.g., "8.3 | 250K") displayed on poster overlays using short-scale formatting (K/M) for maximum density.
 - **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
 - **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
-- **Enhanced Detail Gallery**: Lazily-loaded AniList enrichment — characters (with favourites & VA), curated recommendations, reviews, ranked tags, YouTube trailer (validated), and next-airing countdown — plus a "Quick Stats" row with precise scoring user counts. Trailer IDs validated via `^[a-zA-Z0-9_-]{11}$`.
+- **Enhanced Detail Gallery**: Lazily-loaded AniList enrichment — characters (with favourites & VA), curated recommendations, safe plain-text review excerpts, ranked tags, YouTube trailer, and next-airing countdown — plus a "Quick Stats" row with precise scoring user counts. Trailer IDs are trimmed and validated with `^[a-zA-Z0-9_-]{11}$`; CSP restricts embedded frames to YouTube.
 - **Integrated Airing Schedules**: Native MAL broadcast + AniList `nextAiringEpisode{episode airingAt timeUntilAiring}` countdown displayed on detail pages.
 - **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
 - **Detailed Search Context**: Search and browse results now explicitly show your list status (Watching, Completed, etc.) and real-time watch progress (e.g. 12/24) directly on the posters.
@@ -32,7 +32,7 @@ AniDash is a unified SvelteKit application optimized for **Cloudflare Pages**.
 1. **Frontend**: SvelteKit SPA using Svelte 5's fine-grained reactivity (Runes).
 2. **Backend**: Serverless Edge Functions (`src/routes/api/[...path]/+server.ts`) that handle secure MAL token exchange and CORS proxying for `https://api.myanimelist.net`. AniList enrichment bypasses the proxy and hits `https://graphql.anilist.co` directly from the browser (no auth, Zod-validated, `anilistLimiter` 700ms / 90→30 req/min).
 3. **Database**: Client-side IndexedDB (meta: `anilist:fetch:` 7d TTL + `browse:popular:v1` 24h SWR, `seasonal:YYYY:season`; anime details stale-while-revalidate).
-4. **Enrichment**: AniList GraphQL is the **only** detail enrichment source. `Media(idMal type:ANIME)` direct lookup — if `null`, show empty (no `Page{media(search)}` fallback, no Jikan). Query: `tags{name rank isAdult}` (no `isGeneral`), `characters(voiceActors:JAPANESE)`, `recommendations`, `reviews`, `trailer`, `nextAiringEpisode`. CSP `connect-src` + `preconnect` for `graphql.anilist.co` in `svelte.config.js` / `app.html`.
+4. **Enrichment**: AniList GraphQL is the **only** detail enrichment source. `Media(idMal type:ANIME)` direct lookup — if `null`, show empty (no `Page{media(search)}` fallback, no Jikan). Query: `tags{name rank isAdult}` (no `isGeneral`), `characters(voiceActors:JAPANESE)`, `recommendations`, `reviews`, `trailer`, `nextAiringEpisode`. CSP `connect-src` + `preconnect` allow `graphql.anilist.co`; `frame-src` allows only `www.youtube.com` for validated trailers. AniList review markup is normalized into plain text and never rendered with `{@html}`.
 
 ---
 

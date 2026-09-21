@@ -18,6 +18,7 @@
 		formatNumberShort,
 		formatCharacterName
 	} from '$lib/utils/format';
+	import { formatReviewExcerpt } from '$lib/utils/review-text';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
@@ -475,30 +476,41 @@
 								src="https://www.youtube.com/embed/{safeTrailerId}"
 								title="Trailer"
 								class="h-full w-full"
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 								allowfullscreen
 								loading="lazy"
+								referrerpolicy="strict-origin-when-cross-origin"
 							></iframe>
 						</div>
 					</div>
 				{/if}
 				{#if anilistEnriched.nextAiring}
-					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-					<span class="text-xs font-bold uppercase tracking-wider text-text-muted shrink-0">Next Episode</span>
-					<span class="text-sm text-text-primary shrink-0">EP {anilistEnriched.nextAiring.episode}</span>
-					<span class="text-xs text-text-muted min-w-0 break-words">
-						{new Date(anilistEnriched.nextAiring.airingAt * 1000).toLocaleString()}
-						{#if anilistEnriched.nextAiring.timeUntilAiring}
-							· {Math.floor(anilistEnriched.nextAiring.timeUntilAiring / 3600)}h left
-						{/if}
-					</span>
-				</div>
+					<div
+						class="rounded-xl border border-white/5 bg-surface-1/40 p-4 flex flex-wrap items-center gap-x-3 gap-y-1"
+					>
+						<span class="text-xs font-bold uppercase tracking-wider text-text-muted shrink-0"
+							>Next Episode</span
+						>
+						<span class="text-sm text-text-primary shrink-0"
+							>EP {anilistEnriched.nextAiring.episode}</span
+						>
+						<span class="text-xs text-text-muted min-w-0 break-words">
+							{new Date(anilistEnriched.nextAiring.airingAt * 1000).toLocaleString()}
+							{#if anilistEnriched.nextAiring.timeUntilAiring}
+								· {Math.floor(anilistEnriched.nextAiring.timeUntilAiring / 3600)}h left
+							{/if}
+						</span>
+					</div>
 				{/if}
 				{#if anilistEnriched.tagsRanked.length > 0}
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
 						<h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">Tags</h3>
 						<div class="flex flex-wrap gap-1.5">
 							{#each anilistEnriched.tagsRanked.slice(0, 20) as t (t.name)}
-								<span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-text-secondary max-w-full break-all">{t.name} <span class="text-text-muted">{t.rank}%</span></span>
+								<span
+									class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-text-secondary max-w-full break-all"
+									>{t.name} <span class="text-text-muted">{t.rank}%</span></span
+								>
 							{/each}
 						</div>
 					</div>
@@ -616,17 +628,25 @@
 						</div>
 					{:else if recommendations.length > 0}
 						<div class="space-y-3">
-							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">AniList Recommendations</h4>
+							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">
+								AniList Recommendations
+							</h4>
 							<div class="grid gap-3 md:grid-cols-2">
 								{#each recommendations.slice(0, 4) as rec (rec.id)}
-									<div class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0">
+									<div
+										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
+									>
 										<a
 											href="https://anilist.co/anime/{rec.id}"
 											target="_blank"
 											rel="noopener noreferrer"
 											class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity"
 										>
-											<ImageWithFallback src={rec.cover} alt={rec.title} class="h-full w-full object-cover" />
+											<ImageWithFallback
+												src={rec.cover}
+												alt={rec.title}
+												class="h-full w-full object-cover"
+											/>
 										</a>
 										<div class="min-w-0 flex-1 flex flex-col justify-between">
 											<div>
@@ -640,11 +660,16 @@
 														{rec.title}
 													</a>
 													{#if rec.rating}
-														<span class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted">★ {rec.rating}</span>
+														<span
+															class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted"
+															>★ {rec.rating}</span
+														>
 													{/if}
 												</div>
 											</div>
-											<p class="text-[9px] text-text-muted mt-1">AniList • {rec.idMal ? `MAL ${rec.idMal}` : `AniList ${rec.id}`}</p>
+											<p class="text-[9px] text-text-muted mt-1">
+												AniList • {rec.idMal ? `MAL ${rec.idMal}` : `AniList ${rec.id}`}
+											</p>
 										</div>
 									</div>
 								{/each}
@@ -698,14 +723,25 @@
 								onclick={() => handleCharacterClick(entry)}
 								class="w-full flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus:bg-white/10"
 							>
-								<ImageWithFallback src={entry.image} alt={entry.name} aspectRatio="1/1" fallbackIcon="user" class="h-10 w-10 shrink-0 rounded-full" />
+								<ImageWithFallback
+									src={entry.image}
+									alt={entry.name}
+									aspectRatio="1/1"
+									fallbackIcon="user"
+									class="h-10 w-10 shrink-0 rounded-full"
+								/>
 								<div class="min-w-0 flex-1">
-									<p class="truncate text-xs font-semibold text-text-primary" title={formatCharacterName(entry.name)}>
+									<p
+										class="truncate text-xs font-semibold text-text-primary"
+										title={formatCharacterName(entry.name)}
+									>
 										{formatCharacterName(entry.name)}
 									</p>
 									<p class="text-[10px] capitalize text-text-muted truncate">{entry.role}</p>
 									{#if entry.favourites}
-										<p class="mt-0.5 text-[9px] text-text-muted">♥ {entry.favourites.toLocaleString()}</p>
+										<p class="mt-0.5 text-[9px] text-text-muted">
+											♥ {entry.favourites.toLocaleString()}
+										</p>
 									{/if}
 									{#if entry.voiceActor}
 										<p class="text-[9px] text-text-muted truncate">VA: {entry.voiceActor}</p>
@@ -733,12 +769,22 @@
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Reviews</h3>
 					<div class="grid gap-3 md:grid-cols-2">
 						{#each anilistEnriched.reviews.slice(0, 4) as r (r.summary)}
-							<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 min-w-0 overflow-hidden">
+							<div
+								class="rounded-xl border border-white/5 bg-surface-1/40 p-4 min-w-0 overflow-hidden"
+							>
 								<div class="flex items-center justify-between gap-2 min-w-0">
-									<p class="truncate text-xs font-semibold text-text-primary min-w-0">{r.summary ?? 'Review'}</p>
-									{#if r.rating}<span class="text-xs font-bold text-warning shrink-0">★ {r.rating}</span>{/if}
+									<p class="truncate text-xs font-semibold text-text-primary min-w-0">
+										{r.summary ?? 'Review'}
+									</p>
+									{#if r.rating}<span class="text-xs font-bold text-warning shrink-0"
+											>★ {r.rating}</span
+										>{/if}
 								</div>
-								{#if r.body}<p class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary break-words">{r.body.slice(0, 280)}</p>{/if}
+								{#if r.body}<p
+										class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary break-words [overflow-wrap:anywhere]"
+									>
+										{formatReviewExcerpt(r.body)}
+									</p>{/if}
 								{#if r.user}<p class="mt-2 text-[10px] text-text-muted">— {r.user}</p>{/if}
 							</div>
 						{/each}

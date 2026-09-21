@@ -17,6 +17,7 @@ const config = {
 					'https://raw.githubusercontent.com'
 				],
 				'img-src': ['self', 'data:', 'https:'],
+				'frame-src': ['https://www.youtube.com'],
 				'object-src': ['none'],
 				'base-uri': ['none']
 			}

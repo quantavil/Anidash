@@ -1,6 +1,10 @@
 @import '@fontsource-variable/outfit';
 @import 'tailwindcss';
 
+:root {
+	--mobile-header-height: 3.25rem;
+}
+
 /* ── AniDash High-End Theme ── */
 @theme {
 	/* Brand accents */
@@ -37,8 +41,6 @@ body {
 	color: var(--color-text-primary);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	/* Safe area for bottom nav on iOS */
-	padding-bottom: env(safe-area-inset-bottom);
 }
 
 .pb-safe {
@@ -78,6 +80,7 @@ body {
 	margin: auto;
 	width: min(calc(100vw - 2rem), var(--dialog-max-w, 28rem));
 	max-height: min(86vh, 44rem);
+	max-height: min(86dvh, 44rem);
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: 1rem;
 	padding: 1.5rem;
@@ -115,7 +118,7 @@ body {
 
 /* Keep toasters clear of the floating pill nav / mobile header */
 [data-sonner-toaster] {
-	top: 68px !important;
+	top: calc(var(--mobile-header-height) + env(safe-area-inset-top) + 1rem) !important;
 }
 @media (min-width: 768px) {
 	[data-sonner-toaster] {
@@ -139,7 +142,18 @@ a,
 /* ── Performance Containment for Feed & Cards ── */
 .feed-card-contain {
 	content-visibility: auto;
-	contain-intrinsic-size: 200px 300px;
+	contain-intrinsic-size: auto 200px auto 300px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }
 
 /* ── UI Components (DRY) ── */

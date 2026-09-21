@@ -2,3 +2,7 @@ name = "anidash"
 pages_build_output_dir = ".svelte-kit/cloudflare"
 compatibility_flags = ["nodejs_compat"]
 compatibility_date = "2024-04-01"
+
+[vars]
+VITE_MAL_CLIENT_ID = "f50c5eeee52c54cec1456caef5cc164b"
+MAL_CLIENT_ID = "f50c5eeee52c54cec1456caef5cc164b"

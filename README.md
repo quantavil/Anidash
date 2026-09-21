@@ -2,7 +2,7 @@
 
 ![AniDash Preview](static/screenshots/preview.png)
 
-AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**. Current release: **0.1.2**.
+AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**. Current release: **0.1.3**.
 
 ## ✨ Features
 
@@ -91,13 +91,11 @@ AniDash is optimized for Cloudflare Pages.
    - **Build output directory**: `.svelte-kit/cloudflare`
    - **Node.js version**: Cloudflare reads `24.15.0` from `.node-version`
 3. **Environment Variables**:
-   In the Cloudflare Dashboard, go to **Settings > Variables and Secrets** and add:
+   `wrangler.toml` provides the public MAL client ID to both the Vite build and the Pages runtime. In the Cloudflare Dashboard, go to **Settings > Variables and Secrets** and add only the secret:
 
-   | Variable             | Type                          | Description                                 |
-   | -------------------- | ----------------------------- | ------------------------------------------- |
-   | `VITE_MAL_CLIENT_ID` | Environment Variable          | Public Client ID for the frontend build.    |
-   | `MAL_CLIENT_ID`      | Environment Variable / Secret | Client ID for backend proxying.             |
-   | `MAL_CLIENT_SECRET`  | Secret                        | Your MAL Client Secret (Keep this private). |
+   | Variable            | Type   | Description                                 |
+   | ------------------- | ------ | ------------------------------------------- |
+   | `MAL_CLIENT_SECRET` | Secret | Your MAL Client Secret (Keep this private). |
 
 4. **Compatibility Date**:
    Ensure the compatibility date is set to at least `2024-04-01` in the dashboard or `wrangler.toml`.

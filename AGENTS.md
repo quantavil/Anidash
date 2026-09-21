@@ -1,4 +1,4 @@
-# AGENTS.md — AniDash 0.1.2 Engineering Contract
+# AGENTS.md — AniDash 0.1.3 Engineering Contract
 
 ## Stack
 
@@ -15,6 +15,7 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 - **Untrusted text**: Render MAL `anime.synopsis` as plain `{}`. AniList `description` (HTML) is never `{@html}`'d. AniList review bodies pass through `formatReviewExcerpt()` and remain plain text; do not add an HTML/DOMPurify rendering path.
 - **Tab default**: `TabBar` + `+page.svelte` default `watching` (empty URL param = `watching` via `getUrlParam` `??` + `setUrlParam` delete).
 - **Query correctness**: AniList `MediaTag` has `isAdult` not `isGeneral`. Never query `isGeneral` (400). Tags query is `tags{name rank isAdult}`.
+- **Cloudflare variables**: `wrangler.toml [vars]` supplies the public `VITE_MAL_CLIENT_ID` and `MAL_CLIENT_ID`. `MAL_CLIENT_SECRET` must remain a Cloudflare secret and must never be committed.
 
 ## File Map
 

@@ -151,4 +151,45 @@ describe('userlist.svelte.ts state', () => {
 		expect(updateAnimeStatus).toHaveBeenCalledWith(11, { status: 'watching' });
 		expect(deleteSyncQueue).toHaveBeenCalledWith(11);
 	});
+
+	it('should move plan_to_watch to watching on increment with a combined payload', async () => {
+		await userListStore.addToList(20, 'plan_to_watch', 'Test 20', 'Test 20', null);
+		userListStore.incrementEpisode(20);
+
+		expect(userListStore.getEntry(20)?.status).toBe('watching');
+		expect(userListStore.getEntry(20)?.numWatchedEpisodes).toBe(1);
+
+		userListStore.flushPendingSyncs();
+		await new Promise((r) => setTimeout(r, 0));
+
+		expect(updateAnimeStatus).toHaveBeenCalledWith(
+			20,
+			{ num_watched_episodes: 1, status: 'watching' }
+		);
+	});
+
+	it('should not bump updatedAt on optimistic edit', async () => {
+		await userListStore.addToList(21, 'watching', 'Test 21', 'Test 21', null);
+		const before = userListStore.getEntry(21)?.updatedAt;
+		userListStore.setEpisodeCount(21, 3);
+
+		expect(userListStore.getEntry(21)?.numWatchedEpisodes).toBe(3);
+		expect(userListStore.getEntry(21)?.updatedAt).toBe(before);
+	});
+
+	it('should bump updatedAt when the queued edit lands', async () => {
+		await userListStore.addToList(22, 'watching', 'Test 22', 'Test 22', null);
+		const rec = userListStore.getEntry(22);
+		if (rec) rec.updatedAt = '2020-01-01T00:00:00.000Z';
+
+		const { getSyncQueue } = await import('$lib/cache/userlist.cache');
+		vi.mocked(getSyncQueue).mockResolvedValueOnce([
+			{ malId: 22, payload: { num_watched_episodes: 2 }, timestamp: Date.now() }
+		]);
+
+		await userListStore.flushPersistentQueue();
+
+		expect(updateAnimeStatus).toHaveBeenCalledWith(22, { num_watched_episodes: 2 });
+		expect(userListStore.getEntry(22)?.updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
+	});
 });

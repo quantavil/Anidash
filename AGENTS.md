@@ -16,6 +16,9 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 - **Tab default**: `TabBar` + `+page.svelte` default `watching` (empty URL param = `watching` via `getUrlParam` `??` + `setUrlParam` delete).
 - **Query correctness**: AniList `MediaTag` has `isAdult` not `isGeneral`. Never query `isGeneral` (400). Tags query is `tags{name rank isAdult}`.
 - **Cloudflare variables**: `wrangler.toml [vars]` supplies the public `VITE_MAL_CLIENT_ID` and `MAL_CLIENT_ID`. `MAL_CLIENT_SECRET` must remain a Cloudflare secret and must never be committed.
+- **List ordering**: `updated` sort moves only on sync ack (`markSynced` in `userlist.svelte.ts`), never on optimistic edit. Other sorts reorder immediately.
+- **PTW auto-watch**: `incrementEpisode`/`setEpisodeCount` on `plan_to_watch` moves to `watching` with a combined `{status, num_watched_episodes}` payload.
+- **Browse search**: online search fires only at 3+ chars (`MIN_QUERY_LEN = 3` in `browse/+page.svelte`).
 
 ## File Map
 

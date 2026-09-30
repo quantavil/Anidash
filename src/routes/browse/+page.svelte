@@ -34,7 +34,7 @@
 	// ─── Constants ───
 
 	const PAGE_SIZE = 25;
-	const MIN_QUERY_LEN = 2; // MAL v2 rejects shorter queries
+	const MIN_QUERY_LEN = 3; // MAL v2 rejects shorter queries
 
 	/** Blank-query browsing maps the type filter onto MAL ranking types; ONA has no
 	    ranking type and is client-filtered instead. */

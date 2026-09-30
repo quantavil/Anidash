@@ -127,8 +127,7 @@ function createUserListStore() {
 		// 1. Apply locally with full re-assignment (Svelte 5 reactivity)
 		const updated = {
 			...entry,
-			...localChanges,
-			updatedAt: new Date().toISOString()
+			...localChanges
 		} as UserListRecord;
 		entries = {
 			...entries,
@@ -163,6 +162,16 @@ function createUserListStore() {
 		syncFn();
 	}
 
+	function markSynced(malId: number): void {
+		const entry = entries[malId];
+		if (!entry) return;
+		const updated = { ...entry, updatedAt: new Date().toISOString() } as UserListRecord;
+		entries = { ...entries, [malId]: updated };
+		putEntry($state.snapshot(updated)).catch((e) => {
+			logger.error('Failed to update IndexedDB:', e);
+		});
+	}
+
 	/** Flush the accumulated payload for an anime to the offline queue, then MAL. */
 	async function flushSync(malId: number): Promise<void> {
 		const payload = pendingPayloads.get(malId);
@@ -182,6 +191,7 @@ function createUserListStore() {
 
 		const result = await updateAnimeStatus(malId, payload);
 		if (result.ok) {
+			markSynced(malId);
 			const deleteRes = await deleteSyncQueue(malId);
 			if (!deleteRes.ok) {
 				logger.error('Failed to delete from sync queue after successful sync:', deleteRes.error);
@@ -243,13 +253,24 @@ function createUserListStore() {
 		}
 
 		const newCount = entry.numWatchedEpisodes + 1;
-		optimisticUpdate(
-			malId,
-			{
-				numWatchedEpisodes: newCount
-			},
-			{ num_watched_episodes: newCount }
-		);
+		if (entry.status === 'plan_to_watch') {
+			optimisticUpdate(
+				malId,
+				{
+					numWatchedEpisodes: newCount,
+					status: 'watching'
+				},
+				{ num_watched_episodes: newCount, status: 'watching' }
+			);
+		} else {
+			optimisticUpdate(
+				malId,
+				{
+					numWatchedEpisodes: newCount
+				},
+				{ num_watched_episodes: newCount }
+			);
+		}
 
 		return { watched: newCount, total: entry.numEpisodes };
 	}
@@ -265,10 +286,17 @@ function createUserListStore() {
 
 		optimisticUpdate(
 			malId,
-			{
-				numWatchedEpisodes: validCount
-			},
-			{ num_watched_episodes: validCount }
+			validCount > 0 && entry.status === 'plan_to_watch'
+				? {
+						numWatchedEpisodes: validCount,
+						status: 'watching'
+					}
+				: {
+						numWatchedEpisodes: validCount
+					},
+			validCount > 0 && entry.status === 'plan_to_watch'
+				? { num_watched_episodes: validCount, status: 'watching' }
+				: { num_watched_episodes: validCount }
 		);
 	}
 
@@ -495,6 +523,7 @@ function createUserListStore() {
 			}
 
 			if (result.ok) {
+				if (!payload._delete) markSynced(record.malId);
 				await deleteSyncQueue(record.malId);
 				retryDelay = 1000; // Reset backoff on success
 			} else {

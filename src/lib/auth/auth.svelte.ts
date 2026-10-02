@@ -249,6 +249,7 @@ function createAuthStore() {
 		tokens.clear();
 		if (browser) {
 			localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
+			sessionStorage.removeItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
 		}
 		user = null;
 		error = null;
@@ -256,6 +257,13 @@ function createAuthStore() {
 		try {
 			const { userListStore } = await import('$lib/stores/userlist.svelte');
 			userListStore.clear();
+		} catch {
+			/* ignore */
+		}
+
+		try {
+			const { syncStore } = await import('$lib/stores/sync.svelte');
+			syncStore.reset();
 		} catch {
 			/* ignore */
 		}

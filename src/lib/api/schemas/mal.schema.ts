@@ -38,14 +38,14 @@ export const MalUserSchema = z.object({
 	joined_at: z.string().nullable().optional(),
 	anime_statistics: z
 		.object({
-			num_items_watching: z.number().optional(),
-			num_items_completed: z.number().optional(),
-			num_items_on_hold: z.number().optional(),
-			num_items_dropped: z.number().optional(),
-			num_items_plan_to_watch: z.number().optional(),
-			num_items: z.number().optional(),
-			num_days_watched: z.number().optional(),
-			num_episodes: z.number().optional(),
+			num_items_watching: z.number().nullable().optional(),
+			num_items_completed: z.number().nullable().optional(),
+			num_items_on_hold: z.number().nullable().optional(),
+			num_items_dropped: z.number().nullable().optional(),
+			num_items_plan_to_watch: z.number().nullable().optional(),
+			num_items: z.number().nullable().optional(),
+			num_days_watched: z.number().nullable().optional(),
+			num_episodes: z.number().nullable().optional(),
 			mean_score: z.number().nullable().optional()
 		})
 		.nullable()
@@ -72,14 +72,14 @@ export const MalAnimeLeanSchema = z.object({
 	title: z.string(),
 	main_picture: PictureSchema.nullable().optional(),
 	mean: z.number().nullable().optional(),
-	num_episodes: z.number().optional(),
-	genres: z.array(GenreSchema).optional(),
-	studios: z.array(StudioSchema).optional(),
+	num_episodes: z.number().nullable().optional(),
+	genres: z.array(GenreSchema).nullable().optional(),
+	studios: z.array(StudioSchema).nullable().optional(),
 	start_season: StartSeasonSchema.nullable().optional(),
-	media_type: z.string().optional(),
-	status: z.string().optional(),
-	num_list_users: z.number().optional(),
-	num_scoring_users: z.number().optional(),
+	media_type: z.string().nullable().optional(),
+	status: z.string().nullable().optional(),
+	num_list_users: z.number().nullable().optional(),
+	num_scoring_users: z.number().nullable().optional(),
 	alternative_titles: z
 		.object({
 			en: z.string().nullable().optional()
@@ -117,8 +117,10 @@ export const MalUserListResponseSchema = z.object({
 	data: z.array(MalUserListEntrySchema),
 	paging: z
 		.object({
-			next: z.string().url().optional()
+			next: z.string().nullable().optional(),
+			previous: z.string().nullable().optional()
 		})
+		.nullable()
 		.optional()
 });
 
@@ -177,9 +179,10 @@ export const MalAnimeSearchResponseSchema = z.object({
 	),
 	paging: z
 		.object({
-			next: z.string().url().optional(),
-			previous: z.string().url().optional()
+			next: z.string().nullable().optional(),
+			previous: z.string().nullable().optional()
 		})
+		.nullable()
 		.optional()
 });
 

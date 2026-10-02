@@ -27,6 +27,9 @@ export async function bulkPut(entries: UserListRecord[]): Promise<Result<void>> 
 		const pendingDeletes = new Set(
 			queued.filter((q) => q.payload._delete === true).map((q) => q.malId)
 		);
+		const pendingEdits = new Map(
+			queued.filter((q) => !q.payload._delete).map((q) => [q.malId, q.payload])
+		);
 
 		const tx = db.transaction('userList', 'readwrite');
 
@@ -43,10 +46,22 @@ export async function bulkPut(entries: UserListRecord[]): Promise<Result<void>> 
 		}
 
 		// 2. Put/overwrite the fresh entries, skipping ones pending deletion.
+		// Preserve pending local edits from syncQueue so an in-flight optimistic update isn't reverted.
 		await Promise.all(
 			entries
 				.filter((entry) => !pendingDeletes.has(entry.malId))
-				.map((entry) => tx.store.put(entry))
+				.map((entry) => {
+					const pending = pendingEdits.get(entry.malId);
+					if (pending) {
+						if (pending.status) entry.status = pending.status as typeof entry.status;
+						if (pending.score !== undefined) entry.score = pending.score as number;
+						if (pending.num_watched_episodes !== undefined)
+							entry.numWatchedEpisodes = pending.num_watched_episodes as number;
+						if (pending.is_rewatching !== undefined)
+							entry.isRewatching = pending.is_rewatching as boolean;
+					}
+					return tx.store.put(entry);
+				})
 		);
 
 		await tx.done;

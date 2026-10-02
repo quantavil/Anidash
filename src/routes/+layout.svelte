@@ -30,19 +30,22 @@
 
 			Promise.all([userListStore.loadFromCache(), syncStore.init()])
 				.then(async () => {
+					// Do not attempt background network sync if offline (banner already informs user)
+					if (typeof navigator !== 'undefined' && !navigator.onLine) {
+						return;
+					}
+
 					// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
 					const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
 					const isStale =
 						!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
 
 					if (!hasSyncedThisSession || isStale) {
-						sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
-						// Flush offline queue BEFORE full sync to prevent overwriting local edits
-						await userListStore.flushPersistentQueue();
-						const result = await syncStore.fullSync();
-						if (result.success) {
-							userListStore.loadFromCache();
+						const result = await userListStore.syncFromRemote();
+						if (result.ok) {
+							sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
 						} else {
+							sessionStorage.removeItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
 							logger.error('Background sync failed:', syncStore.syncError);
 							toast.error('Sync failed — showing cached data', {
 								description: 'Your list may be out of date. It will retry next load.'
@@ -95,10 +98,27 @@
 		};
 		document.addEventListener('visibilitychange', visibilityHandler);
 
+		// ─── Auto-sync when reconnecting online if list is unsynced or stale ───
+		const onlineHandler = async () => {
+			if (authStore.isAuthenticated) {
+				const hasSynced = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
+				const isStale =
+					!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
+				if (!hasSynced || isStale) {
+					const res = await userListStore.syncFromRemote();
+					if (res.ok) {
+						sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
+					}
+				}
+			}
+		};
+		window.addEventListener('online', onlineHandler);
+
 		// ─── Cleanup ───
 		return () => {
 			clearInterval(refreshInterval);
 			document.removeEventListener('visibilitychange', visibilityHandler);
+			window.removeEventListener('online', onlineHandler);
 		};
 	});
 

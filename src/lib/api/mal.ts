@@ -10,6 +10,7 @@ import { buildSearchParams } from './params';
 import { MAL_API_BASE, MAL_MIN_INTERVAL_MS } from './config';
 import { ok, err, type Result, zodIssuesToSummaries, type Err } from './result';
 import type { AppError } from './result';
+import { logger } from '$lib/utils/logger';
 import {
 	MalUserListResponseSchema,
 	MalAnimeDetailSchema,
@@ -72,7 +73,7 @@ const BASE_FIELDS = [
 ];
 
 const LIST_FIELDS = [
-	'list_status{status,score,num_episodes_watched,updated_at}',
+	'list_status{status,score,num_episodes_watched,is_rewatching,updated_at,start_date,finish_date}',
 	...BASE_FIELDS
 ].join(',');
 
@@ -82,9 +83,12 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 	// Lycoris Recoil, Spy x Family S2 to disappear). nsfw=true includes all
 	// list entries regardless of MAL's internal nsfw flag.
 	let url: string | null = `${MAL_API_BASE}/users/@me/animelist?fields=${LIST_FIELDS}&limit=1000&nsfw=true`;
+	const seenUrls = new Set<string>();
 
 	while (url) {
 		const currentUrl = url;
+		seenUrls.add(currentUrl);
+
 		let fetchResult = await malLimiter.enqueue(() => authFetch(currentUrl));
 		if (!fetchResult.ok) {
 			const isTransient =
@@ -111,6 +115,7 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 
 		const parsed = MalUserListResponseSchema.safeParse(data);
 		if (!parsed.success) {
+			logger.warn('MAL user list validation failed:', parsed.error.issues);
 			return err({
 				type: 'validation',
 				message: 'Invalid user list response from MAL',
@@ -123,9 +128,13 @@ export async function getUserAnimeList(): Promise<Result<UserListRecord[]>> {
 			allEntries.push(mapListEntryToRecord(entry));
 		}
 
-		// Next page - Rewrite MAL url to use our worker proxy
-		const nextUrl = page.paging?.next;
-		url = nextUrl ? nextUrl.replace('https://api.myanimelist.net/v2', MAL_API_BASE) : null;
+		// Next page - Rewrite MAL url to use our worker proxy & prevent cycles
+		const rawNext = page.paging?.next?.trim();
+		if (rawNext && !seenUrls.has(rawNext)) {
+			url = rawNext.replace(/^https?:\/\/api\.myanimelist\.net\/v2/, MAL_API_BASE);
+		} else {
+			url = null;
+		}
 	}
 
 	return ok(allEntries);

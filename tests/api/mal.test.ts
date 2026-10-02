@@ -8,6 +8,12 @@ import {
 	getRanking
 } from '$lib/api/mal';
 import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from '$lib/api/schemas/mal.schema';
+import {
+	MalAnimeLeanSchema,
+	MalUserListResponseSchema,
+	MalAnimeSearchResponseSchema
+} from '$lib/api/schemas/mal.schema';
+import { getUserAnimeList } from '$lib/api/mal';
 
 describe('MAL API Mappers', () => {
 	it('should correctly map base anime node fields', () => {
@@ -265,6 +271,72 @@ describe('MAL API NSFW Defaults', () => {
 		expect(fetchMock).toHaveBeenCalled();
 		const requestedUrl = fetchMock.mock.calls[0][0] as string;
 		expect(requestedUrl).toContain('nsfw=true');
+	});
+});
+
+describe('MAL Schema Resilience for Real-World MAL Responses', () => {
+	it('should successfully parse MalAnimeLean with null values for optional fields', () => {
+		const rawNode = {
+			id: 777,
+			title: 'Null fields Anime',
+			main_picture: null,
+			alternative_titles: null,
+			mean: null,
+			num_episodes: null,
+			genres: null,
+			studios: null,
+			start_season: null,
+			media_type: null,
+			status: null,
+			num_list_users: null,
+			num_scoring_users: null
+		};
+
+		const parsed = MalAnimeLeanSchema.safeParse(rawNode);
+		expect(parsed.success).toBe(true);
+	});
+
+	it('should parse user list response with null or missing paging fields', () => {
+		const rawResponseWithNullPaging = {
+			data: [
+				{
+					node: {
+						id: 1,
+						title: 'Ongoing Anime',
+						num_episodes: null,
+						genres: null,
+						studios: null
+					},
+					list_status: {
+						status: 'watching',
+						score: 8,
+						num_episodes_watched: 4
+					}
+				}
+			],
+			paging: {
+				next: null
+			}
+		};
+
+		const parsed = MalUserListResponseSchema.safeParse(rawResponseWithNullPaging);
+		expect(parsed.success).toBe(true);
+	});
+
+	it('should request rewatching, start_date, and finish_date in getUserAnimeList', async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: async () => ({ data: [] })
+		} as unknown as Response);
+		vi.stubGlobal('fetch', fetchMock);
+
+		await getUserAnimeList();
+		expect(fetchMock).toHaveBeenCalled();
+		const requestedUrl = decodeURIComponent(fetchMock.mock.calls[0][0] as string);
+		expect(requestedUrl).toContain('is_rewatching');
+		expect(requestedUrl).toContain('start_date');
+		expect(requestedUrl).toContain('finish_date');
 	});
 });
 

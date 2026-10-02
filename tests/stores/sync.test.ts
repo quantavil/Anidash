@@ -76,7 +76,7 @@ describe('sync.svelte.ts', () => {
 		expect(setLastSync).not.toHaveBeenCalled();
 	});
 
-	it('should prevent concurrent sync operations', async () => {
+	it('should coalesce concurrent sync operations into a single execution', async () => {
 		// Mock a delayed response
 		vi.mocked(getUserAnimeList).mockImplementationOnce(
 			() => new Promise((resolve) => setTimeout(() => resolve({ ok: true, value: [] }), 50))
@@ -86,14 +86,25 @@ describe('sync.svelte.ts', () => {
 		const p1 = syncStore.fullSync();
 
 		// Immediately start second sync while first is running
-		const result2 = await syncStore.fullSync();
+		const p2 = syncStore.fullSync();
 
-		expect(result2).toEqual({ success: false, entryCount: 0 });
+		// Both should resolve successfully with the shared result
+		const [result1, result2] = await Promise.all([p1, p2]);
 
-		// Wait for first to finish
-		await p1;
+		expect(result1).toEqual({ success: true, entryCount: 0 });
+		expect(result2).toEqual({ success: true, entryCount: 0 });
 
 		// API should only have been called once
 		expect(getUserAnimeList).toHaveBeenCalledTimes(1);
+	});
+
+	it('should reset sync store state cleanly', () => {
+		syncStore.reportError({ type: 'network', message: 'Test error' });
+		expect(syncStore.syncError).not.toBeNull();
+
+		syncStore.reset();
+		expect(syncStore.syncError).toBeNull();
+		expect(syncStore.isSyncing).toBe(false);
+		expect(syncStore.lastSynced).toBeNull();
 	});
 });

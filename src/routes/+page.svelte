@@ -6,6 +6,7 @@
 	import { sortEntries, type SortKey } from '$lib/utils/sort';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { matchesFuzzy } from '$lib/utils/search';
+	import { formatListStatus } from '$lib/utils/format';
 
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
@@ -40,6 +41,34 @@
 		void dubStore.dubMode;
 
 		orderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
+	});
+
+	// Tell "nothing here yet" apart from "your filters hide everything", and point the
+	// former at something to do.
+	const emptyState = $derived.by(() => {
+		if (userListStore.totalCount === 0) {
+			return {
+				title: 'Your list is empty',
+				hint: 'Add anime from Browse, or sync if you expect to see your MyAnimeList entries.',
+				href: '/browse',
+				cta: 'Browse anime'
+			};
+		}
+		if (currentQuery || (dubStore.dubMode && dubStore.isReady)) {
+			return {
+				title: 'No matches',
+				hint: currentQuery
+					? `Nothing in this tab matches “${currentQuery}”.`
+					: 'Nothing in this tab has an English dub. Turn off Dub Mode to see everything.'
+			};
+		}
+		return {
+			title:
+				currentTab === 'all' ? 'Nothing here yet' : `Nothing in ${formatListStatus(currentTab)}`,
+			hint: 'Add anime from Browse, or change its status on the anime page.',
+			href: '/browse',
+			cta: 'Browse anime'
+		};
 	});
 
 	const filteredEntries = $derived(
@@ -106,6 +135,7 @@
 			entries={filteredEntries}
 			resetKey="{currentTab}-{currentSort}-{currentQuery}"
 			loading={false}
+			empty={emptyState}
 		/>
 
 		<!-- Stats footer -->

@@ -7,11 +7,14 @@
 	let {
 		entries = [],
 		loading = false,
-		resetKey
+		resetKey,
+		empty = { title: 'No anime found', hint: 'Try a different filter or add anime from Browse' }
 	}: {
 		entries: UserListRecord[];
 		loading?: boolean;
 		resetKey?: string;
+		/** Copy (and optional call-to-action) shown when there is nothing to list. */
+		empty?: { title: string; hint: string; href?: string; cta?: string };
 	} = $props();
 
 	// Infinite scrolling state
@@ -65,8 +68,16 @@
 		class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
 	>
 		<div class="mb-3 text-4xl">📺</div>
-		<p class="text-sm text-text-secondary">No anime found</p>
-		<p class="mt-1 text-xs text-text-muted">Try a different filter or add anime from Browse</p>
+		<p class="text-sm text-text-secondary">{empty.title}</p>
+		<p class="mt-1 text-xs text-text-muted">{empty.hint}</p>
+		{#if empty.href && empty.cta}
+			<a
+				href={empty.href}
+				class="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+			>
+				{empty.cta}
+			</a>
+		{/if}
 	</div>
 {:else}
 	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

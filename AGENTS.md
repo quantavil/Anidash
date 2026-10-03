@@ -19,6 +19,7 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 - **Token refresh**: only a definitive rejection of the refresh token (4xx except 408/429/`invalid_client`) clears tokens. Throttling, 5xx, or a misconfigured client must keep the session.
 - **Sync queue**: `flushSync` sends the _merged_ queued payload and acks with `deleteSyncQueue(malId, timestamp)` so a newer merged edit is never deleted unsent. `bulkPut` keeps a locally-present entry missing from MAL only while its edit is still queued.
 - **Seasonal**: fetch with `limit=500` (MAL's max); the default of 100 silently truncates a season (fall 2025 has 327 entries).
+- **Offline shell**: `src/service-worker.ts` precaches the build + static files and serves the cached `/` shell for failed navigations. It must never cache `/api/*`, `/auth/token`, `/auth/refresh`, or cross-origin requests (live MAL data / credentials / opaque image responses). Verify changes with a real browser: load once online, go offline, reload `/`, `/browse`, `/stats`.
 - **List ordering**: `updated` sort moves only on sync ack (`markSynced` in `userlist.svelte.ts`), never on optimistic edit. Other sorts reorder immediately.
 - **PTW auto-watch**: `incrementEpisode`/`setEpisodeCount` on `plan_to_watch` moves to `watching` with a combined `{status, num_watched_episodes}` payload.
 - **Browse search**: online search fires only at 3+ chars (`MIN_QUERY_LEN = 3` in `browse/+page.svelte`).
@@ -33,6 +34,7 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 - `src/lib/utils/review-text.ts` — safe plain-text normalization for AniList review markup.
 - `src/routes/anime/[id]/+page.svelte` — `loadAnime` (MAL) + `loadAnilistData` (single call, closure-guarded `if(id!==Number(page.params.id))return`), `safeTrailerId`, tags/trailer/airing/reviews sections.
 - `src/lib/cache/meta.cache.ts` — `getAnilistCache/setAnilistCache`, `purgeStaleAnilistCache` only `anilist:fetch:`.
+- `src/service-worker.ts` — offline app shell (see constraint above).
 - `svelte.config.js` / `src/app.html` — CSP + preconnect for AniList; YouTube-only `frame-src`.
 - `tests/api/anilist.test.ts` — regression: no `isGeneral`, direct `Media(idMal)` lookup, 429 mapping, 404+null, browser headers, tag schema.
 - `tests/server/oauth.test.ts`, `tests/auth/tokens.test.ts` — credential injection, missing-secret 500, refresh failure classification.

@@ -39,6 +39,27 @@
 		});
 	}
 
+	// WAI-ARIA tabs: one tab stop, arrows/Home/End move between tabs.
+	function handleKeydown(e: KeyboardEvent, index: number) {
+		const last = tabs.length - 1;
+		const next =
+			e.key === 'ArrowRight'
+				? (index + 1) % tabs.length
+				: e.key === 'ArrowLeft'
+					? (index - 1 + tabs.length) % tabs.length
+					: e.key === 'Home'
+						? 0
+						: e.key === 'End'
+							? last
+							: -1;
+		if (next === -1) return;
+		e.preventDefault();
+		selectTab(tabs[next].key);
+		(e.currentTarget as HTMLElement).parentElement
+			?.querySelectorAll<HTMLElement>('[role="tab"]')
+			[next]?.focus();
+	}
+
 	function getCount(key: TabKey): number {
 		if (key === 'all') return userListStore.totalCount;
 		return counts[key] ?? 0;
@@ -50,12 +71,14 @@
 	role="tablist"
 	aria-label="Anime list status tabs"
 >
-	{#each tabs as tab, _idx (_idx)}
+	{#each tabs as tab, idx (tab.key)}
 		{@const isActive = currentTab === tab.key}
 		<button
 			role="tab"
 			aria-selected={isActive}
+			tabindex={isActive ? 0 : -1}
 			onclick={() => selectTab(tab.key)}
+			onkeydown={(e) => handleKeydown(e, idx)}
 			class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
         {isActive
 				? (activeColors[tab.key] ?? activeColors.all)

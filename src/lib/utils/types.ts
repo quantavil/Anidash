@@ -86,45 +86,37 @@ export function mergeLocalWithOnline(local: DisplayAnime, online: DisplayAnime):
 	};
 }
 
-// ─── AniList mappers (no-auth, primary enrichment) ───
+// ─── AniList detail enrichment (view model for the anime detail page) ───
 
-export function mapAnilistNodeToDisplay(node: AnilistMedia): DisplayAnime {
-	// AniList is source, malId is idMal if present else Anilist id (for display only)
-	const malId = node.idMal ?? node.id;
-	return {
-		malId,
-		title: node.title.romaji ?? node.title.english ?? node.title.native ?? '',
-		titleEnglish: node.title.english ?? null,
-		mainPicture: node.coverImage?.extraLarge ?? node.coverImage?.large ?? node.coverImage?.medium ?? null,
-		mean: node.averageScore != null ? node.averageScore / 10 : (node.meanScore != null ? node.meanScore / 10 : null),
-		numEpisodes: node.episodes ?? 0,
-		genres: node.genres ?? [],
-		studios: node.studios?.edges.filter((e) => e.isMain).map((e) => e.node.name) ?? node.studios?.edges.map((e) => e.node.name) ?? [],
-		startSeason: node.season ? formatSeason(node.seasonYear ?? null, node.season) : null,
-		mediaType: (node.format ?? 'unknown').toLowerCase(),
-		animeStatus: (node.status ?? 'unknown').toLowerCase(),
-		numListUsers: node.popularity ?? 0,
-		synopsis: node.description ?? null
-	};
-}
-
-// For detail page enrichment - enriches existing Display shape plus extra fields
 export interface AnilistEnriched {
-	anilistId: number;
-	idMal: number | null;
 	tagsRanked: { name: string; rank: number | null }[];
-	characters: { id: number; name: string; image: string | null; role: string | null; voiceActor: string | null; favourites: number | null }[];
-	recommendations: { id: number; idMal: number | null; title: string; cover: string | null; rating: number | null }[];
-	reviews: { summary: string | null; rating: number | null; body: string | null; user: string | null }[];
-	nextAiring: { episode: number; airingAt: number; timeUntilAiring: number | null } | null;
+	characters: {
+		id: number;
+		name: string;
+		image: string | null;
+		role: string | null;
+		voiceActor: string | null;
+		favourites: number | null;
+	}[];
+	recommendations: {
+		id: number;
+		idMal: number | null;
+		title: string;
+		cover: string | null;
+		rating: number | null;
+	}[];
+	reviews: {
+		summary: string | null;
+		rating: number | null;
+		body: string | null;
+		user: string | null;
+	}[];
+	nextAiring: { episode: number; airingAt: number } | null;
 	trailer: { id: string; site: string } | null;
-	streamingEpisodes: { title: string | null; thumbnail: string | null }[];
 }
 
 export function mapAnilistToEnriched(media: AnilistMedia): AnilistEnriched {
 	return {
-		anilistId: media.id,
-		idMal: media.idMal ?? null,
 		tagsRanked: (media.tags ?? []).map((t) => ({ name: t.name, rank: t.rank ?? null })),
 		characters: (media.characters?.edges ?? []).map((e) => ({
 			id: e.node.id,
@@ -134,20 +126,31 @@ export function mapAnilistToEnriched(media: AnilistMedia): AnilistEnriched {
 			voiceActor: e.voiceActors?.[0]?.name?.full ?? null,
 			favourites: e.node.favourites ?? null
 		})),
-		recommendations: (media.recommendations?.nodes ?? [])
-			.map((n) => ({
-				id: n.mediaRecommendation?.id ?? 0,
-				idMal: (n.mediaRecommendation as unknown as { idMal?: number | null })?.idMal ?? null,
-				title: n.mediaRecommendation?.title?.romaji ?? n.mediaRecommendation?.title?.english ?? '',
-				cover: n.mediaRecommendation?.coverImage?.large ?? n.mediaRecommendation?.coverImage?.medium ?? null,
-				rating: n.rating ?? null
-			}))
-			.filter((r) => r.id !== 0),
-		reviews: (media.reviews?.nodes ?? []).map((r) => ({ summary: r.summary ?? null, rating: r.rating ?? null, body: r.body ?? null, user: r.user?.name ?? null })),
+		recommendations: (media.recommendations?.nodes ?? []).flatMap((n) => {
+			const rec = n.mediaRecommendation;
+			if (!rec) return [];
+			return [
+				{
+					id: rec.id,
+					idMal: rec.idMal ?? null,
+					title: rec.title.romaji ?? rec.title.english ?? '',
+					cover: rec.coverImage?.large ?? rec.coverImage?.medium ?? null,
+					rating: n.rating ?? null
+				}
+			];
+		}),
+		reviews: (media.reviews?.nodes ?? []).map((r) => ({
+			summary: r.summary ?? null,
+			rating: r.rating ?? null,
+			body: r.body ?? null,
+			user: r.user?.name ?? null
+		})),
 		nextAiring: media.nextAiringEpisode
-			? { episode: media.nextAiringEpisode.episode, airingAt: media.nextAiringEpisode.airingAt, timeUntilAiring: media.nextAiringEpisode.timeUntilAiring ?? null }
+			? { episode: media.nextAiringEpisode.episode, airingAt: media.nextAiringEpisode.airingAt }
 			: null,
-		trailer: media.trailer?.id && media.trailer?.site ? { id: media.trailer.id, site: media.trailer.site } : null,
-		streamingEpisodes: (media.streamingEpisodes ?? []).map((s) => ({ title: s.title ?? null, thumbnail: s.thumbnail ?? null }))
+		trailer:
+			media.trailer?.id && media.trailer?.site
+				? { id: media.trailer.id, site: media.trailer.site }
+				: null
 	};
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { syncStore } from '$lib/stores/sync.svelte';
 import { bulkPut } from '$lib/cache/userlist.cache';
 import { getUserAnimeList } from '$lib/api/mal';
-import { setLastSync, setCachedProfile } from '$lib/cache/meta.cache';
+import { setLastSync } from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';
 import type { UserListRecord } from '$lib/cache/db';
 import type { AppError } from '$lib/api/result';
@@ -19,16 +19,11 @@ vi.mock('$lib/api/mal', () => ({
 vi.mock('$lib/cache/meta.cache', () => ({
 	getLastSync: vi.fn().mockResolvedValue(null),
 	setLastSync: vi.fn().mockResolvedValue(undefined),
-	setCachedProfile: vi.fn().mockResolvedValue(undefined),
 	purgeStaleAnilistCache: vi.fn().mockResolvedValue(0)
 }));
 
 vi.mock('$lib/cache/anime.cache', () => ({
 	purgeStaleAnime: vi.fn().mockResolvedValue(0)
-}));
-
-vi.mock('$lib/auth/auth.svelte', () => ({
-	authStore: { user: { name: 'TestUser' } }
 }));
 
 describe('sync.svelte.ts', () => {
@@ -57,7 +52,6 @@ describe('sync.svelte.ts', () => {
 
 		expect(getUserAnimeList).toHaveBeenCalledTimes(1);
 		expect(bulkPut).toHaveBeenCalledWith(mockEntries);
-		expect(setCachedProfile).toHaveBeenCalledWith({ name: 'TestUser' });
 		expect(setLastSync).toHaveBeenCalled();
 		expect(purgeStaleAnime).toHaveBeenCalled();
 	});

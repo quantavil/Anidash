@@ -6,6 +6,7 @@
 import { ok, err, type Result, zodIssuesToSummaries } from '$lib/api/result';
 import { MalTokenResponseSchema } from '$lib/api/schemas/mal.schema';
 import { STORAGE_KEYS } from '$lib/constants';
+import { AUTH_REFRESH_URL } from '$lib/api/config';
 
 export interface TokenData {
 	accessToken: string;
@@ -183,10 +184,8 @@ async function doRefresh(): Promise<Result<void>> {
 		return err({ type: 'auth', message: 'No refresh token available' });
 	}
 
-	const workerUrl = import.meta.env.VITE_WORKER_URL || '';
-
 	try {
-		const response = await fetch(`${workerUrl}/auth/refresh`, {
+		const response = await fetch(AUTH_REFRESH_URL, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ refresh_token: data.refreshToken })
@@ -196,10 +195,19 @@ async function doRefresh(): Promise<Result<void>> {
 		const bodyPartial = body as { error?: string };
 
 		if (!response.ok) {
-			// Only clear tokens on definitive auth failures (4xx), not transient server errors
-			if (response.status >= 400 && response.status < 500) {
+			// Only a definitive rejection of the refresh token ends the session. Throttling
+			// (429/408), server errors, and a rejected/misconfigured client (invalid_client)
+			// are transient from the user's point of view: keep the tokens.
+			const reason = bodyPartial.error ?? '';
+			const definitive =
+				response.status >= 400 &&
+				response.status < 500 &&
+				response.status !== 408 &&
+				response.status !== 429 &&
+				reason !== 'invalid_client';
+			if (definitive) {
 				tokens.clear();
-				return err({ type: 'auth', message: bodyPartial.error || 'Token refresh failed' });
+				return err({ type: 'auth', message: reason || 'Token refresh failed' });
 			}
 			return err({ type: 'network', message: `Token refresh failed (HTTP ${response.status})` });
 		}

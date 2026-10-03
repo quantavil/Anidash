@@ -33,15 +33,11 @@ export async function bulkPut(entries: UserListRecord[]): Promise<Result<void>> 
 
 		const tx = db.transaction('userList', 'readwrite');
 
-		// 1. Delete outdated entries (those not in the sync list and not marked as local-only or explicit)
+		// 1. Delete entries MAL no longer has — unless their add/edit is still queued
+		// (e.g. added offline), in which case MAL simply hasn't seen it yet.
 		for (const entry of currentEntries) {
-			if (!newIds.has(entry.malId)) {
-				const isExplicit =
-					entry.isLocalOnly ||
-					entry.genres?.some((g) => g.name === 'Hentai' || g.name === 'Erotica');
-				if (!isExplicit) {
-					await tx.store.delete(entry.malId);
-				}
+			if (!newIds.has(entry.malId) && !pendingEdits.has(entry.malId)) {
+				await tx.store.delete(entry.malId);
 			}
 		}
 
@@ -113,7 +109,7 @@ function isDeletePayload(payload: Record<string, unknown>): boolean {
  * anime. Without this, a second edit (e.g. score) would overwrite an earlier queued
  * edit (e.g. episodes) that hadn't synced yet. A delete on either side supersedes.
  */
-export async function mergeSyncQueue(record: SyncQueueRecord): Promise<Result<void>> {
+export async function mergeSyncQueue(record: SyncQueueRecord): Promise<Result<SyncQueueRecord>> {
 	try {
 		const db = await getDB();
 		const existing = await db.get('syncQueue', record.malId);
@@ -122,7 +118,7 @@ export async function mergeSyncQueue(record: SyncQueueRecord): Promise<Result<vo
 			next = { ...record, payload: { ...existing.payload, ...record.payload } };
 		}
 		await db.put('syncQueue', next);
-		return ok(undefined);
+		return ok(next);
 	} catch (e) {
 		return err({
 			type: 'cache',
@@ -136,10 +132,19 @@ export async function getSyncQueue(): Promise<SyncQueueRecord[]> {
 	return db.getAllFromIndex('syncQueue', 'by-timestamp');
 }
 
-export async function deleteSyncQueue(malId: number): Promise<Result<void>> {
+/**
+ * Remove a queued change. With `ifTimestamp`, only if the stored record is still the one
+ * that was sent — a newer edit merged in meanwhile must survive this request's ack.
+ */
+export async function deleteSyncQueue(malId: number, ifTimestamp?: number): Promise<Result<void>> {
 	try {
 		const db = await getDB();
-		await db.delete('syncQueue', malId);
+		const tx = db.transaction('syncQueue', 'readwrite');
+		const current = await tx.store.get(malId);
+		if (current && (ifTimestamp === undefined || current.timestamp === ifTimestamp)) {
+			await tx.store.delete(malId);
+		}
+		await tx.done;
 		return ok(undefined);
 	} catch (e) {
 		return err({

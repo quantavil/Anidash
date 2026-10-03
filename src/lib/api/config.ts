@@ -1,8 +1,9 @@
 // ─── API endpoints & public config ───
 
-const WORKER_URL = import.meta.env.VITE_WORKER_URL || '';
-
-export const MAL_API_BASE = `${WORKER_URL}/api`;
+// Same-origin SvelteKit endpoints (Cloudflare Pages Functions) — no separate worker URL.
+export const MAL_API_BASE = '/api';
+export const AUTH_TOKEN_URL = '/auth/token';
+export const AUTH_REFRESH_URL = '/auth/refresh';
 
 /** MAL API v2 recommended rate: ~2-3 req/s for authenticated */
 export const MAL_MIN_INTERVAL_MS = 400;

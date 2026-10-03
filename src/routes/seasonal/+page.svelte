@@ -65,12 +65,20 @@
 
 	// ─── Fetch ───
 
+	const SEASONAL_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+	// MAL's season endpoint defaults to 100 results; a season has more, and the max is 500.
+	const SEASON_FETCH_LIMIT = 500;
+
 	async function loadSeason() {
-		const cacheKey = `seasonal:${seasonYear}:${seasonKey}`;
-		const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+		const year = seasonYear;
+		const season = seasonKey;
+		const cacheKey = `seasonal:${year}:${season}`;
+		// Ignore responses for a season the user has already navigated away from.
+		const isCurrent = () => year === seasonYear && season === seasonKey;
 
 		const cached = await getSeasonalCache(cacheKey);
-		const isStale = !cached || Date.now() - cached.updatedAt > CACHE_TTL;
+		if (!isCurrent()) return;
+		const isStale = !cached || Date.now() - cached.updatedAt > SEASONAL_CACHE_TTL_MS;
 
 		if (cached) {
 			anime = cached.value;
@@ -81,7 +89,8 @@
 		}
 
 		if (isStale) {
-			const result = await getSeasonal(seasonYear, seasonKey, { limit: 100 });
+			const result = await getSeasonal(year, season, { limit: SEASON_FETCH_LIMIT });
+			if (!isCurrent()) return;
 
 			if (result.ok) {
 				const fetchedAnime = result.value.data.map((item) => mapMalNodeToDisplay(item.node));

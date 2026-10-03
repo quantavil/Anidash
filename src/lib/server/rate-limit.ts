@@ -1,3 +1,5 @@
+import { jsonError } from './mal-env';
+
 // ─── Per-IP rate limiting for server endpoints ───
 // Note: state is per-isolate on Cloudflare, so this is best-effort, not a hard guarantee.
 
@@ -34,8 +36,5 @@ export function createIpRateLimiter(options: { windowMs: number; max: number }) 
 
 /** Standard 429 response for a rate-limited request. */
 export function rateLimitedResponse(): Response {
-	return new Response(JSON.stringify({ ok: false, error: 'Rate limit exceeded' }), {
-		status: 429,
-		headers: { 'Content-Type': 'application/json', 'Retry-After': '60' }
-	});
+	return jsonError(429, 'Rate limit exceeded', { 'Retry-After': '60' });
 }

@@ -3,7 +3,7 @@
 	import { untrack } from 'svelte';
 
 	import { getAnimeDetail } from '$lib/api/mal';
-	import { fetchAnilistMediaByMalId } from '$lib/api/anilist';
+	import { loadAnilistMedia } from '$lib/api/anilist';
 	import { mapAnilistToEnriched } from '$lib/utils/types';
 	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
 	import { userListStore } from '$lib/stores/userlist.svelte';
@@ -127,20 +127,15 @@
 		charactersError = null;
 		recsError = null;
 
-		const result = await fetchAnilistMediaByMalId(id);
+		const result = await loadAnilistMedia(id);
 		if (id !== Number(page.params.id)) return;
 
-		if (result.ok && result.value) {
-			const enriched = mapAnilistToEnriched(result.value);
+		if (result.ok) {
+			// `null` = no AniList entry for this MAL id: show empty (no title-search fallback).
+			const enriched = result.value ? mapAnilistToEnriched(result.value) : null;
 			anilistEnriched = enriched;
-			characters = enriched.characters;
-			recommendations = enriched.recommendations;
-		} else if (result.ok && !result.value) {
-			// Direct hit miss - no AniList entry for this MAL id, show empty (no fallback per spec)
-			characters = [];
-			recommendations = [];
-			charactersError = null;
-			recsError = null;
+			characters = enriched?.characters ?? [];
+			recommendations = enriched?.recommendations ?? [];
 		} else {
 			charactersError = 'Failed to load characters';
 			recsError = 'Failed to load recommendations';
@@ -159,8 +154,11 @@
 		if (id && id !== currentMalId) {
 			untrack(() => {
 				anime = null;
+				anilistEnriched = null;
 				recommendations = [];
 				characters = [];
+				charactersError = null;
+				recsError = null;
 				expandedSynopsis = false;
 				expandedCharacters = false;
 
@@ -185,6 +183,14 @@
 		finished_airing: 'text-info',
 		not_yet_aired: 'text-warning'
 	};
+
+	// Derived from airingAt (not AniList's timeUntilAiring) so cached entries stay accurate.
+	const hoursUntilNextAiring = $derived.by(() => {
+		const airing = anilistEnriched?.nextAiring;
+		if (!airing) return null;
+		const hours = Math.floor((airing.airingAt * 1000 - Date.now()) / 3_600_000);
+		return hours > 0 ? hours : null;
+	});
 
 	const YT_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 	const safeTrailerId = $derived.by(() => {
@@ -496,8 +502,8 @@
 						>
 						<span class="text-xs text-text-muted min-w-0 break-words">
 							{new Date(anilistEnriched.nextAiring.airingAt * 1000).toLocaleString()}
-							{#if anilistEnriched.nextAiring.timeUntilAiring}
-								· {Math.floor(anilistEnriched.nextAiring.timeUntilAiring / 3600)}h left
+							{#if hoursUntilNextAiring !== null}
+								· {hoursUntilNextAiring}h left
 							{/if}
 						</span>
 					</div>
@@ -633,13 +639,17 @@
 							</h4>
 							<div class="grid gap-3 md:grid-cols-2">
 								{#each recommendations.slice(0, 4) as rec (rec.id)}
+									{@const href = rec.idMal
+										? `/anime/${rec.idMal}`
+										: `https://anilist.co/anime/${rec.id}`}
+									{@const external = !rec.idMal}
 									<div
 										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
 									>
 										<a
-											href="https://anilist.co/anime/{rec.id}"
-											target="_blank"
-											rel="noopener noreferrer"
+											{href}
+											target={external ? '_blank' : undefined}
+											rel={external ? 'noopener noreferrer' : undefined}
 											class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity"
 										>
 											<ImageWithFallback
@@ -649,27 +659,22 @@
 											/>
 										</a>
 										<div class="min-w-0 flex-1 flex flex-col justify-between">
-											<div>
-												<div class="flex items-start justify-between gap-2 min-w-0 w-full">
-													<a
-														href="https://anilist.co/anime/{rec.id}"
-														target="_blank"
-														rel="noopener noreferrer"
-														class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors"
+											<div class="flex items-start justify-between gap-2 min-w-0 w-full">
+												<a
+													{href}
+													target={external ? '_blank' : undefined}
+													rel={external ? 'noopener noreferrer' : undefined}
+													class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors"
+												>
+													{rec.title}
+												</a>
+												{#if rec.rating}
+													<span
+														class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted"
+														>★ {rec.rating}</span
 													>
-														{rec.title}
-													</a>
-													{#if rec.rating}
-														<span
-															class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted"
-															>★ {rec.rating}</span
-														>
-													{/if}
-												</div>
+												{/if}
 											</div>
-											<p class="text-[9px] text-text-muted mt-1">
-												AniList • {rec.idMal ? `MAL ${rec.idMal}` : `AniList ${rec.id}`}
-											</p>
 										</div>
 									</div>
 								{/each}
@@ -768,7 +773,7 @@
 				<div class="space-y-3">
 					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Reviews</h3>
 					<div class="grid gap-3 md:grid-cols-2">
-						{#each anilistEnriched.reviews.slice(0, 4) as r (r.summary)}
+						{#each anilistEnriched.reviews.slice(0, 4) as r, i (i)}
 							<div
 								class="rounded-xl border border-white/5 bg-surface-1/40 p-4 min-w-0 overflow-hidden"
 							>

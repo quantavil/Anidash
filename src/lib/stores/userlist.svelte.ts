@@ -185,14 +185,17 @@ function createUserListStore() {
 			notifyError('Offline sync failed. Your changes could not be queued.');
 			return;
 		}
+		// Send the merged payload: an earlier edit that failed to sync must ride along,
+		// otherwise acking this request would delete it from the queue unsent.
+		const queued = queueRes.value;
 
 		// If explicitly offline, leave it in the queue for later.
 		if (typeof navigator !== 'undefined' && !navigator.onLine) return;
 
-		const result = await updateAnimeStatus(malId, payload);
+		const result = await updateAnimeStatus(malId, queued.payload);
 		if (result.ok) {
 			markSynced(malId);
-			const deleteRes = await deleteSyncQueue(malId);
+			const deleteRes = await deleteSyncQueue(malId, queued.timestamp);
 			if (!deleteRes.ok) {
 				logger.error('Failed to delete from sync queue after successful sync:', deleteRes.error);
 			}
@@ -391,8 +394,7 @@ function createUserListStore() {
 			isRewatching: false,
 			updatedAt: new Date().toISOString(),
 			startDate: null,
-			finishDate: null,
-			isLocalOnly: true
+			finishDate: null
 		};
 
 		entries = {
@@ -442,8 +444,11 @@ function createUserListStore() {
 						await updateAnimeStatus(malId, payload);
 					}
 
+					// Build on the live entry: the user may have edited it while detail loaded.
+					const current = entries[malId];
+					if (!current) return; // removed in the meantime
 					const enrichedEntry: UserListRecord = {
-						...newEntry,
+						...current,
 						title: d.title,
 						titleEnglish: d.titleEnglish || titleEnglish || null,
 						mainPicture: d.mainPicture,
@@ -459,8 +464,7 @@ function createUserListStore() {
 						numWatchedEpisodes:
 							status === 'completed' && finalEpisodes > 0
 								? finalEpisodes
-								: newEntry.numWatchedEpisodes,
-						isLocalOnly: false
+								: current.numWatchedEpisodes
 					};
 
 					entries = { ...entries, [malId]: enrichedEntry };
@@ -504,7 +508,6 @@ function createUserListStore() {
 
 		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 		const now = Date.now();
-		let retryDelay = 1000; // start with 1s backoff
 
 		for (const record of queue) {
 			// TTL Check: purge if older than 7 days
@@ -524,21 +527,15 @@ function createUserListStore() {
 
 			if (result.ok) {
 				if (!payload._delete) markSynced(record.malId);
-				await deleteSyncQueue(record.malId);
-				retryDelay = 1000; // Reset backoff on success
+				await deleteSyncQueue(record.malId, record.timestamp);
+			} else if (
+				result.error.type === 'api' &&
+				(result.error.status === 400 || result.error.status === 404)
+			) {
+				// Persistent bad request — retrying can never succeed.
+				await deleteSyncQueue(record.malId, record.timestamp);
 			} else {
-				// Drop the payload if it's a persistent bad request
-				if (
-					result.error?.type === 'api' &&
-					(result.error.status === 400 || result.error.status === 404)
-				) {
-					await deleteSyncQueue(record.malId);
-				} else {
-					// Exponential backoff before next attempt/break
-					await new Promise((r) => setTimeout(r, retryDelay));
-					retryDelay *= 2; // Double the delay
-					break; // Stop flushing if rate limited or network is still down
-				}
+				break; // Rate limited / offline / server error: retry on the next flush.
 			}
 		}
 	}

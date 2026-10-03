@@ -24,39 +24,36 @@
 
 	let dataLoaded = $state(false);
 
+	const STALE_AFTER_MS = 5 * 60 * 1000;
+
+	/** Sync on a fresh session (new tab/window) or when data is older than 5 minutes. */
+	async function syncIfNeeded(): Promise<void> {
+		// Offline: the banner already informs the user; a doomed request only adds toast spam.
+		if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+
+		const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
+		const isStale = !syncStore.lastSynced || Date.now() - syncStore.lastSynced > STALE_AFTER_MS;
+		if (hasSyncedThisSession && !isStale) return;
+
+		const result = await userListStore.syncFromRemote();
+		if (result.ok) {
+			sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
+		} else {
+			sessionStorage.removeItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
+			logger.error('Background sync failed:', syncStore.syncError);
+			toast.error('Sync failed — showing cached data', {
+				description: 'Your list may be out of date. It will retry next load.'
+			});
+		}
+	}
+
 	$effect(() => {
 		if (authStore.isAuthenticated && !dataLoaded) {
 			dataLoaded = true;
 
 			Promise.all([userListStore.loadFromCache(), syncStore.init()])
-				.then(async () => {
-					// Do not attempt background network sync if offline (banner already informs user)
-					if (typeof navigator !== 'undefined' && !navigator.onLine) {
-						return;
-					}
-
-					// Sync if it's a fresh session (new tab/window) OR if data is stale (>5 min)
-					const hasSyncedThisSession = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
-					const isStale =
-						!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
-
-					if (!hasSyncedThisSession || isStale) {
-						const result = await userListStore.syncFromRemote();
-						if (result.ok) {
-							sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
-						} else {
-							sessionStorage.removeItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
-							logger.error('Background sync failed:', syncStore.syncError);
-							toast.error('Sync failed — showing cached data', {
-								description: 'Your list may be out of date. It will retry next load.'
-							});
-						}
-					}
-				})
-				.catch((e) => {
-					logger.error('Data loading failed:', e);
-					dataLoaded = false;
-				});
+				.then(syncIfNeeded)
+				.catch((e) => logger.error('Data loading failed:', e));
 		} else if (!authStore.isAuthenticated && dataLoaded) {
 			dataLoaded = false;
 		}
@@ -99,18 +96,8 @@
 		document.addEventListener('visibilitychange', visibilityHandler);
 
 		// ─── Auto-sync when reconnecting online if list is unsynced or stale ───
-		const onlineHandler = async () => {
-			if (authStore.isAuthenticated) {
-				const hasSynced = sessionStorage.getItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION);
-				const isStale =
-					!syncStore.lastSynced || Date.now() - syncStore.lastSynced > 5 * 60 * 1000;
-				if (!hasSynced || isStale) {
-					const res = await userListStore.syncFromRemote();
-					if (res.ok) {
-						sessionStorage.setItem(STORAGE_KEYS.HAS_SYNCED_THIS_SESSION, 'true');
-					}
-				}
-			}
+		const onlineHandler = () => {
+			if (authStore.isAuthenticated) void syncIfNeeded();
 		};
 		window.addEventListener('online', onlineHandler);
 

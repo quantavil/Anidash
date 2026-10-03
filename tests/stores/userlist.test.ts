@@ -7,7 +7,8 @@ vi.mock('$lib/cache/userlist.cache', () => ({
 	getAllEntries: vi.fn().mockResolvedValue([]),
 	putEntry: vi.fn().mockResolvedValue({ ok: true }),
 	removeEntry: vi.fn().mockResolvedValue({ ok: true }),
-	mergeSyncQueue: vi.fn().mockResolvedValue({ ok: true }),
+	// Echo the record like the real merge does when nothing was queued before.
+	mergeSyncQueue: vi.fn(async (record: unknown) => ({ ok: true, value: record })),
 	getSyncQueue: vi.fn().mockResolvedValue([]),
 	deleteSyncQueue: vi.fn().mockResolvedValue({ ok: true })
 }));
@@ -108,7 +109,7 @@ describe('userlist.svelte.ts state', () => {
 		await userListStore.flushPersistentQueue();
 
 		expect(updateAnimeStatus).toHaveBeenCalledWith(5, { status: 'completed' });
-		expect(deleteSyncQueue).toHaveBeenCalledWith(5);
+		expect(deleteSyncQueue).toHaveBeenCalledWith(5, expect.any(Number));
 	});
 
 	it('should handle IDB read failure gracefully in loadFromCache', async () => {
@@ -149,7 +150,7 @@ describe('userlist.svelte.ts state', () => {
 		expect(updateAnimeStatus).not.toHaveBeenCalledWith(10, expect.any(Object));
 
 		expect(updateAnimeStatus).toHaveBeenCalledWith(11, { status: 'watching' });
-		expect(deleteSyncQueue).toHaveBeenCalledWith(11);
+		expect(deleteSyncQueue).toHaveBeenCalledWith(11, validTime);
 	});
 
 	it('should move plan_to_watch to watching on increment with a combined payload', async () => {
@@ -162,10 +163,10 @@ describe('userlist.svelte.ts state', () => {
 		userListStore.flushPendingSyncs();
 		await new Promise((r) => setTimeout(r, 0));
 
-		expect(updateAnimeStatus).toHaveBeenCalledWith(
-			20,
-			{ num_watched_episodes: 1, status: 'watching' }
-		);
+		expect(updateAnimeStatus).toHaveBeenCalledWith(20, {
+			num_watched_episodes: 1,
+			status: 'watching'
+		});
 	});
 
 	it('should not bump updatedAt on optimistic edit', async () => {
@@ -191,5 +192,23 @@ describe('userlist.svelte.ts state', () => {
 
 		expect(updateAnimeStatus).toHaveBeenCalledWith(22, { num_watched_episodes: 2 });
 		expect(userListStore.getEntry(22)?.updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
+	});
+
+	it('sends the merged queued payload so an earlier unsynced edit is not dropped', async () => {
+		await userListStore.addToList(30, 'watching', 'Test 30', 'Test 30', null);
+		vi.mocked(updateAnimeStatus).mockClear();
+
+		// An earlier episode edit failed to sync and is still queued; the score edit merges with it.
+		vi.mocked(mergeSyncQueue).mockResolvedValueOnce({
+			ok: true,
+			value: { malId: 30, payload: { num_watched_episodes: 4, score: 9 }, timestamp: 123 }
+		});
+		userListStore.setScore(30, 9);
+		userListStore.flushPendingSyncs();
+		await new Promise((r) => setTimeout(r, 0));
+
+		expect(updateAnimeStatus).toHaveBeenCalledWith(30, { num_watched_episodes: 4, score: 9 });
+		// Ack only deletes the exact record that was sent.
+		expect(deleteSyncQueue).toHaveBeenCalledWith(30, 123);
 	});
 });

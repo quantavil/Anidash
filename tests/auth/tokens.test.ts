@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { tokens, parseAndSetTokens, needsRefresh } from '$lib/auth/tokens';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { tokens, parseAndSetTokens, needsRefresh, refreshTokens } from '$lib/auth/tokens';
 
 const storage = new Map<string, string>();
 const localStorageMock = {
@@ -83,5 +83,64 @@ describe('tokens auth storage and refresh helpers', () => {
 			expiresAt: Date.now() + 1_800_000 // 30 minutes in future (within 1h threshold)
 		});
 		expect(needsRefresh()).toBe(true);
+	});
+});
+
+describe('refreshTokens failure classification', () => {
+	beforeEach(() => {
+		storage.clear();
+		tokens.set({ accessToken: 'a', refreshToken: 'r', expiresAt: Date.now() + 1000 });
+	});
+	afterEach(() => vi.unstubAllGlobals());
+
+	function stubRefresh(status: number, body: unknown) {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status }))
+		);
+	}
+
+	it('keeps the session when our own endpoint rate-limits the refresh (429)', async () => {
+		stubRefresh(429, { ok: false, error: 'Rate limit exceeded' });
+		const res = await refreshTokens();
+		expect(res.ok).toBe(false);
+		if (!res.ok) expect(res.error.type).toBe('network');
+		expect(tokens.get()).not.toBeNull();
+	});
+
+	it('keeps the session when MAL rejects the client (misconfigured secret)', async () => {
+		stubRefresh(401, { error: 'invalid_client' });
+		const res = await refreshTokens();
+		expect(res.ok).toBe(false);
+		expect(tokens.get()).not.toBeNull();
+	});
+
+	it('keeps the session on server errors', async () => {
+		stubRefresh(500, {
+			ok: false,
+			error: 'MAL credentials not configured in platform environment'
+		});
+		await refreshTokens();
+		expect(tokens.get()).not.toBeNull();
+	});
+
+	it('ends the session when the refresh token itself is rejected', async () => {
+		stubRefresh(400, { error: 'invalid_grant' });
+		const res = await refreshTokens();
+		expect(res.ok).toBe(false);
+		if (!res.ok) expect(res.error.type).toBe('auth');
+		expect(tokens.get()).toBeNull();
+	});
+
+	it('stores rotated tokens on success', async () => {
+		stubRefresh(200, {
+			token_type: 'Bearer',
+			expires_in: 3600,
+			access_token: 'new',
+			refresh_token: 'new_r'
+		});
+		const res = await refreshTokens();
+		expect(res.ok).toBe(true);
+		expect(tokens.get()).toMatchObject({ accessToken: 'new', refreshToken: 'new_r' });
 	});
 });

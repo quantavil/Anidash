@@ -4,9 +4,9 @@
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { generatePKCE } from './pkce';
-import { tokens, refreshTokens, parseAndSetTokens } from './tokens';
+import { tokens, parseAndSetTokens } from './tokens';
 import { authFetch } from '$lib/api/fetch';
-import { MAL_API_BASE } from '$lib/api/config';
+import { MAL_API_BASE, AUTH_TOKEN_URL } from '$lib/api/config';
 import { ok, err, type Result } from '$lib/api/result';
 import { MalUserSchema, type MalUser } from '$lib/api/schemas/mal.schema';
 import { zodIssuesToSummaries } from '$lib/api/result';
@@ -50,31 +50,16 @@ function createAuthStore() {
 
 		// Background revalidation (non-blocking)
 		fetchUserProfile()
-			.then(async (result) => {
+			.then((result) => {
 				if (result.ok) {
 					user = result.value;
+				} else if (result.error.type === 'auth') {
+					// authFetch already refreshed and retried on 401; an auth error here is final.
+					logout();
 				} else {
-					// If it's a network/offline error, do NOT log out or refresh
-					if (result.error.type === 'network') {
-						isLoading = false;
-						return;
-					}
-
-					// Try refreshing the token if profile fetch failed (possible token expired)
-					const refreshed = await refreshTokens();
-					if (refreshed.ok) {
-						const retry = await fetchUserProfile();
-						if (retry.ok) {
-							user = retry.value;
-						} else {
-							logger.warn('Profile fetch failed after refresh:', retry.error);
-						}
-					} else {
-						// Only log out if the refresh failure was not a temporary network issue
-						if (refreshed.error.type !== 'network') {
-							logout();
-						}
-					}
+					// Offline, 5xx, 429, validation: keep the cached session instead of burning
+					// a (rotating) refresh token or logging the user out.
+					logger.warn('Profile revalidation failed:', result.error);
 				}
 				isLoading = false;
 			})
@@ -123,6 +108,12 @@ function createAuthStore() {
 		error = null;
 
 		try {
+			const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
+			if (!clientId) {
+				error = 'MAL Client ID not configured';
+				return;
+			}
+
 			const { verifier, challenge, state } = generatePKCE();
 			const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes TTL
 
@@ -130,12 +121,6 @@ function createAuthStore() {
 				STORAGE_KEYS.PKCE_VERIFIER,
 				JSON.stringify({ verifier, state, expiresAt })
 			);
-
-			const clientId = import.meta.env.VITE_MAL_CLIENT_ID;
-			if (!clientId) {
-				error = 'MAL Client ID not configured';
-				return;
-			}
 
 			const redirectUri = `${window.location.origin}/auth/callback`;
 			const params = new URLSearchParams({
@@ -190,13 +175,10 @@ function createAuthStore() {
 			// Clean up PKCE early for security
 			sessionStorage.removeItem(STORAGE_KEYS.PKCE_VERIFIER);
 
-			// Use default local worker if not configured to prevent crashes in local dev
-			const workerUrl = import.meta.env.VITE_WORKER_URL || '';
-
 			try {
 				const redirectUri = `${window.location.origin}/auth/callback`;
 
-				const response = await fetch(`${workerUrl}/auth/token`, {
+				const response = await fetch(AUTH_TOKEN_URL, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -223,11 +205,14 @@ function createAuthStore() {
 					return parseResult;
 				}
 
-				// Fetch user profile
+				// A session without a profile is a half-login (UI would look logged out while
+				// tokens exist) — fail the login instead.
 				const userResult = await fetchUserProfile();
-				if (userResult.ok) {
-					user = userResult.value;
+				if (!userResult.ok) {
+					tokens.clear();
+					return userResult;
 				}
+				user = userResult.value;
 
 				return ok(undefined);
 			} catch (e) {

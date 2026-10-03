@@ -1,150 +1,156 @@
 // ─── AniList GraphQL API (no-auth) ───
-// Public queries only. Single endpoint, Zod-validated.
+// Sole enrichment source for the detail page. Single endpoint, Zod-validated.
 
-import { z } from 'zod';
+import { z, type ZodType } from 'zod';
 
 import { anilistLimiter } from './rate-limit';
 import { AnilistMediaSchema, type AnilistMedia } from './schemas/anilist.schema';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
-import type { AppError } from './result';
+import { getAnilistCache, setAnilistCache } from '$lib/cache/meta.cache';
+import { logger } from '$lib/utils/logger';
 
 const ANILIST_GQL = 'https://graphql.anilist.co';
+const DEFAULT_RETRY_AFTER_MS = 60_000;
 
-async function gqlFetch<T>(query: string, variables: Record<string, unknown>, schema: import('zod').ZodType<T>): Promise<Result<T>> {
-	const fetchResult = await anilistLimiter.enqueue(async () => {
-		try {
-			const res = await fetch(ANILIST_GQL, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Accept: 'application/json'
-				},
-				body: JSON.stringify({ query, variables })
-			});
-			if (!res.ok) {
-				// Map HTTP errors to AppError
+/** Retry delay from Retry-After (seconds) or X-RateLimit-Reset (epoch seconds). */
+function retryAfterMs(headers: Headers): number {
+	const retry = parseInt(headers.get('Retry-After') ?? '', 10);
+	if (!Number.isNaN(retry)) return retry * 1000;
+
+	const reset = parseInt(headers.get('X-RateLimit-Reset') ?? '', 10);
+	if (!Number.isNaN(reset)) {
+		const wait = reset * 1000 - Date.now();
+		if (wait > 0) return wait;
+	}
+	return DEFAULT_RETRY_AFTER_MS;
+}
+
+interface GqlEnvelope {
+	data?: unknown;
+	errors?: { message?: string }[];
+}
+
+async function gqlFetch<T>(
+	query: string,
+	variables: Record<string, unknown>,
+	schema: ZodType<T>
+): Promise<Result<T>> {
+	const fetched = await anilistLimiter.enqueue(
+		async (): Promise<Result<{ status: number; ok: boolean; body: GqlEnvelope | null }>> => {
+			try {
+				// Browser fetch: only Content-Type + Accept (User-Agent is forbidden).
+				const res = await fetch(ANILIST_GQL, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+					body: JSON.stringify({ query, variables })
+				});
 				if (res.status === 429) {
-					const retryAfter = res.headers.get('Retry-After');
-					const reset = res.headers.get('X-RateLimit-Reset');
-					return { ok: false as const, status: 429, retryAfter, reset } as const;
+					return err({
+						type: 'rate_limit',
+						retryAfter: retryAfterMs(res.headers),
+						message: 'AniList rate limited'
+					});
 				}
-				const text = await res.text().catch(() => '');
-				return { ok: false as const, status: res.status, text } as const;
+				const body = (await res.json().catch(() => null)) as GqlEnvelope | null;
+				return ok({ status: res.status, ok: res.ok, body });
+			} catch (e) {
+				return err({
+					type: 'network',
+					message: e instanceof Error ? e.message : 'Network error',
+					cause: e instanceof Error ? e : undefined
+				});
 			}
-			return { ok: true as const, res } as const;
-		} catch (e) {
-			return { ok: false as const, error: e } as const;
 		}
-	});
+	);
+	if (!fetched.ok) return fetched;
 
-	// Handle limiter-wrapped result cases
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const r: any = fetchResult;
-	if (r && r.ok === false && typeof r.status === 'number') {
-		if (r.status === 429) {
-			const rawRetry = typeof r.retryAfter === 'string' ? r.retryAfter : null;
-			const rawReset = typeof r.reset === 'string' ? r.reset : null;
-			let retryAfterMs = 60_000;
-			if (rawRetry) {
-				const secs = parseInt(rawRetry, 10);
-				if (!Number.isNaN(secs)) retryAfterMs = secs * 1000;
-			} else if (rawReset) {
-				const resetSecs = parseInt(rawReset, 10);
-				if (!Number.isNaN(resetSecs)) {
-					const resetMs = resetSecs * 1000;
-					retryAfterMs = Math.max(0, resetMs - Date.now());
-					if (retryAfterMs === 0) retryAfterMs = 60_000;
-				}
-			}
-			return err({
-				type: 'rate_limit',
-				retryAfter: retryAfterMs,
-				message: 'AniList rate limited'
-			} as AppError);
-		}
-		return err({ type: 'api', message: `AniList HTTP ${r.status}`, status: r.status } as AppError);
-	}
-	if (r && r.ok === false && r.error) {
-		return err({ type: 'network', message: r.error instanceof Error ? r.error.message : 'Network error' } as AppError);
-	}
-	const response: Response = r.res;
+	const { status, ok: httpOk, body } = fetched.value;
 
-	let json: unknown;
-	try {
-		json = await response.json();
-	} catch (e) {
-		return err({ type: 'network', message: 'Failed to parse AniList response', cause: e instanceof Error ? e : undefined } as AppError);
+	// AniList answers an unknown Media with HTTP 404 *and* `data:{Media:null}`; that is a
+	// valid "no result", not a failure. Any other non-2xx is an error.
+	const hasData = body?.data != null;
+	if (!httpOk && !(status === 404 && hasData)) {
+		return err({
+			type: 'api',
+			status,
+			message: body?.errors?.[0]?.message ?? `AniList HTTP ${status}`
+		});
+	}
+	if (!hasData) {
+		return err({
+			type: 'api',
+			status,
+			message: body?.errors?.[0]?.message ?? 'AniList GraphQL error'
+		});
 	}
 
-	// AniList returns {data, errors}
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const data = (json as any)?.data as unknown;
-	// If top-level has no data but has errors, surface
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	if (!(json as any)?.data && (json as any)?.errors) {
-		return err({ type: 'api', message: (json as any).errors[0]?.message ?? 'AniList GraphQL error', status: 400 } as AppError);
-	}
-
-	const parsed = schema.safeParse(data);
+	const parsed = schema.safeParse(body?.data);
 	if (!parsed.success) {
 		return err({
 			type: 'validation',
 			message: 'Invalid response from AniList API',
 			issues: zodIssuesToSummaries(parsed.error.issues)
-		} as AppError);
+		});
 	}
 	return ok(parsed.data);
 }
 
-// ─── Detail by MAL ID (primary, no fallback) ───
+// ─── Detail by MAL ID (direct lookup, no title-search fallback) ───
+// Requests exactly the fields the detail page renders — one call per anime.
 const MEDIA_DETAIL_QUERY = `
 query($malId:Int){
   Media(idMal:$malId type:ANIME){
-    id idMal title{romaji english native} description
-    coverImage{extraLarge large medium color} bannerImage
-    format status episodes duration season seasonYear isAdult
-    genres synonyms tags{name rank isAdult}
-    averageScore meanScore popularity favourites trending
-    nextAiringEpisode{episode airingAt timeUntilAiring}
-    trailer{id site} externalLinks{site url} streamingEpisodes{title thumbnail url}
-    studios{edges{isMain node{name}}}
-    relations{edges{relationType node{id type format title{romaji english} coverImage{large medium}}}}
+    id idMal
+    tags{name rank isAdult}
+    nextAiringEpisode{episode airingAt}
+    trailer{id site}
     characters(perPage:25 sort:FAVOURITES_DESC){edges{role node{id name{full} image{large} favourites} voiceActors(language:JAPANESE){id name{full} languageV2}}}
-    recommendations(perPage:6 sort:RATING_DESC){nodes{rating mediaRecommendation{id idMal title{romaji english} coverImage{large medium} format averageScore}}}
-    reviews(perPage:6 sort:RATING_DESC){nodes{summary rating ratingAmount body user{name avatar{large}}}}
-    airingSchedule(perPage:8){nodes{episode airingAt}}
+    recommendations(perPage:6 sort:RATING_DESC){nodes{rating mediaRecommendation{id idMal title{romaji english} coverImage{large medium}}}}
+    reviews(perPage:6 sort:RATING_DESC){nodes{summary rating body user{name}}}
   }
 }
 `;
 
-export async function fetchAnilistMediaByMalId(malId: number): Promise<Result<AnilistMedia | null>> {
-	const result = await gqlFetch<{ Media: AnilistMedia | null }>(
-		MEDIA_DETAIL_QUERY,
-		{ malId },
-		// Inline schema for {Media}
-		z.object({ Media: AnilistMediaSchema.nullable() })
-	);
-	if (!result.ok) return result as unknown as Result<AnilistMedia | null>;
-	// unwrap
+const MediaResponseSchema = z.object({ Media: AnilistMediaSchema.nullable() });
+
+/** Network fetch. `null` value = AniList has no entry for this MAL id. */
+export async function fetchAnilistMediaByMalId(
+	malId: number
+): Promise<Result<AnilistMedia | null>> {
+	const result = await gqlFetch(MEDIA_DETAIL_QUERY, { malId }, MediaResponseSchema);
+	if (!result.ok) return result;
 	return ok(result.value.Media);
 }
 
-// ─── Page (trending / search) ───
-const PAGE_QUERY = `
-query($page:Int $perPage:Int $search:String $sort:MediaSort){
-  Page(page:$page perPage:$perPage){
-    pageInfo{total currentPage lastPage hasNextPage perPage}
-    media(search:$search type:ANIME sort:$sort isAdult:false){
-      id idMal title{romaji english native} coverImage{extraLarge large medium} bannerImage
-      format status episodes duration season seasonYear
-      genres averageScore meanScore popularity favourites trending
-      nextAiringEpisode{episode airingAt}
-      studios{edges{isMain node{name}}}
-    }
-  }
+// ─── Cached + de-duplicated access (what the UI should call) ───
+
+const inflight = new Map<number, Promise<Result<AnilistMedia | null>>>();
+
+/**
+ * Detail enrichment with a 7-day IndexedDB cache (`anilist:fetch:{malId}`) and a
+ * single in-flight request per MAL id, so revisits and rapid navigation never
+ * spend extra AniList budget.
+ */
+export function loadAnilistMedia(malId: number): Promise<Result<AnilistMedia | null>> {
+	const pending = inflight.get(malId);
+	if (pending) return pending;
+
+	const request = (async (): Promise<Result<AnilistMedia | null>> => {
+		const cached = await getAnilistCache(malId).catch(() => null);
+		if (cached) return ok(cached.media);
+
+		const result = await fetchAnilistMediaByMalId(malId);
+		if (result.ok) {
+			await setAnilistCache(malId, result.value).catch((e) =>
+				logger.warn('Failed to cache AniList media:', e)
+			);
+		}
+		return result;
+	})().finally(() => inflight.delete(malId));
+
+	inflight.set(malId, request);
+	return request;
 }
-`;
 
 // re-export for tests
-export const _pageQuery = PAGE_QUERY;
 export const _detailQuery = MEDIA_DETAIL_QUERY;

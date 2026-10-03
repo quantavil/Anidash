@@ -31,7 +31,7 @@ AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal
 AniDash is a unified SvelteKit application optimized for **Cloudflare Pages**.
 
 1. **Frontend**: SvelteKit SPA using Svelte 5's fine-grained reactivity (Runes).
-2. **Backend**: Serverless Edge Functions (`src/routes/api/[...path]/+server.ts`) that handle secure MAL token exchange and CORS proxying for `https://api.myanimelist.net`. AniList enrichment bypasses the proxy and hits `https://graphql.anilist.co` directly from the browser (no auth, Zod-validated, `anilistLimiter` 700ms / 90→30 req/min).
+2. **Backend**: Serverless Edge Functions (`src/routes/api/[...path]/+server.ts`) that handle secure MAL token exchange and CORS proxying for `https://api.myanimelist.net`. AniList enrichment bypasses the proxy and hits `https://graphql.anilist.co` directly from the browser (no auth, Zod-validated, `anilistLimiter` 700ms / 90→30 req/min, cached 7 days per anime).
 3. **Database**: Client-side IndexedDB (meta: `anilist:fetch:` 7d TTL + `browse:popular:v1` 24h SWR, `seasonal:YYYY:season`; anime details stale-while-revalidate).
 4. **Enrichment**: AniList GraphQL is the **only** detail enrichment source. `Media(idMal type:ANIME)` direct lookup — if `null`, show empty (no `Page{media(search)}` fallback, no Jikan). Query: `tags{name rank isAdult}` (no `isGeneral`), `characters(voiceActors:JAPANESE)`, `recommendations`, `reviews`, `trailer`, `nextAiringEpisode`. CSP `connect-src` + `preconnect` allow `graphql.anilist.co`; `frame-src` allows only `www.youtube.com` for validated trailers. AniList review markup is normalized into plain text and never rendered with `{@html}`.
 
@@ -44,7 +44,7 @@ AniDash is a unified SvelteKit application optimized for **Cloudflare Pages**.
 1. Go to [MyAnimeList API Settings](https://myanimelist.net/apiconfig).
 2. Create a new ID.
    - **App Type**: `web`
-   - **Redirect URI**: `http://localhost:5173/auth/callback` (for local development)
+   - **Redirect URI**: one per line, each with its scheme — `http://localhost:5173/auth/callback` for local dev, plus your production URL (see Deployment). The app sends `${window.location.origin}/auth/callback`, so every origin you log in from (including Cloudflare preview deployments) must be registered exactly.
 
 ### 2. Environment Variables
 
@@ -60,6 +60,8 @@ For local development of server-side routes, create a `.dev.vars` file in the ro
 MAL_CLIENT_ID=your_mal_client_id
 MAL_CLIENT_SECRET=your_mal_client_secret
 ```
+
+`MAL_CLIENT_ID` comes from `wrangler.toml`; only the secret goes in `.dev.vars`. Restart `npm run dev` after editing `.dev.vars` — it is read once at startup.
 
 ### 3. Running Locally
 

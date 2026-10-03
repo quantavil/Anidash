@@ -8,11 +8,7 @@ import {
 	getRanking
 } from '$lib/api/mal';
 import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from '$lib/api/schemas/mal.schema';
-import {
-	MalAnimeLeanSchema,
-	MalUserListResponseSchema,
-	MalAnimeSearchResponseSchema
-} from '$lib/api/schemas/mal.schema';
+import { MalAnimeLeanSchema, MalUserListResponseSchema } from '$lib/api/schemas/mal.schema';
 import { getUserAnimeList } from '$lib/api/mal';
 
 describe('MAL API Mappers', () => {
@@ -339,4 +335,3 @@ describe('MAL Schema Resilience for Real-World MAL Responses', () => {
 		expect(requestedUrl).toContain('finish_date');
 	});
 });
-

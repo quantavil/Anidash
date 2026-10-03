@@ -65,7 +65,6 @@ export interface UserListRecord extends BaseAnimeRecord {
 	updatedAt: string | null;
 	startDate: string | null;
 	finishDate: string | null;
-	isLocalOnly?: boolean;
 }
 
 export interface MetaRecord {
@@ -177,6 +176,5 @@ export async function clearUserCache(): Promise<void> {
 	await tx.objectStore('syncQueue').clear();
 	const metaStore = tx.objectStore('meta');
 	await metaStore.delete('lastSync');
-	await metaStore.delete('userProfile');
 	await tx.done;
 }

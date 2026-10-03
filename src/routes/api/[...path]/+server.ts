@@ -1,8 +1,13 @@
 import type { RequestHandler } from './$types';
 import { createIpRateLimiter, rateLimitedResponse } from '$lib/server/rate-limit';
+import { getMalClientId, jsonError } from '$lib/server/mal-env';
 
-// 60 requests per minute per IP.
-const checkRateLimit = createIpRateLimiter({ windowMs: 60_000, max: 60 });
+// Sized above the client-side MAL limiter (~2.5 req/s ≈ 150/min) so normal use is never
+// throttled by our own proxy; per-isolate, so best-effort abuse protection only.
+const checkRateLimit = createIpRateLimiter({ windowMs: 60_000, max: 200 });
+
+/** Only these request headers are forwarded to MAL (no cookies / cf-* / hop-by-hop leakage). */
+const FORWARDED_HEADERS = ['authorization', 'content-type', 'accept'];
 
 export const fallback: RequestHandler = async ({ request, params, platform, url }) => {
 	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
@@ -10,34 +15,28 @@ export const fallback: RequestHandler = async ({ request, params, platform, url 
 		return rateLimitedResponse();
 	}
 
-	const malUrl = `https://api.myanimelist.net/v2/${params.path}${url.search}`;
-	const env = platform?.env;
-	const malClientId =
-		env?.MAL_CLIENT_ID ||
-		(typeof process !== 'undefined' ? process.env?.MAL_CLIENT_ID : undefined);
-
-	if (!malClientId) {
-		return new Response(
-			JSON.stringify({ ok: false, error: 'MAL_CLIENT_ID not configured in platform environment' }),
-			{
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			}
-		);
+	// The upstream host is fixed; reject dot-segments so the path can't climb out of /v2/.
+	if (params.path.split('/').some((seg) => seg === '.' || seg === '..')) {
+		return jsonError(400, 'Invalid path');
 	}
 
-	const headers = new Headers(request.headers);
+	const malClientId = getMalClientId(platform);
+	if (!malClientId) {
+		return jsonError(500, 'MAL_CLIENT_ID not configured in platform environment');
+	}
+
+	const headers = new Headers();
+	for (const name of FORWARDED_HEADERS) {
+		const value = request.headers.get(name);
+		if (value) headers.set(name, value);
+	}
 	// Only add client ID for unauthenticated requests; Bearer token suffices for auth'd ones
-	if (!headers.has('Authorization')) {
+	if (!headers.has('authorization')) {
 		headers.set('X-MAL-CLIENT-ID', malClientId);
 	}
-	// Strip headers that MAL might reject or that reveal proxy details
-	headers.delete('Host');
-	headers.delete('Origin');
-	headers.delete('Referer');
 
 	try {
-		const res = await fetch(malUrl, {
+		const res = await fetch(`https://api.myanimelist.net/v2/${params.path}${url.search}`, {
 			method: request.method,
 			headers,
 			body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
@@ -47,9 +46,6 @@ export const fallback: RequestHandler = async ({ request, params, platform, url 
 
 		return new Response(res.body, res);
 	} catch {
-		return new Response(JSON.stringify({ ok: false, error: 'Upstream proxy error' }), {
-			status: 502,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return jsonError(502, 'Upstream proxy error');
 	}
 };

@@ -1,14 +1,13 @@
 // ─── Metadata cache (IndexedDB) ───
-// Stores: lastSync timestamp, userProfile, seasonal anime cache.
+// Stores: lastSync timestamp, browse/seasonal grids, AniList detail cache.
 
 import { getDB, type MetaRecord } from './db';
-import type { MalUser } from '$lib/api/schemas/mal.schema';
+import { AnilistMediaSchema, type AnilistMedia } from '$lib/api/schemas/anilist.schema';
 import type { DisplayAnime } from '$lib/utils/types';
 
 // ─── Keys ───
 
 const KEY_LAST_SYNC = 'lastSync';
-const KEY_USER_PROFILE = 'userProfile';
 
 // ─── Private Base Helper ───
 
@@ -32,12 +31,6 @@ export async function getLastSync(): Promise<number | null> {
 export async function setLastSync(timestamp: number): Promise<void> {
 	const db = await getDB();
 	await db.put('meta', { key: KEY_LAST_SYNC, value: timestamp, updatedAt: Date.now() });
-}
-
-// ─── User Profile ───
-
-export async function setCachedProfile(profile: MalUser): Promise<void> {
-	await putMetaRecord(KEY_USER_PROFILE, profile);
 }
 
 // ─── Browse Popular (stale-while-revalidate) ───
@@ -69,10 +62,33 @@ export async function setSeasonalCache(key: string, animeList: DisplayAnime[]): 
 	await putMetaRecord(key, animeList);
 }
 
-// ─── Maintenance ───
+// ─── AniList detail cache (7d TTL, GC'd by purgeStaleAnilistCache) ───
 
 const ANILIST_CACHE_PREFIX = 'anilist:fetch:';
 const MAX_ANILIST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Fresh cached AniList media for a MAL id. `{ media: null }` is a cached "AniList has
+ * no entry"; `null` means miss/stale/invalid. Entries are re-validated so a schema
+ * change silently invalidates old records.
+ */
+export async function getAnilistCache(
+	malId: number
+): Promise<{ media: AnilistMedia | null } | null> {
+	const record = await getMetaRecord(`${ANILIST_CACHE_PREFIX}${malId}`);
+	if (!record || Date.now() - record.updatedAt > MAX_ANILIST_TTL_MS) return null;
+
+	const value = record.value as { media?: unknown } | null;
+	if (value?.media === null) return { media: null };
+	const parsed = AnilistMediaSchema.safeParse(value?.media);
+	return parsed.success ? { media: parsed.data } : null;
+}
+
+export async function setAnilistCache(malId: number, media: AnilistMedia | null): Promise<void> {
+	await putMetaRecord(`${ANILIST_CACHE_PREFIX}${malId}`, { media });
+}
+
+// ─── Maintenance ───
 
 /** Delete stale AniList cache records. Returns count purged. */
 export async function purgeStaleAnilistCache(): Promise<number> {

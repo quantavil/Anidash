@@ -3,14 +3,8 @@
 
 import { bulkPut } from '$lib/cache/userlist.cache';
 import { getUserAnimeList } from '$lib/api/mal';
-import {
-	getLastSync,
-	setLastSync,
-	setCachedProfile,
-	purgeStaleAnilistCache
-} from '$lib/cache/meta.cache';
+import { getLastSync, setLastSync, purgeStaleAnilistCache } from '$lib/cache/meta.cache';
 import { purgeStaleAnime } from '$lib/cache/anime.cache';
-import { authStore } from '$lib/auth/auth.svelte';
 import type { AppError } from '$lib/api/result';
 
 function createSyncStore() {
@@ -50,17 +44,12 @@ function createSyncStore() {
 					return { success: false, entryCount: 0 };
 				}
 
-				// 3. Cache user profile
-				if (authStore.user) {
-					await setCachedProfile($state.snapshot(authStore.user));
-				}
-
-				// 4. Update last sync timestamp
+				// 3. Update last sync timestamp
 				const now = Date.now();
 				await setLastSync(now);
 				lastSynced = now;
 
-				// 5. Purge stale caches in background
+				// 4. Purge stale caches in background
 				purgeStaleAnime().catch(() => {});
 				purgeStaleAnilistCache().catch(() => {});
 

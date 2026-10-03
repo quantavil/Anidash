@@ -21,8 +21,14 @@ export async function handleOAuthRequest(
 	}
 
 	const env = platform?.env;
+	const malClientId =
+		env?.MAL_CLIENT_ID ||
+		(typeof process !== 'undefined' ? process.env?.MAL_CLIENT_ID : undefined);
+	const malClientSecret =
+		env?.MAL_CLIENT_SECRET ||
+		(typeof process !== 'undefined' ? process.env?.MAL_CLIENT_SECRET : undefined);
 
-	if (!env?.MAL_CLIENT_ID || !env?.MAL_CLIENT_SECRET) {
+	if (!malClientId || !malClientSecret) {
 		return new Response(
 			JSON.stringify({
 				ok: false,
@@ -51,8 +57,8 @@ export async function handleOAuthRequest(
 	}
 
 	// Inject credentials
-	paramsOrResponse.set('client_id', env.MAL_CLIENT_ID);
-	paramsOrResponse.set('client_secret', env.MAL_CLIENT_SECRET);
+	paramsOrResponse.set('client_id', malClientId);
+	paramsOrResponse.set('client_secret', malClientSecret);
 
 	try {
 		const malRes = await fetch(MAL_TOKEN_URL, {

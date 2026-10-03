@@ -12,8 +12,11 @@ export const fallback: RequestHandler = async ({ request, params, platform, url 
 
 	const malUrl = `https://api.myanimelist.net/v2/${params.path}${url.search}`;
 	const env = platform?.env;
+	const malClientId =
+		env?.MAL_CLIENT_ID ||
+		(typeof process !== 'undefined' ? process.env?.MAL_CLIENT_ID : undefined);
 
-	if (!env?.MAL_CLIENT_ID) {
+	if (!malClientId) {
 		return new Response(
 			JSON.stringify({ ok: false, error: 'MAL_CLIENT_ID not configured in platform environment' }),
 			{
@@ -26,7 +29,7 @@ export const fallback: RequestHandler = async ({ request, params, platform, url 
 	const headers = new Headers(request.headers);
 	// Only add client ID for unauthenticated requests; Bearer token suffices for auth'd ones
 	if (!headers.has('Authorization')) {
-		headers.set('X-MAL-CLIENT-ID', env.MAL_CLIENT_ID);
+		headers.set('X-MAL-CLIENT-ID', malClientId);
 	}
 	// Strip headers that MAL might reject or that reveal proxy details
 	headers.delete('Host');

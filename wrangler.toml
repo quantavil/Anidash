@@ -4,5 +4,5 @@ compatibility_flags = ["nodejs_compat"]
 compatibility_date = "2024-04-01"
 
 [vars]
-VITE_MAL_CLIENT_ID = "f50c5eeee52c54cec1456caef5cc164b"
-MAL_CLIENT_ID = "f50c5eeee52c54cec1456caef5cc164b"
+VITE_MAL_CLIENT_ID = "3e45fccd29b9aec2aeee18ad8a9ad46d"
+MAL_CLIENT_ID = "3e45fccd29b9aec2aeee18ad8a9ad46d"

@@ -1,12 +1,13 @@
 # AniDash
 
-A personal anime watch journal connected to MyAnimeList. Track episodes, keep your own ratings, and find your next series in a responsive interface built around your actual collection. Current release: **0.1.3**.
+A fast anime tracker connected to MyAnimeList. Track episodes in one tap, keep your own ratings, and find your next series in an interface built around your actual collection. Current release: **0.1.3**.
 
-## The watch journal
+## What it does
 
-- **Journal and poster views.** The default journal pairs a featured watching entry with compact progress rows and a Plan to Watch shelf. Switch to the poster grid while keeping your filters and sort order.
+- **Ledger and poster views.** The default ledger shows every entry as one aligned row (progress stepper, MAL rating, your rating, status, last update) with sortable column headers on desktop. Switch to the poster grid while keeping your tab, search and sort. A summary line shows how many episodes are still ahead of you.
+- **Keyboard-first.** ⌘/Ctrl-K opens a command palette to jump to pages, list tabs, any title in your list, or a MAL search; `/` focuses search.
 - **Ratings you can read and edit.** MAL community ratings and your personal scores have separate labels. Update your score, status, or episode count directly from the list.
-- **Comfortable on every screen.** Warm charcoal surfaces, ivory editorial headings, coral actions, and gold ratings give the interface depth. Locally hosted Outfit, visible keyboard focus, and large touch controls support desktop, tablet, and phone use.
+- **Comfortable on every screen.** A sidebar on desktop, an icon rail on tablets and a bottom tab bar on phones. Neutral graphite surfaces with a single lime accent, locally hosted Geist and Bricolage Grotesque, visible keyboard focus, and 44px touch targets throughout.
 - **Local edits and queued sync.** Changes update immediately in IndexedDB and queue for MAL. Starting a planned title moves it to Watching. Last Updated order changes after MAL acknowledges the edit.
 - **Discovery and details.** Search MAL, explore popular and seasonal anime, identify English dubs, and view characters, recommendations, review excerpts, tags, trailers, and airing information where available.
 - **Personal statistics and preferences.** Explore score and format distributions, and choose English or Romaji titles.
@@ -70,7 +71,7 @@ npm run lint
 
 The dummy client ID supports build and test verification; use your registered ID for actual login. Vitest covers API, authentication, cache, sync, and utility behavior. [Browser checks](tests/browser/README.md) exercise ratings, episode edits, status changes, responsive layouts at 320/390/820/1440px, and offline navigation to `/`, `/browse`, and `/stats` in isolated Chromium contexts.
 
-See [AGENTS.md](AGENTS.md) for the engineering contract and [the design specification](docs/superpowers/specs/2026-10-04-watch-journal-design.md) for the watch journal direction. Deployed PageSpeed improvements have not yet been measured.
+See [AGENTS.md](AGENTS.md) for the engineering contract and [the design specification](docs/superpowers/specs/2026-10-04-ledger-design.md) for the interface direction. Deployed PageSpeed improvements have not yet been measured.
 
 ## Deploy to Cloudflare Pages
 

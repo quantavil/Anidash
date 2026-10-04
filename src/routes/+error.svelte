@@ -11,28 +11,17 @@
 	};
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-surface-0 px-4">
-	<div class="text-center glass-card backdrop-blur p-10 max-w-md w-full">
-		<div class="mb-4 text-6xl">
-			{status === 404 ? '🔍' : '💥'}
-		</div>
-		<h1 class="text-4xl font-bold text-text-primary">{status}</h1>
-		<p class="mt-2 text-lg text-text-secondary">
-			{MESSAGES[status] ?? message}
+<div class="flex min-h-dvh items-center justify-center px-4">
+	<div class="w-full max-w-md text-center">
+		<p
+			class="num font-[family-name:var(--font-display)] text-8xl font-bold tracking-tighter text-primary"
+		>
+			{status}
 		</p>
-		<div class="mt-6 flex justify-center gap-3">
-			<button
-				onclick={() => goto('/')}
-				class="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-			>
-				Go Home
-			</button>
-			<button
-				onclick={() => history.back()}
-				class="rounded-lg border border-border bg-surface-1 px-5 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-2"
-			>
-				Go Back
-			</button>
+		<h1 class="mt-2 text-xl font-semibold text-text-primary">{MESSAGES[status] ?? message}</h1>
+		<div class="mt-8 flex justify-center gap-3">
+			<button class="btn btn-primary" onclick={() => goto('/')}>Go home</button>
+			<button class="btn" onclick={() => history.back()}>Go back</button>
 		</div>
 	</div>
 </div>

@@ -5,24 +5,29 @@
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { toast } from 'svelte-sonner';
 	import { formatMediaType } from '$lib/utils/format';
-	import { Star, Plus, Mic } from 'lucide-svelte';
-	import GenreBadge from './GenreBadge.svelte';
+	import { Star, Plus, Mic, Check, LoaderCircle } from 'lucide-svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
-	import StatusBadge from './StatusBadge.svelte';
+	import { STATUS_META } from './status';
 
-	let { anime, index = 0 }: { anime: DisplayAnime; index?: number } = $props();
+	let {
+		anime,
+		index = 0,
+		season
+	}: {
+		anime: DisplayAnime;
+		index?: number;
+		/** Season the card is shown under; long-running shows from earlier seasons read "Since …". */
+		season?: string;
+	} = $props();
 
 	const listEntry = $derived(userListStore.getEntry(anime.malId));
 	const inList = $derived(listEntry !== undefined);
-
 	let adding = $state(false);
 
-	async function handleAdd(e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
+	async function handleAdd() {
 		if (!authStore.isAuthenticated) {
-			toast.info('Please login to add to your list');
+			toast.info('Connect MyAnimeList to add to your list');
 			authStore.login();
 			return;
 		}
@@ -36,102 +41,168 @@
 			anime.genres
 		);
 		adding = false;
-		if (result.ok) {
-			toast.success(`Added ${anime.title} to Plan to Watch`);
-		} else {
-			toast.error(result.error.message || 'Failed to add anime');
-		}
+		if (result.ok) toast.success(`Added ${anime.title} to Plan to Watch`);
+		else toast.error(result.error.message || 'Failed to add anime');
 	}
 </script>
 
-<div
-	class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface-1 transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 feed-card-contain"
->
-	<a
-		href="/anime/{anime.malId}"
-		class="absolute inset-0 z-[1]"
-		aria-label="View {anime.title} details"
-	></a>
-
-	<!-- Cover Image -->
-	<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-2">
-		<ImageWithFallback
-			src={anime.mainPicture}
-			alt={anime.title}
-			{index}
-			class="h-full w-full transition-transform duration-300 group-hover:scale-105"
-		/>
-
-		<!-- Status badge overlay -->
-		{#if inList && listEntry}
-			<div class="absolute left-2 top-2 z-10">
-				<StatusBadge malId={listEntry.malId} status={listEntry.status} />
-			</div>
+<article class="card feed-card-contain">
+	<div class="frame poster">
+		<a class="cover" href="/anime/{anime.malId}" aria-label="View {anime.title} details">
+			<ImageWithFallback src={anime.mainPicture} alt="" {index} aspectRatio="2/3" class="img" />
+		</a>
+		{#if anime.mean != null}
+			<span class="score glass-badge" title="MyAnimeList community rating"
+				><Star size={11} fill="currentColor" /><span class="num">{anime.mean.toFixed(2)}</span
+				></span
+			>
 		{/if}
-
-		<!-- Dub overlay -->
 		{#if dubStore.hasDub(anime.malId)}
-			<div class="glass-badge absolute bottom-2 left-2 h-6 w-6 border-primary/20 text-primary z-10">
-				<Mic size={12} fill="currentColor" />
-			</div>
+			<span class="dub glass-badge" title="Dubbed"><Mic size={12} fill="currentColor" /></span>
 		{/if}
-	</div>
-
-	<!-- Info -->
-	<div class="flex flex-1 flex-col gap-1.5 p-3">
-		<AnimeTitle
-			title={anime.title}
-			titleEnglish={anime.titleEnglish}
-			tag="h3"
-			interactive={false}
-			class="line-clamp-2 text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
-		/>
-
-		<div class="flex items-center gap-1.5 text-xs text-warning">
-			<Star size={12} fill="currentColor" /><span
-				>{anime.mean != null ? anime.mean.toFixed(2) : '—'}</span
-			><span class="text-text-secondary">MAL</span>
-		</div>
-
-		<div class="flex items-center gap-2 text-xs text-text-muted">
-			{#if anime.mediaType}
-				<span>{formatMediaType(anime.mediaType)}</span>
-			{/if}
-			{#if anime.numEpisodes > 0}
-				<span>· {anime.numEpisodes} eps</span>
-			{/if}
-			{#if anime.startSeason}
-				<span>· {anime.startSeason}</span>
-			{/if}
-		</div>
-
-		<!-- Genres (show first 2) -->
-		{#if anime.genres.length > 0}
-			<div class="mt-auto flex flex-wrap gap-1 pt-1">
-				{#each anime.genres.slice(0, 2) as genre, _idx (_idx)}
-					<GenreBadge name={genre} small />
-				{/each}
-			</div>
-		{/if}
-
-		<!-- Add to List button (if not in list) -->
-		{#if !inList}
+		{#if inList}
+			<span class="saved glass-badge" title="In your list"
+				><Check size={16} strokeWidth={2.4} /></span
+			>
+		{:else}
 			<button
+				class="add glass-badge"
 				onclick={handleAdd}
 				disabled={adding}
 				aria-label="Add {anime.title} to Plan to Watch"
-				class="relative z-[2] mt-2 flex items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/10 min-h-11 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+				title="Add to Plan to Watch"
+				>{#if adding}<LoaderCircle size={17} class="animate-spin" />{:else}<Plus
+						size={19}
+						strokeWidth={2.2}
+					/>{/if}</button
 			>
-				{#if adding}
-					<div
-						class="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
-					></div>
-					<span>Adding...</span>
-				{:else}
-					<Plus size={12} />
-					<span>Add to List</span>
-				{/if}
-			</button>
 		{/if}
 	</div>
-</div>
+	<div class="info">
+		<a class="title" href="/anime/{anime.malId}"
+			><AnimeTitle
+				title={anime.title}
+				titleEnglish={anime.titleEnglish}
+				tag="h3"
+				interactive={false}
+			/></a
+		>
+		<p class="meta">
+			{#if anime.mediaType}<span>{formatMediaType(anime.mediaType)}</span>{/if}
+			{#if anime.numEpisodes > 0}<span class="num">{anime.numEpisodes} ep</span>{/if}
+			{#if anime.startSeason}<span
+					>{season && anime.startSeason !== season
+						? `Since ${anime.startSeason.split(' ').pop()}`
+						: anime.startSeason}</span
+				>{/if}
+		</p>
+		{#if listEntry}
+			<p class="state">
+				<span class="status-dot" style:--dot={STATUS_META[listEntry.status].color}></span>
+				{STATUS_META[listEntry.status].short}
+			</p>
+		{/if}
+	</div>
+</article>
+
+<style>
+	.card {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		min-width: 0;
+	}
+	.frame {
+		position: relative;
+	}
+	.cover {
+		display: block;
+	}
+	.frame :global(.img) {
+		width: 100%;
+		transition: transform 0.4s var(--ease-fluid);
+	}
+	.cover:hover :global(.img) {
+		transform: scale(1.03);
+	}
+	.score {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		gap: 4px;
+		padding: 3px 8px;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--color-warning);
+	}
+	.score .num {
+		color: var(--color-text-primary);
+	}
+	.dub {
+		position: absolute;
+		left: 6px;
+		bottom: 8px;
+		width: 24px;
+		height: 24px;
+		color: var(--color-primary);
+	}
+	.add,
+	.saved {
+		position: absolute;
+		right: 6px;
+		bottom: 6px;
+		width: 44px;
+		height: 44px;
+		transition:
+			background-color 0.15s,
+			color 0.15s,
+			transform 0.1s;
+	}
+	.add:hover:not(:disabled) {
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+	}
+	.add:active:not(:disabled) {
+		transform: scale(0.92);
+	}
+	.saved {
+		color: var(--color-primary);
+		pointer-events: none;
+	}
+	.title :global(h3) {
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.3;
+		overflow-wrap: anywhere;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.title:hover :global(h3) {
+		text-decoration: underline;
+		text-decoration-color: var(--color-border-strong);
+		text-underline-offset: 3px;
+	}
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 8px;
+		margin-top: 2px;
+		font-size: 12px;
+		color: var(--color-text-muted);
+	}
+	.meta > span:not(:last-child)::after {
+		content: '·';
+		margin-left: 8px;
+	}
+	.state {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 6px;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+</style>

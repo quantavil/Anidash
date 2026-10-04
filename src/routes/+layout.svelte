@@ -7,7 +7,8 @@
 	import { onMount } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 
-	import FluidNav from '$lib/ui/FluidNav.svelte';
+	import AppNav from '$lib/ui/AppNav.svelte';
+	import CommandPalette from '$lib/ui/CommandPalette.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
@@ -21,6 +22,7 @@
 	let { children } = $props();
 
 	let initialized = $state(false);
+	let paletteOpen = $state(false);
 
 	let dataLoaded = $state(false);
 
@@ -118,15 +120,16 @@
 	theme="dark"
 	position="top-right"
 	toastOptions={{
-		style: 'background: #242720; border: 1px solid #3b3f35; color: #f1eee5;',
+		style:
+			'background: var(--color-surface-2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary);',
 		duration: 3000
 	}}
 />
 
 <a class="skip-link" href="#main-content">Skip to content</a>
-<div class="app-shell">
-	<FluidNav />
-	<div class="app-content">
+<div class="shell">
+	<AppNav onsearch={() => (paletteOpen = true)} />
+	<div class="stage">
 		{#if authStore.isAuthenticated}<OfflineBanner />{/if}
 		<main id="main-content" tabindex="-1">
 			{#if !initialized || authStore.isLoading}<div
@@ -138,7 +141,34 @@
 		</main>
 	</div>
 </div>
+<CommandPalette bind:open={paletteOpen} />
 {#if initialized && authStore.isAuthenticated}<CompleteAnimeDialog
 		bind:open={userListStore.showCompleteDialog}
 		bind:malId={userListStore.completeTargetId}
 	/>{/if}
+
+<style>
+	/* Grid: [sidebar | stage]. The sidebar collapses to an icon rail, then to a bottom tab bar. */
+	.shell {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		min-height: 100dvh;
+	}
+	.stage {
+		min-width: 0;
+		padding: 0 16px calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+	}
+	@media (min-width: 768px) {
+		.shell {
+			grid-template-columns: 72px minmax(0, 1fr);
+		}
+		.stage {
+			padding: 0 clamp(20px, 3vw, 40px);
+		}
+	}
+	@media (min-width: 1100px) {
+		.shell {
+			grid-template-columns: 232px minmax(0, 1fr);
+		}
+	}
+</style>

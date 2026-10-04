@@ -3,7 +3,7 @@ import sys
 from playwright.sync_api import sync_playwright, expect
 base=sys.argv[1] if len(sys.argv)>1 else 'http://127.0.0.1:4173'
 with sync_playwright() as p:
-    browser=p.chromium.launch(headless=True)
+    browser=p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM_PATH'))
     context=browser.new_context()
     context.route(base+'/api/**',lambda r:r.fulfill(status=503,json={'error':'Isolated offline shell check'}))
     page=context.new_page()

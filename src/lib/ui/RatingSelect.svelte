@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { Star, ChevronDown } from 'lucide-svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	let { malId, title, score }: { malId: number; title: string; score: number } = $props();
+
+	let {
+		malId,
+		title,
+		score,
+		compact = false
+	}: { malId: number; title: string; score: number; compact?: boolean } = $props();
+
 	const descriptions = [
 		'Not rated',
 		'Appalling',
@@ -17,10 +24,11 @@
 	];
 </script>
 
-<label class="rating-control" class:rated={score > 0}>
+<label class="chip-select" class:compact class:rated={score > 0} title="Your personal rating">
 	<Star size={14} fill={score > 0 ? 'currentColor' : 'none'} aria-hidden="true" />
-	<span class="rating-label">Yours</span>
-	<strong aria-hidden="true">{score > 0 ? `${score} / 10` : 'Rate'}</strong>
+	<span class="k">You</span>
+	<strong class="num" aria-hidden="true">{score > 0 ? score : 'Rate'}</strong>
+	<ChevronDown size={13} aria-hidden="true" />
 	<select
 		aria-label="Your rating for {title}"
 		value={score}
@@ -30,69 +38,58 @@
 			<option {value}>{value === 0 ? 'Not rated' : `${value} / 10 · ${description}`}</option>
 		{/each}
 	</select>
-	<ChevronDown size={12} aria-hidden="true" />
 </label>
 
 <style>
-	.rating-control {
+	.chip-select {
 		position: relative;
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: 5px;
-		min-height: 44px;
-		padding: 0 8px;
+		gap: 6px;
+		height: 36px;
+		padding: 0 10px;
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		background: var(--color-surface-2);
-		color: var(--color-text-secondary);
-		min-width: 0;
+		border-radius: var(--radius-m);
+		background: var(--color-surface-1);
+		color: var(--color-text-muted);
+		font-size: 13px;
+		white-space: nowrap;
+		transition: border-color 0.15s;
 	}
-	.rating-control.rated {
+	.chip-select:hover {
+		border-color: var(--color-border-strong);
+	}
+	.chip-select.rated {
 		color: var(--color-warning);
 	}
-	.rating-label {
+	.chip-select:focus-within {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+	.k {
 		font-size: 11px;
-		color: var(--color-text-secondary);
+		color: var(--color-text-muted);
+	}
+	.compact {
+		width: 100%;
 	}
 	strong {
-		font-size: 12px;
-		font-weight: 500;
+		font-weight: 600;
 		color: var(--color-text-primary);
-		white-space: nowrap;
 	}
 	select {
 		position: absolute;
-		inset: 0;
-		opacity: 0;
+		inset: -4px 0;
 		width: 100%;
-		height: 100%;
+		height: calc(100% + 8px);
+		opacity: 0;
 		cursor: pointer;
-	}
-
-	option {
-		background: var(--color-surface-1);
-		color: var(--color-text-primary);
-	}
-	.rating-control:focus-within {
-		outline: 2px solid var(--color-primary);
-		outline-offset: 2px;
 	}
 	select:focus-visible {
 		outline: none;
 	}
-	@media (max-width: 480px) {
-		.rating-control {
-			gap: 4px;
-			padding: 0 6px;
-		}
-		.rating-control :global(svg) {
-			width: 11px;
-		}
-		.rating-label {
-			font-size: 10px;
-		}
-		strong {
-			font-size: 11px;
-		}
+	option {
+		background: var(--color-surface-1);
+		color: var(--color-text-primary);
 	}
 </style>

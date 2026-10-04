@@ -19,7 +19,7 @@ ENTRIES = [
 records = [dict(malId=i,title=t,titleEnglish=en,numWatchedEpisodes=w,numEpisodes=n,score=s,mean=m,status=st,mainPicture={'medium':im,'large':im},genres=[{'id':10,'name':'Fantasy'}],studios=[],startSeason={'year':2023,'season':'fall'},mediaType='tv',animeStatus='finished_airing',numListUsers=10000,numScoringUsers=5000,isRewatching=False,updatedAt=f'2026-10-04T{23-k:02d}:00:00Z',startDate=None,finishDate=None) for k,(i,t,en,w,n,s,m,st,im) in enumerate(ENTRIES)]
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
+    browser = p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM_PATH'))
     context = browser.new_context(viewport={'width':1440,'height':1000})
     context.route(BASE + '/api/**', lambda route: route.fulfill(status=503,json={'error':'Isolated browser verification'}))
     context.route('**/raw.githubusercontent.com/**', lambda route: route.fulfill(json={'dubbed':[]}))
@@ -66,7 +66,7 @@ with sync_playwright() as p:
     page.set_viewport_size({'width':320,'height':760})
     page.get_by_role('button',name='Poster grid').click()
     expect(page).to_have_url(__import__('re').compile('view=grid'))
-    for button in page.locator('.pill-base.compact .pill-btn').all():
+    for button in page.locator('article .stepper button').all():
         box=button.bounding_box()
         assert box['width']>=44 and box['height']>=44,box
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Grid overflow'
@@ -89,10 +89,10 @@ with sync_playwright() as p:
     expect(page.get_by_role('combobox',name='Your rating for Sousou no Frieren')).to_have_count(0)
     page.get_by_role('tab',name=__import__('re').compile('On Hold')).click()
     expect(page.get_by_role('combobox',name='Your rating for Sousou no Frieren')).to_have_value('8')
-    page.get_by_role('button',name='Settings and account').click()
-    expect(page.get_by_role('region',name='Your preferences')).to_be_visible()
+    page.get_by_role('button',name='Settings and account').first.click()
+    expect(page.get_by_role('dialog',name='Your preferences')).to_be_visible()
     page.keyboard.press('Escape')
-    expect(page.get_by_role('region',name='Your preferences')).to_have_count(0)
+    expect(page.get_by_role('dialog',name='Your preferences')).to_have_count(0)
     # Boundary cases: full progress, unknown totals, missing ratings, and long titles.
     page.evaluate("""async()=>{
       const req=indexedDB.open('anidash',2);const db=await new Promise(r=>req.onsuccess=()=>r(req.result));

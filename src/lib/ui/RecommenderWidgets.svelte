@@ -9,7 +9,7 @@
 	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { logger } from '$lib/utils/logger';
 	import Dialog from './Dialog.svelte';
-	import { Dice5, Sparkles, LoaderCircle, Settings, ListFilter, X } from 'lucide-svelte';
+	import { Dice5, Sparkles, LoaderCircle, SlidersHorizontal, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { onMount, onDestroy } from 'svelte';
 
@@ -170,259 +170,275 @@
 	}
 </script>
 
-<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
-	<!-- PTW Roulette Widget -->
-	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-500 sm:p-6 bg-surface-1 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {rollingPTW
-			? 'border-primary/40 shadow-[0_0_20px_rgba(139,126,248,0.25)]'
-			: 'border-white/5 hover:border-primary/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(139,126,248,0.12)]'}"
-	>
+<!-- Quick picks: pick something for me. -->
+<div class="picks">
+	<div class="pick">
 		<button
+			class="pick-main"
 			onclick={runRoulette}
 			disabled={rollingPTW}
-			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
 			aria-label="Roll Plan to Watch Roulette"
-		></button>
-
-		<button
-			onclick={(e) => {
-				e.stopPropagation();
-				filterDialogOpen = true;
-			}}
-			aria-expanded={filterDialogOpen}
-			class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-all hover:bg-primary/10 hover:border-primary/20 hover:text-primary-hover hover:rotate-45 active:scale-90 cursor-pointer"
-			title="Filter Settings"
 		>
-			<Settings size={14} />
+			{#if rollingPTW}<LoaderCircle size={18} class="animate-spin" />{:else}<Dice5 size={18} />{/if}
+			<span class="pick-text">
+				<strong>{rollingPTW ? rolledTitle : 'Plan to Watch roulette'}</strong>
+				<span>
+					{#if rollingPTW}Picking…
+					{:else if ptwEntries.length === 0}Your backlog is empty
+					{:else if selectedGenres.length > 0 || selectedFormats.length > 0 || minScore > 0}{matchingPTW.length}
+						{matchingPTW.length === 1 ? 'match' : 'matches'} with your filters
+					{:else}One at random from {ptwEntries.length} saved{/if}
+				</span>
+			</span>
 		</button>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
-		></div>
-
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-primary"
-		>
-			<Dice5 size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div
-				class="glass-icon-wrapper border-primary/10 bg-primary/5 text-primary group-hover:bg-primary/10 group-hover:border-primary/20"
-			>
-				{#if rollingPTW}
-					<LoaderCircle
-						size={24}
-						class="animate-spin text-primary drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Dice5 size={24} class="text-primary drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				{#if rollingPTW}
-					{rolledTitle}
-				{:else}
-					PTW Roulette
-				{/if}
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{#if rollingPTW}
-					Spinning...
-				{:else if ptwEntries.length === 0}
-					Backlog is empty
-				{:else if selectedGenres.length > 0 || selectedFormats.length > 0 || minScore > 0}
-					{matchingPTW.length} match{matchingPTW.length === 1 ? '' : 'es'} ({selectedGenres.length +
-						selectedFormats.length +
-						(minScore > 0 ? 1 : 0)} active)
-				{:else}
-					Random from backlog
-				{/if}
-			</p>
-		</div>
-	</div>
-
-	<!-- Seasonal Surprise Widget -->
-	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {loading
-			? 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.25)]'
-			: 'border-white/5 hover:border-pink-500/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(244,114,182,0.12)]'}"
-	>
 		<button
+			class="pick-side"
+			onclick={() => (filterDialogOpen = true)}
+			aria-expanded={filterDialogOpen}
+			aria-label="Roulette filters"
+			title="Roulette filters"><SlidersHorizontal size={16} /></button
+		>
+	</div>
+	<div class="pick">
+		<button
+			class="pick-main"
 			onclick={getRandomSeasonal}
 			disabled={loading}
-			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
 			aria-label="Roll Seasonal Surprise"
-		></button>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
-		></div>
-
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-pink-400"
 		>
-			<Sparkles size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div
-				class="glass-icon-wrapper border-pink-500/10 bg-pink-500/5 text-pink-400 group-hover:bg-pink-500/10 group-hover:border-pink-500/20"
-			>
-				{#if loading}
-					<LoaderCircle
-						size={24}
-						class="animate-spin text-pink-400 drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Sparkles size={24} class="text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				Seasonal Surprise
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{#if loading}
-					Loading...
-				{:else}
-					Random airing anime
-				{/if}
-			</p>
-		</div>
+			{#if loading}<LoaderCircle size={18} class="animate-spin" />{:else}<Sparkles size={18} />{/if}
+			<span class="pick-text">
+				<strong>Seasonal surprise</strong>
+				<span>{loading ? 'Loading…' : 'Something airing this season'}</span>
+			</span>
+		</button>
 	</div>
 </div>
 
-<!-- PTW Filters Modal -->
-<Dialog bind:open={filterDialogOpen}>
-	<div class="flex items-center justify-between">
-		<h2 class="text-base font-bold text-text-primary flex items-center gap-2">
-			<ListFilter size={16} class="text-primary" />
-			PTW Roulette Filters
-		</h2>
+<Dialog bind:open={filterDialogOpen} sheet label="Roulette filters">
+	<div class="dlg-head">
+		<h2>Roulette filters</h2>
 		<button
+			class="btn btn-ghost btn-icon"
 			onclick={() => (filterDialogOpen = false)}
-			class="rounded-full p-1.5 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all active:scale-95 cursor-pointer"
-			aria-label="Close filters"
+			aria-label="Close filters"><X size={17} /></button
 		>
-			<X size={16} />
-		</button>
 	</div>
 
-	<div class="mt-5 flex flex-col gap-5">
-		<!-- Genres Filter -->
-		<div class="space-y-2">
-			<span class="text-xs font-semibold uppercase tracking-wider text-text-secondary block"
-				>Genres</span
-			>
+	<div class="dlg-body">
+		<fieldset>
+			<legend>Genres</legend>
 			{#if availableMetadata.genres.length === 0}
-				<p class="text-xs text-text-muted">No genres available in your backlog</p>
+				<p class="none">No genres in your backlog yet.</p>
 			{:else}
-				<div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+				<div class="chips">
 					{#each availableMetadata.genres as genre (genre.id)}
 						{@const active = selectedGenres.includes(genre.id)}
 						<button
+							class="chip"
+							aria-pressed={active}
 							onclick={() => {
 								selectedGenres = active
 									? selectedGenres.filter((id) => id !== genre.id)
 									: [...selectedGenres, genre.id];
-							}}
-							aria-pressed={active}
-							class="rounded-full border px-2.5 py-1 text-xs font-medium transition-all cursor-pointer {active
-								? 'border-primary/40 bg-primary/10 text-primary-hover shadow-[0_0_8px_rgba(139,126,248,0.15)]'
-								: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
+							}}>{genre.name}</button
 						>
-							{genre.name}
-						</button>
 					{/each}
 				</div>
 			{/if}
-		</div>
+		</fieldset>
 
-		<!-- Formats Filter -->
-		<div class="space-y-2">
-			<span class="text-xs font-semibold uppercase tracking-wider text-text-secondary block"
-				>Format</span
-			>
+		<fieldset>
+			<legend>Format</legend>
 			{#if availableMetadata.formats.length === 0}
-				<p class="text-xs text-text-muted">No formats available in your backlog</p>
+				<p class="none">No formats in your backlog yet.</p>
 			{:else}
-				<div class="flex flex-wrap gap-1.5">
+				<div class="chips">
 					{#each availableMetadata.formats as format (format)}
 						{@const active = selectedFormats.includes(format)}
 						<button
+							class="chip"
+							aria-pressed={active}
 							onclick={() => {
 								selectedFormats = active
 									? selectedFormats.filter((f) => f !== format)
 									: [...selectedFormats, format];
-							}}
-							aria-pressed={active}
-							class="rounded-full border px-2.5 py-1 text-xs font-medium uppercase transition-all cursor-pointer {active
-								? 'border-primary/40 bg-primary/10 text-primary-hover shadow-[0_0_8px_rgba(139,126,248,0.15)]'
-								: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
+							}}>{format.toUpperCase()}</button
 						>
-							{format}
-						</button>
 					{/each}
 				</div>
 			{/if}
-		</div>
+		</fieldset>
 
-		<!-- Minimum Score Filter -->
-		<div class="space-y-2">
-			<div
-				class="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-text-secondary"
-			>
-				<span>Min MAL Rating</span>
-				<span class="text-primary-hover font-bold tracking-normal text-sm lowercase">
-					{minScore === 0 ? 'any rating' : `${minScore.toFixed(1)}+`}
-				</span>
-			</div>
-			<div class="flex items-center gap-3">
-				<span class="text-xs text-text-muted">0</span>
-				<input
-					type="range"
-					min="0"
-					max="10"
-					step="0.5"
-					bind:value={minScore}
-					aria-label="Minimum MAL rating"
-					class="flex-1 accent-primary cursor-pointer h-1.5 rounded-full bg-white/10 border-none outline-none"
-				/>
-				<span class="text-xs text-text-muted">10</span>
-			</div>
-		</div>
+		<fieldset>
+			<legend>
+				Minimum MAL rating <span class="val num"
+					>{minScore === 0 ? 'any' : `${minScore.toFixed(1)}+`}</span
+				>
+			</legend>
+			<input
+				type="range"
+				min="0"
+				max="10"
+				step="0.5"
+				bind:value={minScore}
+				aria-label="Minimum MAL rating"
+			/>
+		</fieldset>
 
-		<!-- Eligible Counter -->
-		<div
-			class="flex items-center justify-between rounded-xl border border-white/5 bg-black/40 px-3 py-2 text-xs text-text-secondary"
-		>
-			<span>Eligible backlog titles:</span>
-			<span class="font-bold text-primary-hover">{matchingPTW.length} anime</span>
-		</div>
+		<p class="eligible">
+			<span>Eligible titles</span><strong class="num">{matchingPTW.length}</strong>
+		</p>
 
-		<!-- Actions -->
-		<div class="flex gap-2 mt-2">
+		<div class="dlg-actions">
 			<button
+				class="btn"
 				onclick={() => {
 					selectedGenres = [];
 					selectedFormats = [];
 					minScore = 0;
-				}}
-				class="flex-1 rounded-xl border border-white/10 bg-surface-2 py-2.5 text-xs font-semibold text-text-secondary transition-all hover:bg-white/10 hover:text-text-primary cursor-pointer"
+				}}>Reset</button
 			>
-				Reset
-			</button>
-			<button
-				onclick={runRoulette}
-				disabled={matchingPTW.length === 0}
-				class="flex-[2] rounded-xl bg-gradient-to-r from-primary to-primary-hover text-white py-2.5 text-xs font-bold transition-all hover:shadow-[0_0_15px_rgba(139,126,248,0.3)] active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center"
+			<button class="btn btn-primary" onclick={runRoulette} disabled={matchingPTW.length === 0}
+				>Roll</button
 			>
-				Roll Selected
-			</button>
 		</div>
 	</div>
 </Dialog>
+
+<style>
+	.picks {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+	}
+	@media (max-width: 640px) {
+		.picks {
+			grid-template-columns: 1fr;
+		}
+	}
+	.pick {
+		display: flex;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-m);
+		background: var(--color-surface-1);
+		overflow: hidden;
+		transition: border-color 0.15s;
+	}
+	.pick:hover {
+		border-color: var(--color-border-strong);
+	}
+	.pick-main {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		min-height: 60px;
+		padding: 0 16px;
+		min-width: 0;
+		text-align: left;
+		color: var(--color-primary);
+	}
+	.pick-main:hover:not(:disabled) {
+		background: var(--color-surface-2);
+	}
+	.pick-text {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		color: var(--color-text-secondary);
+		font-size: 12px;
+	}
+	.pick-text strong {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		color: var(--color-text-primary);
+		font-size: 14px;
+		font-weight: 600;
+	}
+	.pick-text span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.pick-side {
+		display: grid;
+		place-items: center;
+		width: 52px;
+		border-left: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.pick-side:hover {
+		background: var(--color-surface-2);
+		color: var(--color-text-primary);
+	}
+	.dlg-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin: -8px -8px 8px 0;
+	}
+	h2 {
+		font-family: var(--font-display);
+		font-size: 20px;
+		font-weight: 650;
+		letter-spacing: -0.02em;
+	}
+	.dlg-body {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+	fieldset {
+		border: 0;
+		padding: 0;
+		margin: 0;
+		min-width: 0;
+	}
+	legend {
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+		margin-bottom: 10px;
+		font-size: 13px;
+		font-weight: 600;
+	}
+	.val {
+		color: var(--color-primary);
+		font-weight: 600;
+	}
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		max-height: 160px;
+		overflow-y: auto;
+	}
+	.none {
+		color: var(--color-text-muted);
+		font-size: 13px;
+	}
+	input[type='range'] {
+		width: 100%;
+		accent-color: var(--color-primary);
+		min-height: 44px;
+	}
+	.eligible {
+		display: flex;
+		justify-content: space-between;
+		padding: 12px 14px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-m);
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+	.eligible strong {
+		color: var(--color-text-primary);
+	}
+	.dlg-actions {
+		display: grid;
+		grid-template-columns: 1fr 2fr;
+		gap: 8px;
+	}
+</style>

@@ -4,7 +4,9 @@
 	import { goto } from '$app/navigation';
 	import { debounce } from '$lib/utils/debounce';
 	import type { SortKey } from '$lib/utils/sort';
+	import { ArrowDownUp } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
+
 	const options: { key: SortKey; label: string }[] = [
 		{ key: 'updated', label: 'Recently updated' },
 		{ key: 'title', label: 'Title A–Z' },
@@ -24,16 +26,30 @@
 	}
 </script>
 
-<div class="filter-bar">
+<svelte:window
+	onkeydown={(e) => {
+		const t = e.target as HTMLElement;
+		if (e.key === '/' && !e.metaKey && !e.ctrlKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) {
+			e.preventDefault();
+			document.getElementById('list-search')?.focus();
+		}
+	}}
+/>
+
+<div class="filters">
 	<SearchInput
+		id="list-search"
 		value={currentQuery}
-		placeholder="Find in your list…"
+		placeholder="Find in your list"
 		label="Search your list"
+		hint="/"
 		oninput={(e) => search((e.target as HTMLInputElement).value)}
 		onclear={clearSearch}
 	/>
-	<label class="sort-control"
-		><span class="sr-only">Sort anime list</span><select
+	<label class="field sort">
+		<ArrowDownUp size={15} class="shrink-0" />
+		<span class="sr-only">Sort anime list</span>
+		<select
 			aria-label="Sort anime list"
 			value={currentSort}
 			onchange={(e) =>
@@ -45,51 +61,40 @@
 					),
 					{ keepFocus: true, noScroll: true }
 				)}
-			>{#each options as option (option.key)}<option value={option.key}>{option.label}</option
-				>{/each}</select
-		></label
-	>
+		>
+			{#each options as option (option.key)}<option value={option.key}>{option.label}</option
+				>{/each}
+		</select>
+	</label>
 </div>
 
 <style>
-	.filter-bar {
+	.filters {
 		display: flex;
-		gap: 12px;
-		align-items: center;
+		flex: 1;
+		gap: 10px;
 		min-width: 0;
 	}
-	.filter-bar :global(.search-field) {
+	.filters :global(.search-field) {
+		flex: 1 1 280px;
 		max-width: 440px;
 	}
-	.sort-control {
+	.sort {
 		flex: none;
 	}
-	select {
-		min-height: 48px;
-		max-width: 100%;
-		padding: 0 30px 0 12px;
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		background: var(--color-surface-1);
-		color: var(--color-text-secondary);
-		font-size: 12px;
-		cursor: pointer;
-	}
-	option {
-		background: var(--color-surface-1);
+	.sort select {
+		padding-right: 4px;
 	}
 	@media (max-width: 640px) {
-		.filter-bar {
-			flex-wrap: wrap;
-			gap: 10px;
+		.filters {
+			display: contents;
 		}
-		.filter-bar :global(.search-field) {
-			flex-basis: 100%;
+		.filters :global(.search-field) {
+			grid-column: 1 / -1;
 			max-width: none;
 		}
-		select {
-			min-height: 46px;
-			padding-left: 10px;
+		.sort {
+			min-width: 0;
 		}
 	}
 </style>

@@ -11,11 +11,12 @@
 		mergeLocalWithOnline,
 		type DisplayAnime
 	} from '$lib/utils/types';
-	import { SlidersHorizontal, LoaderCircle, SearchX } from 'lucide-svelte';
+	import { ArrowDownUp, LoaderCircle, SearchX } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchInput from '$lib/ui/SearchInput.svelte';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
+	import EmptyState from '$lib/ui/EmptyState.svelte';
 	import RecommenderWidgets from '$lib/ui/RecommenderWidgets.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { debounce } from '$lib/utils/debounce';
@@ -361,199 +362,200 @@
 
 <svelte:window onkeydown={handleWindowKeydown} />
 
-<div class="py-6">
-	<!-- Header -->
-	<h1 class="route-title">Discover<span class="text-primary" aria-hidden="true">.</span></h1>
-	<p class="mt-1 text-sm text-text-secondary">Search and discover anime to add to your list</p>
-
-	<!-- Search Bar -->
-	<div class="mt-5 flex flex-col sm:flex-row gap-3">
-		<div class="flex-1">
-			<SearchInput
-				id="browse-search"
-				value={searchInput}
-				placeholder="Search anime by title…"
-				oninput={handleSearchInput}
-				onclear={clearSearch}
-				onkeydown={handleKeyDown}
-				{loading}
-				{isDebouncing}
-			/>
+<div class="page">
+	<div class="page-head">
+		<div>
+			<h1 class="page-title">Browse</h1>
+			<p class="page-sub">Search MyAnimeList, or start from what is popular right now.</p>
 		</div>
+	</div>
 
+	<div class="search-row">
+		<SearchInput
+			id="browse-search"
+			value={searchInput}
+			placeholder="Search anime by title"
+			hint="/"
+			oninput={handleSearchInput}
+			onclear={clearSearch}
+			onkeydown={handleKeyDown}
+			{loading}
+			{isDebouncing}
+		/>
 		{#if hasQuery}
-			<!-- Sort By (only meaningful against a real query corpus) -->
-			<div class="relative sm:w-44">
+			<label class="field sort">
+				<ArrowDownUp size={15} class="shrink-0" />
+				<span class="sr-only">Sort results</span>
 				<select
 					id="browse-sort"
 					aria-label="Sort results"
 					value={filterSort}
 					onchange={(e) => setFilter('sort', (e.target as HTMLSelectElement).value)}
-					class="w-full appearance-none rounded-full border border-white/5 bg-white/5 px-4 py-2.5 pr-9 text-sm text-text-secondary outline-none transition-all focus:bg-white/10 cursor-pointer"
 				>
-					{#each SORTS as s (s.value)}
-						<option value={s.value} class="bg-surface-2">{s.label}</option>
-					{/each}
+					{#each SORTS as s (s.value)}<option value={s.value}>{s.label}</option>{/each}
 				</select>
-				<SlidersHorizontal
-					size={13}
-					class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted"
-				/>
-			</div>
+			</label>
 		{/if}
 	</div>
 
-	<!-- Always-visible filter chips -->
-	<div class="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
-		<!-- Type chips -->
-		{#each TYPES as t (t.value)}
-			{@const active = filterType === t.value}
-			<button
-				onclick={() => setFilter('type', active ? '' : t.value)}
-				aria-pressed={active}
-				class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
-					? 'border-primary/50 bg-primary/15 text-primary'
-					: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
+	<div class="filters" role="group" aria-label="Filters">
+		<div class="scroller scrollbar-none">
+			{#each TYPES as t (t.value)}
+				{@const active = filterType === t.value}
+				<button
+					class="chip"
+					onclick={() => setFilter('type', active ? '' : t.value)}
+					aria-pressed={active}>{t.label}</button
+				>
+			{/each}
+		</div>
+		<div class="scroller scrollbar-none">
+			<button class="chip" onclick={() => setFilter('genre', '')} aria-pressed={!filterGenre}
+				>All genres</button
 			>
-				{t.label}
-			</button>
-		{/each}
-
-		<span class="h-5 w-px bg-white/10" aria-hidden="true"></span>
-
-		<!-- Genre chips (horizontally scrollable) -->
-		<div
-			class="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none"
-			style="max-width: min(100%, 34rem)"
-		>
-			<button
-				onclick={() => setFilter('genre', '')}
-				aria-pressed={!filterGenre}
-				class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {!filterGenre
-					? 'border-primary/50 bg-primary/15 text-primary'
-					: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
-			>
-				All Genres
-			</button>
 			{#each GENRES as g (g.id)}
 				{@const active = filterGenre === String(g.id)}
 				<button
+					class="chip"
 					onclick={() => setFilter('genre', active ? '' : String(g.id))}
-					aria-pressed={active}
-					class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
-						? 'border-primary/50 bg-primary/15 text-primary'
-						: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
+					aria-pressed={active}>{g.name}</button
 				>
-					{g.name}
-				</button>
 			{/each}
 		</div>
 	</div>
 
-	<!-- Results -->
-	<div class="mt-6">
-		<!-- Result count -->
+	{#if isLandingView && !loading}
+		<div class="picks-wrap" transition:fade={{ duration: 150 }}><RecommenderWidgets /></div>
+	{/if}
+
+	<div class="results">
 		{#if !loading}
-			<p class="mb-4 text-xs text-text-muted" aria-live="polite">
+			<p class="count num" aria-live="polite">
 				{filteredResults.length}
-				{filteredResults.length === 1 ? 'title' : 'titles'}
-				{isLandingView ? '· trending now' : ''}
+				{filteredResults.length === 1 ? 'title' : 'titles'}{isLandingView ? ' · popular now' : ''}
 			</p>
 		{/if}
 
 		{#if loading && results.length === 0}
-			<!-- Skeleton mirrors the final layout to prevent shift -->
-			<div>
-				{#if isLandingView}
-					<div class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-						<div
-							class="min-h-[130px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[150px]"
-						></div>
-						<div
-							class="min-h-[130px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[150px]"
-						></div>
-					</div>
-					<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">
-						Popular Anime
-					</h2>
-				{/if}
-				<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-					<AnimeCardSkeleton count={10} />
-				</div>
-			</div>
+			<div class="poster-grid"><AnimeCardSkeleton count={12} /></div>
 		{:else if filteredResults.length > 0}
-			{#if isLandingView}
-				<div transition:fade={{ duration: 150 }}>
-					<RecommenderWidgets />
-				</div>
-				<h2 class="mb-4 mt-8 text-sm font-semibold uppercase tracking-wider text-text-muted">
-					Popular Anime
-				</h2>
-			{/if}
-			<div
-				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-				transition:fade={{ duration: 150 }}
-			>
+			<div class="poster-grid" transition:fade={{ duration: 150 }}>
 				{#each filteredResults as anime, i (anime.malId)}
 					<SearchResultCard {anime} index={i} />
 				{/each}
 			</div>
 
-			<!-- Pagination -->
 			{#if hasNextPage}
-				<div class="flex justify-center py-8">
+				<div class="more">
 					{#if loadingMore}
-						<div class="flex items-center gap-2 text-sm text-text-muted" aria-live="polite">
-							<LoaderCircle size={16} class="animate-spin" />
-							Loading more…
-						</div>
-					{:else}
-						<button
-							onclick={() => fetchOnline(currentPage + 1, true, currentSearchId)}
-							class="rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+						<span class="loading" aria-live="polite"
+							><LoaderCircle size={16} class="animate-spin" /> Loading more…</span
 						>
-							Show More
-						</button>
+					{:else}
+						<button class="btn" onclick={() => fetchOnline(currentPage + 1, true, currentSearchId)}
+							>Show more</button
+						>
 					{/if}
 				</div>
 			{:else if !isLandingView}
-				<p class="mt-6 text-center text-sm text-text-muted">End of results</p>
+				<p class="end">End of results</p>
 			{/if}
 		{:else if fetchFailed && filteredResults.length === 0}
-			<div
-				class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
-				transition:fade={{ duration: 150 }}
-			>
-				<SearchX size={36} class="mb-3 text-text-muted" strokeWidth={1.5} />
-				<p class="text-sm text-text-secondary">Couldn't load anime right now</p>
-				<button
-					onclick={runSearch}
-					class="mt-4 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
-				>
-					Retry
-				</button>
+			<div class="state" transition:fade={{ duration: 150 }}>
+				<SearchX size={30} strokeWidth={1.5} />
+				<p>Could not load anime right now.</p>
+				<button class="btn" onclick={runSearch}>Retry</button>
 			</div>
 		{:else}
-			<div
-				class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
-				transition:fade={{ duration: 150 }}
-			>
-				<SearchX size={36} class="mb-3 text-text-muted" strokeWidth={1.5} />
-				<p class="text-sm text-text-secondary">
-					{hasQuery ? 'No anime found matching your search' : 'Nothing matches these filters'}
-				</p>
-				<p class="mt-1 text-xs text-text-muted">
-					{hasQuery
-						? 'Try different keywords or filters'
-						: 'Try widening your filters or search by title'}
-				</p>
-				<button
-					onclick={clearAllFilters}
-					class="mt-4 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
-				>
-					Clear All Filters
-				</button>
+			<EmptyState
+				title={hasQuery ? 'No anime match your search' : 'Nothing matches these filters'}
+				hint={hasQuery
+					? 'Try different keywords or loosen the filters.'
+					: 'Widen the filters, or search by title.'}
+			/>
+			<div class="state">
+				<button class="btn" onclick={clearAllFilters}>Clear all filters</button>
 			</div>
 		{/if}
 	</div>
 </div>
+
+<style>
+	.search-row {
+		display: flex;
+		gap: 10px;
+	}
+	.search-row :global(.search-field) {
+		flex: 1;
+		max-width: 560px;
+	}
+	.sort {
+		flex: none;
+	}
+	.sort select {
+		padding-right: 4px;
+	}
+	.filters {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin: 14px 0 0;
+	}
+	/* Chips scroll sideways and fade at the right edge, so overflow is visible but the page never scrolls sideways. */
+	.scroller {
+		display: flex;
+		gap: 8px;
+		padding: 4px 0;
+		overflow-x: auto;
+		mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+	}
+	.picks-wrap {
+		margin-top: 20px;
+	}
+	.results {
+		margin-top: 24px;
+	}
+	.count {
+		margin-bottom: 14px;
+		color: var(--color-text-muted);
+		font-size: 12px;
+	}
+	.more {
+		display: flex;
+		justify-content: center;
+		padding: 32px 0 8px;
+	}
+	.loading {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--color-text-muted);
+		font-size: 14px;
+	}
+	.end {
+		margin-top: 32px;
+		text-align: center;
+		color: var(--color-text-muted);
+		font-size: 13px;
+	}
+	.state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		padding: 24px 0;
+		color: var(--color-text-secondary);
+	}
+	@media (max-width: 640px) {
+		.search-row {
+			flex-wrap: wrap;
+		}
+		.search-row :global(.search-field) {
+			max-width: none;
+			flex-basis: 100%;
+		}
+		.sort {
+			flex: 1;
+		}
+	}
+</style>

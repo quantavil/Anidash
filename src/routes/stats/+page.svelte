@@ -2,12 +2,12 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
-	import { formatMediaType, formatRelativeDate, formatListStatus } from '$lib/utils/format';
-	import { Film, Star, Tv, Play, Calendar, CircleCheck, Pause, Trash, Clock } from 'lucide-svelte';
-	import StatCard from '$lib/ui/StatCard.svelte';
-	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
+	import { formatRelativeDate } from '$lib/utils/format';
+	import EpisodeStepper from '$lib/ui/EpisodeStepper.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
+	import { STATUS_META, STATUS_ORDER } from '$lib/ui/status';
+	import type { AnimeStatus } from '$lib/cache/db';
 
 	// ─── Stats ───
 
@@ -58,91 +58,36 @@
 			.map(([label, count]) => ({ label, count }))
 			.sort((a, b) => b.count - a.count);
 
-		const topGenres = allGenres.slice(0, 5);
-		const otherCount = allGenres.slice(5).reduce((sum, item) => sum + item.count, 0);
-
-		const genres = [...topGenres];
-		if (otherCount > 0) genres.push({ label: 'Other', count: otherCount });
-
-		const totalGenreCount = genres.reduce((sum, item) => sum + item.count, 0);
-
-		let cumulativePct = 0;
-		const donutSlices = genres.map((item) => {
-			const percentage = (item.count / totalGenreCount) * 100;
-			const slice = {
-				...item,
-				percentage,
-				offset: -cumulativePct
-			};
-			cumulativePct += percentage;
-			return slice;
-		});
+		const topGenres = allGenres.slice(0, 8);
+		const maxGenre = topGenres[0]?.count ?? 1;
 
 		return {
 			scoreDist,
 			maxScoreCount: maxScoreCount || 1,
-			donutSlices,
-			totalGenreCount
+			topGenres,
+			maxGenre
 		};
 	});
 
-	const statCards = $derived([
-		{
-			label: 'Watching',
-			value: stats.watching,
-			icon: Play,
-			color: 'text-primary',
-			href: '/?tab=watching'
-		},
-		{
-			label: 'Plan to Watch',
-			value: stats.planToWatch,
-			icon: Calendar,
-			color: 'text-info',
-			href: '/?tab=plan_to_watch'
-		},
-		{
-			label: 'Completed',
-			value: stats.completed,
-			icon: CircleCheck,
-			color: 'text-success',
-			href: '/?tab=completed'
-		},
-		{
-			label: 'On Hold',
-			value: stats.onHold,
-			icon: Pause,
-			color: 'text-warning',
-			href: '/?tab=on_hold'
-		},
-		{
-			label: 'Dropped',
-			value: stats.dropped,
-			icon: Trash,
-			color: 'text-error',
-			href: '/?tab=dropped'
-		},
-		{ label: 'All Anime', value: stats.total, icon: Tv, href: '/?tab=all' }
-	]);
+	const distribution = $derived(
+		STATUS_ORDER.map((key) => ({
+			key,
+			count: userListStore.statusCounts[key] ?? 0,
+			pct: stats.total > 0 ? ((userListStore.statusCounts[key] ?? 0) / stats.total) * 100 : 0
+		}))
+	);
 
-	const summaryCards = $derived([
-		{ label: 'Episodes', value: stats.totalEpisodes.toLocaleString(), icon: Film },
-		{
-			label: 'Mean Score',
-			value: stats.meanScore > 0 ? stats.meanScore.toFixed(1) : '—',
-			icon: Star
-		},
-		{
-			label: 'Days Watched',
-			value: stats.daysWatched > 0 ? stats.daysWatched.toFixed(1) : '—',
-			icon: Clock
-		}
+	const kpis = $derived([
+		{ label: 'Titles', value: stats.total.toLocaleString() },
+		{ label: 'Episodes watched', value: stats.totalEpisodes.toLocaleString() },
+		{ label: 'Days watched', value: stats.daysWatched > 0 ? stats.daysWatched.toFixed(1) : '—' },
+		{ label: 'Mean score', value: stats.meanScore > 0 ? stats.meanScore.toFixed(1) : '—' }
 	]);
 
 	const watching = $derived(
 		[...userListStore.watching]
 			.sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
-			.slice(0, 6)
+			.slice(0, 8)
 	);
 
 	const recentlyUpdated = $derived(
@@ -157,271 +102,420 @@
 	<title>Stats | AniDash</title>
 </svelte:head>
 
-<div class="py-6 pb-24 lg:pb-6">
-	<!-- Greeting -->
-	<div class="mb-6">
-		<h1 class="route-title">
-			Welcome back{authStore.user?.name ? `, ${authStore.user.name}` : ''}
-		</h1>
-		<p class="mt-1 text-sm text-text-secondary">
-			{#if syncStore.lastSynced}
-				Last synced {formatRelativeDate(new Date(syncStore.lastSynced).toISOString())}
-			{:else}
-				Sync your list to get started
-			{/if}
-		</p>
+<div class="page">
+	<div class="page-head">
+		<div>
+			<h1 class="page-title">Stats</h1>
+			<p class="page-sub">
+				{authStore.user?.name ? `${authStore.user.name} · ` : ''}{#if syncStore.lastSynced}last
+					synced
+					{formatRelativeDate(new Date(syncStore.lastSynced).toISOString())}{:else}sync your list to
+					get started{/if}
+			</p>
+		</div>
 	</div>
 
-	<!-- Stats Grid -->
-	<div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-		{#each statCards as card (card.label)}
-			<StatCard {...card} />
+	<dl class="kpis">
+		{#each kpis as kpi (kpi.label)}
+			<div class="kpi">
+				<dd class="num">{kpi.value}</dd>
+				<dt>{kpi.label}</dt>
+			</div>
 		{/each}
-	</div>
+	</dl>
 
-	<div class="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-		{#each summaryCards as card, i (card.label)}
-			<StatCard {...card} class={i === summaryCards.length - 1 ? 'col-span-2 sm:col-span-1' : ''} />
-		{/each}
-	</div>
-
-	<!-- Visual Analytics -->
 	{#if stats.total > 0}
-		<div class="mb-8 grid gap-4 lg:grid-cols-2">
-			<!-- Score Distribution -->
-			<section class="rounded-2xl border border-white/5 bg-surface-1 p-5 shadow-xl">
-				<h2 class="mb-4 text-sm font-semibold text-text-primary">Score Distribution</h2>
-				<div class="flex h-32 items-stretch gap-1.5 sm:gap-2 pt-2">
-					{#each analytics.scoreDist as count, i (i)}
-						{@const heightPct =
-							count === 0 ? 0 : Math.max(5, (count / analytics.maxScoreCount) * 100)}
-						<div class="group relative flex h-full flex-1 flex-col items-center justify-end">
-							<!-- Tooltip -->
-							<div
-								class="absolute -top-8 hidden rounded bg-surface-3 px-2 py-1 text-[10px] font-medium text-white shadow-lg group-hover:block whitespace-nowrap z-10 pointer-events-none"
-							>
-								{count} series
-							</div>
+		<section class="block" aria-labelledby="dist">
+			<h2 id="dist">Where your list stands</h2>
+			<div class="dist-bar" role="img" aria-label="Share of your list by status">
+				{#each distribution as seg (seg.key)}
+					{#if seg.count > 0}<span
+							style:width="{seg.pct}%"
+							style:background={STATUS_META[seg.key].color}
+						></span>{/if}
+				{/each}
+			</div>
+			<ul class="legend">
+				{#each distribution as seg (seg.key)}
+					<li>
+						<a href={seg.key === 'watching' ? '/' : `/?tab=${seg.key}`}>
+							<span class="status-dot" style:--dot={STATUS_META[seg.key as AnimeStatus].color}
+							></span>
+							<span class="name">{STATUS_META[seg.key as AnimeStatus].label}</span>
+							<strong class="num">{seg.count.toLocaleString()}</strong>
+							<span class="pct num">{Math.round(seg.pct)}%</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
 
-							<div
-								class="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-80 mb-1
-								{i >= 7 ? 'bg-success' : i >= 4 ? 'bg-primary' : 'bg-warning'}"
-								style="height: {heightPct}%"
-							></div>
-							<span class="text-[10px] sm:text-xs font-medium text-text-muted">{i + 1}</span>
+		<div class="two">
+			<section class="block" aria-labelledby="scores">
+				<h2 id="scores">Your scores</h2>
+				<div class="hist">
+					{#each analytics.scoreDist as count, i (i)}
+						{@const h = count === 0 ? 0 : Math.max(4, (count / analytics.maxScoreCount) * 100)}
+						<div class="col" title="{count} rated {i + 1}">
+							<span class="n num">{count || ''}</span>
+							<span class="bar" style:height="{h}%"></span>
+							<span class="x num">{i + 1}</span>
 						</div>
 					{/each}
 				</div>
 			</section>
 
-			<!-- Genre Distribution -->
-			<section class="flex flex-col rounded-2xl border border-white/5 bg-surface-1 p-5 shadow-xl">
-				<h2 class="mb-4 text-sm font-semibold text-text-primary">Genre Distribution</h2>
-				<div class="flex flex-1 items-center justify-center gap-6 pb-2">
-					<!-- Donut Chart -->
-					<div class="relative h-28 w-28 shrink-0">
-						<svg viewBox="0 0 42 42" class="h-full w-full -rotate-90 drop-shadow-md">
-							<circle
-								cx="21"
-								cy="21"
-								r="15.91549431"
-								fill="transparent"
-								stroke="rgba(255,255,255,0.05)"
-								stroke-width="5"
-							/>
-							{#each analytics.donutSlices as slice, i (slice.label)}
-								<circle
-									cx="21"
-									cy="21"
-									r="15.91549431"
-									fill="transparent"
-									stroke="currentColor"
-									stroke-width="5"
-									stroke-dasharray="{slice.percentage} {100 - slice.percentage}"
-									stroke-dashoffset={slice.offset}
-									class={[
-										'transition-all duration-700 ease-out hover:stroke-[6px]',
-										i === 0
-											? 'text-primary'
-											: i === 1
-												? 'text-success'
-												: i === 2
-													? 'text-info'
-													: i === 3
-														? 'text-warning'
-														: i === 4
-															? 'text-error'
-															: 'text-surface-3'
-									]}
-								/>
-							{/each}
-						</svg>
-						<!-- Center Info -->
-						<div
-							class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
-						>
-							<span class="text-xs font-bold text-text-primary">{stats.total}</span>
-							<span class="text-[9px] text-text-muted">Total</span>
-						</div>
-					</div>
-
-					<!-- Legend -->
-					<div class="flex flex-1 flex-col justify-center gap-2.5 text-xs">
-						{#each analytics.donutSlices as slice, i (slice.label)}
-							<div class="group flex items-center justify-between">
-								<div class="flex items-center gap-2 truncate pr-2">
-									<div
-										class={[
-											'h-2 w-2 shrink-0 rounded-full',
-											i === 0
-												? 'bg-primary'
-												: i === 1
-													? 'bg-success'
-													: i === 2
-														? 'bg-info'
-														: i === 3
-															? 'bg-warning'
-															: i === 4
-																? 'bg-error'
-																: 'bg-surface-3'
-										]}
-									></div>
-									<span
-										class="truncate font-medium text-text-secondary transition-colors group-hover:text-text-primary"
-									>
-										{slice.label}
-									</span>
-								</div>
-								<div class="flex items-center gap-1.5 pl-1">
-									<span class="font-semibold text-text-primary">{slice.count}</span>
-									<span class="hidden w-7 text-right text-[10px] text-text-muted sm:inline-block">
-										{Math.round(slice.percentage)}%
-									</span>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
+			<section class="block" aria-labelledby="genres">
+				<h2 id="genres">Top genres</h2>
+				<ul class="genres">
+					{#each analytics.topGenres as g (g.label)}
+						<li>
+							<span class="g-name">{g.label}</span>
+							<span class="g-track"
+								><span style:width="{(g.count / analytics.maxGenre) * 100}%"></span></span
+							>
+							<span class="g-count num">{g.count}</span>
+						</li>
+					{/each}
+				</ul>
 			</section>
 		</div>
 	{/if}
 
-	<!-- Continue Watching -->
 	{#if watching.length > 0}
-		<section class="mb-8">
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-lg font-semibold text-text-primary">Continue Watching</h2>
-				<a href="/?tab=watching" class="text-sm text-primary hover:text-primary-hover">
-					View all →
-				</a>
+		<section class="block" aria-labelledby="cont">
+			<div class="block-head">
+				<h2 id="cont">Continue watching</h2>
+				<a href="/">View all</a>
 			</div>
-
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<ul class="shelf scrollbar-none">
 				{#each watching as entry (entry.malId)}
-					<a
-						href="/anime/{entry.malId}"
-						class="group flex gap-3 rounded-xl border border-border bg-surface-1 p-3 transition-all hover:border-primary/40 hover:bg-surface-2"
-					>
-						<ImageWithFallback
-							src={entry.mainPicture?.medium}
-							alt={entry.title}
-							aspectRatio="3/4"
-							class="h-24 w-[68px] shrink-0 rounded-lg overflow-hidden"
-						/>
-						<div class="min-w-0 flex-1">
-							<AnimeTitle
-								title={entry.title}
-								titleEnglish={entry.titleEnglish}
-								tag="h3"
-								interactive={false}
-								class="line-clamp-2 text-sm font-medium text-text-primary group-hover:text-primary"
+					<li>
+						<a class="poster" href="/anime/{entry.malId}" aria-label="View {entry.title} details">
+							<ImageWithFallback
+								src={entry.mainPicture?.medium}
+								alt=""
+								aspectRatio="2/3"
+								class="shelf-img"
 							/>
-							<div class="mt-1 flex items-center gap-2 text-xs text-text-muted">
-								{#if entry.mediaType}
-									<span>{formatMediaType(entry.mediaType)}</span>
-								{/if}
-								{#if entry.mean}
-									<span>★ {entry.mean.toFixed(1)}</span>
-								{/if}
-							</div>
-							<div class="mt-2">
-								<EpisodeCounter
-									malId={entry.malId}
-									watched={entry.numWatchedEpisodes}
-									total={entry.numEpisodes}
-								/>
-							</div>
-							{#if entry.updatedAt}
-								<p class="mt-1 text-[10px] text-text-muted">
-									{formatRelativeDate(entry.updatedAt)}
-								</p>
-							{/if}
-						</div>
-					</a>
+						</a>
+						<AnimeTitle
+							title={entry.title}
+							titleEnglish={entry.titleEnglish}
+							tag="h3"
+							interactive={false}
+							class="shelf-title"
+						/>
+						<EpisodeStepper
+							malId={entry.malId}
+							title={entry.title}
+							watched={entry.numWatchedEpisodes}
+							total={entry.numEpisodes}
+							size="card"
+						/>
+					</li>
 				{/each}
-			</div>
+			</ul>
 		</section>
 	{/if}
 
-	<!-- Recently Updated -->
 	{#if recentlyUpdated.length > 0}
-		<section class="mb-8">
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-lg font-semibold text-text-primary">Recently Updated</h2>
-				<a href="/?sort=updated" class="text-sm text-primary hover:text-primary-hover">
-					View all →
-				</a>
+		<section class="block" aria-labelledby="recent">
+			<div class="block-head">
+				<h2 id="recent">Recently updated</h2>
+				<a href="/?sort=updated&tab=all">View all</a>
 			</div>
-
-			<div class="overflow-x-auto rounded-xl border border-border">
-				<table class="w-full text-sm">
-					<thead>
-						<tr class="border-b border-border bg-surface-1 text-left text-xs text-text-muted">
-							<th class="px-4 py-2.5 font-medium">Title</th>
-							<th class="hidden px-4 py-2.5 font-medium sm:table-cell">Status</th>
-							<th class="hidden px-4 py-2.5 font-medium md:table-cell">Progress</th>
-							<th class="px-4 py-2.5 font-medium">Updated</th>
+			<table class="recent">
+				<thead>
+					<tr
+						><th>Title</th><th class="hide-s">Status</th><th class="hide-s">Progress</th><th
+							class="r">Updated</th
+						></tr
+					>
+				</thead>
+				<tbody>
+					{#each recentlyUpdated as entry (entry.malId)}
+						<tr>
+							<td class="t"
+								><a href="/anime/{entry.malId}"
+									><AnimeTitle
+										title={entry.title}
+										titleEnglish={entry.titleEnglish}
+										tag="span"
+										interactive={false}
+									/></a
+								></td
+							>
+							<td class="hide-s"
+								><span class="st"
+									><span class="status-dot" style:--dot={STATUS_META[entry.status].color}
+									></span>{STATUS_META[entry.status].short}</span
+								></td
+							>
+							<td class="hide-s num">{entry.numWatchedEpisodes}/{entry.numEpisodes || '?'}</td>
+							<td class="r num">{entry.updatedAt ? formatRelativeDate(entry.updatedAt) : '—'}</td>
 						</tr>
-					</thead>
-					<tbody class="divide-y divide-border">
-						{#each recentlyUpdated as entry (entry.malId)}
-							<tr class="bg-surface-0 transition-colors hover:bg-surface-1">
-								<td class="px-4 py-2.5">
-									<a href="/anime/{entry.malId}" class="text-text-primary hover:text-primary">
-										<AnimeTitle
-											title={entry.title}
-											titleEnglish={entry.titleEnglish}
-											tag="span"
-											interactive={false}
-											class=""
-										/>
-									</a>
-								</td>
-								<td class="hidden px-4 py-2.5 sm:table-cell">
-									<span
-										class={[
-											'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
-											entry.status === 'watching' && 'bg-primary/15 text-primary',
-											entry.status === 'completed' && 'bg-success/15 text-success',
-											entry.status === 'on_hold' && 'bg-warning/15 text-warning',
-											entry.status === 'dropped' && 'bg-error/15 text-error',
-											entry.status === 'plan_to_watch' && 'bg-info/15 text-info'
-										]}
-									>
-										{formatListStatus(entry.status)}
-									</span>
-								</td>
-								<td class="hidden px-4 py-2.5 text-text-secondary md:table-cell">
-									{entry.numWatchedEpisodes}/{entry.numEpisodes || '?'}
-								</td>
-								<td class="px-4 py-2.5 text-text-muted">
-									{entry.updatedAt ? formatRelativeDate(entry.updatedAt) : '—'}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
+					{/each}
+				</tbody>
+			</table>
 		</section>
 	{/if}
 </div>
+
+<style>
+	.kpis {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		margin: 0 0 40px;
+		border-top: 1px solid var(--color-border-strong);
+		border-bottom: 1px solid var(--color-border);
+	}
+	.kpi {
+		display: flex;
+		flex-direction: column-reverse;
+		padding: 20px 16px 18px 0;
+	}
+	.kpi + .kpi {
+		padding-left: 20px;
+		border-left: 1px solid var(--color-border);
+	}
+	.kpi dd {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(26px, 3.4vw, 44px);
+		font-weight: 650;
+		letter-spacing: -0.03em;
+		line-height: 1.05;
+	}
+	.kpi dt {
+		margin-bottom: 8px;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+	@media (max-width: 640px) {
+		.kpis {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.kpi:nth-child(odd) {
+			padding-left: 0;
+			border-left: 0;
+		}
+		.kpi:nth-child(n + 3) {
+			border-top: 1px solid var(--color-border);
+		}
+	}
+	.block {
+		margin-bottom: 40px;
+	}
+	h2 {
+		margin-bottom: 14px;
+		font-size: 15px;
+		font-weight: 600;
+	}
+	.block-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+	.block-head a {
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+		color: var(--color-primary);
+		font-size: 13px;
+	}
+	.block-head a:hover {
+		text-decoration: underline;
+	}
+	.dist-bar {
+		display: flex;
+		height: 14px;
+		gap: 2px;
+		border-radius: 4px;
+		overflow: hidden;
+	}
+	.dist-bar span {
+		min-width: 4px;
+	}
+	.legend {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+		gap: 0 28px;
+		margin: 14px 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.legend a {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 44px;
+		border-bottom: 1px solid var(--color-border);
+		font-size: 14px;
+	}
+	.legend a:hover .name {
+		color: var(--color-text-primary);
+	}
+	.name {
+		flex: 1;
+		color: var(--color-text-secondary);
+	}
+	.pct {
+		width: 36px;
+		text-align: right;
+		font-size: 12px;
+		color: var(--color-text-muted);
+	}
+	.two {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 48px;
+	}
+	@media (max-width: 900px) {
+		.two {
+			grid-template-columns: 1fr;
+			gap: 0;
+		}
+	}
+	.hist {
+		display: flex;
+		align-items: flex-end;
+		gap: 6px;
+		height: 168px;
+	}
+	.col {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		height: 100%;
+		gap: 4px;
+	}
+	.col .bar {
+		width: 100%;
+		border-radius: 3px 3px 0 0;
+		background: var(--color-primary);
+		opacity: 0.85;
+		transition: opacity 0.15s;
+	}
+	.col:hover .bar {
+		opacity: 1;
+	}
+	.col .n {
+		font-size: 11px;
+		color: var(--color-text-secondary);
+		min-height: 14px;
+	}
+	.col .x {
+		font-size: 12px;
+		color: var(--color-text-muted);
+	}
+	.genres {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.genres li {
+		display: grid;
+		grid-template-columns: minmax(80px, 128px) 1fr 40px;
+		align-items: center;
+		gap: 12px;
+		min-height: 36px;
+		font-size: 13px;
+	}
+	.g-name {
+		color: var(--color-text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.g-track {
+		height: 6px;
+		border-radius: 3px;
+		background: var(--color-surface-2);
+	}
+	.g-track span {
+		display: block;
+		height: 100%;
+		border-radius: 3px;
+		background: var(--color-primary);
+	}
+	.g-count {
+		text-align: right;
+		color: var(--color-text-secondary);
+	}
+	.shelf {
+		display: flex;
+		gap: 16px;
+		margin: 0 -16px;
+		padding: 0 16px 4px;
+		list-style: none;
+		overflow-x: auto;
+		scroll-snap-type: x proximity;
+	}
+	.shelf li {
+		flex: 0 0 156px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		scroll-snap-align: start;
+	}
+	.shelf :global(.shelf-img) {
+		width: 100%;
+	}
+	.shelf :global(.shelf-title) {
+		font-size: 13px;
+		font-weight: 600;
+		line-height: 1.3;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.poster {
+		display: block;
+	}
+	.recent {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 14px;
+	}
+	.recent th {
+		padding: 0 0 10px;
+		text-align: left;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		border-bottom: 1px solid var(--color-border-strong);
+	}
+	.recent td {
+		padding: 0;
+		height: 48px;
+		border-bottom: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.recent .t a {
+		color: var(--color-text-primary);
+		display: block;
+		padding-right: 16px;
+	}
+	.recent .t a:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.recent .r {
+		text-align: right;
+	}
+	.st {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+	@media (max-width: 640px) {
+		.hide-s {
+			display: none;
+		}
+	}
+</style>

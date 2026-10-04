@@ -6,15 +6,16 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 
 ## Working in this repository
 
-Read this contract before changing code. Keep changes focused, preserve existing user work, and verify behavior before claiming completion. Never commit `.env`, `.dev.vars`, tokens, or client secrets. The current product is a real watch journal, not a mockup; do not ship fixture collections or invented ratings.
+Read this contract before changing code. Keep changes focused, preserve existing user work, and verify behavior before claiming completion. Never commit `.env`, `.dev.vars`, tokens, or client secrets. The current product is a real watch tracker, not a mockup; do not ship fixture collections or invented ratings.
 
 ## Interface Contract
 
-- **Design system**: shared tokens live in `src/app.css`. Preserve the warm charcoal/ivory palette, coral actions, gold rating accents, local Outfit UI font with `font-display: swap`, and Georgia editorial headings. Maintain readable contrast, visible focus, and reduced-motion behavior.
+- **Design system**: shared tokens and primitives (`.btn`, `.chip`, `.field`, `.panel`, `.poster`, `.poster-grid`, `.page-head`) live in `src/app.css`. Surfaces are neutral graphite, the single accent is lime (`--color-primary`, always paired with `--color-on-primary` ink), status hues come from `--st-*`, and ratings use the warning amber. Type is local Geist (UI) and Bricolage Grotesque (display) with `font-display: swap`; use `.num` (tabular numerals) for counters and ratings. Prefer hairlines to nested cards, no decorative gradients, shadows or glow. Maintain readable contrast, visible focus, and reduced-motion behavior.
+- **Shell**: ≥1100px sidebar, 768–1099px icon rail, <768px compact top bar plus bottom tab bar. ⌘/Ctrl-K opens the command palette (pages, list tabs, your list titles, MAL search); `/` focuses the page search on My List and Browse.
 - **Views and state**: the default list view is `journal`; `view=grid` selects the poster grid. Preserve tab, search, filter, and sort behavior when switching views. `watching` remains the default status tab.
-- **Real collection**: the featured entry, journal rows, planned shelf, and collection counts consume existing list records. They must not trigger extra AniList enrichment calls or introduce demo data into production.
+- **Real collection**: ledger rows, grid cards, the episodes-ahead summary, and stats consume existing list records. They must not trigger extra AniList enrichment calls or introduce demo data into production.
 - **Ratings**: distinguish MAL community ratings from personal scores with explicit labels. Personal scores are 1–10, with 0 representing unrated. Keep native, accessible controls in compact list/grid layouts and keyboard-operable detail controls.
-- **Episode/status edits**: all journal entries, including the featured one, allow status changes. Use the existing store mutation methods; retain completion guards, unknown episode totals, PTW auto-watch, and queued sync behavior.
+- **Episode/status edits**: every row, card, and the detail page allow status, score, and episode changes. Use the existing store mutation methods; retain completion guards, unknown episode totals, PTW auto-watch, and queued sync behavior.
 - **Responsive ergonomics**: verify at 320, 390, 820, and 1440px. Controls must retain at least 44px touch targets in both dimensions, including inside narrow poster cards. Long titles must not create horizontal overflow. Keep mobile bottom navigation clear of safe-area insets and content.
 - **Startup and public access**: keep navigation available during auth initialization and use a list skeleton for loading. Public browsing and the inline welcome must remain usable without an automatic login modal. Do not enable SSR or prerendering without auditing browser-only stores and the offline shell.
 - **Performance**: prefer appropriately sized artwork, lazy loading below the fold, and targeted motion. Do not add runtime dependencies or broad visual effects without a concrete need. Report measured performance results accurately; do not invent PageSpeed improvements.
@@ -41,11 +42,11 @@ Read this contract before changing code. Keep changes focused, preserve existing
 
 ## UI File Map
 
-- `src/routes/+layout.svelte` — startup, shared navigation, preferences, and offline feedback.
+- `src/routes/+layout.svelte` — startup, grid shell, and offline feedback. `src/lib/ui/AppNav.svelte` (sidebar/rail/top bar/tab bar, preferences sheet), `CommandPalette.svelte`.
 - `src/routes/+page.svelte` — public welcome, journal/grid selection, list filtering and ordering, real list state.
-- `src/lib/ui/AnimeJournal.svelte`, `JournalEntry.svelte`, `CollectionShelf.svelte` — featured entry, journal rows, and planned collection shelf.
-- `src/lib/ui/RatingSelect.svelte`, `ScoreInput.svelte` — compact personal score selection and detail-page scoring.
-- `src/lib/ui/EpisodeProgress.svelte`, `EpisodeCounter.svelte` — accessible progress and episode controls.
+- `src/lib/ui/AnimeJournal.svelte`, `ListRow.svelte` — the ledger: container-query layout (phone stack, tablet two-zone, desktop table with sortable sticky header), auto-loading pages.
+- `src/lib/ui/RatingSelect.svelte`, `StatusSelect.svelte`, `ScoreInput.svelte` — native-select chips (36px visible, 44px hit area) and detail-page scoring.
+- `src/lib/ui/EpisodeBar.svelte`, `EpisodeStepper.svelte`, `status.ts` — accessible progress bar (segmented ≤30 episodes), episode stepper, shared status metadata.
 - `src/lib/ui/AnimeCard.svelte`, `TabBar.svelte`, `FilterBar.svelte`, `SearchInput.svelte` — poster view, status tabs, sorting and search.
 - `src/app.css`, `src/lib/ui/Logo.svelte`, `static/favicon.svg`, `static/manifest.json` — shared visual tokens and app identity.
 - `tests/browser/watch-journal.py`, `offline-shell.py` — isolated production-browser regressions; setup in `tests/browser/README.md`.

@@ -6,7 +6,7 @@ A personal anime watch journal connected to MyAnimeList. Track episodes, keep yo
 
 - **Journal and poster views.** The default journal pairs a featured watching entry with compact progress rows and a Plan to Watch shelf. Switch to the poster grid while keeping your filters and sort order.
 - **Ratings you can read and edit.** MAL community ratings and your personal scores have separate labels. Update your score, status, or episode count directly from the list.
-- **Comfortable on every screen.** Warm charcoal surfaces, ivory editorial headings, coral actions, and gold ratings give the interface depth. Locally hosted Outfit, visible keyboard focus, and large touch controls support desktop, tablet, and phone use.
+- **Comfortable on every screen.** Deep ink surfaces, ivory editorial headings, coral actions, and gold ratings give the interface depth. Locally hosted Outfit, visible keyboard focus, and large touch controls support desktop, tablet, and phone use.
 - **Local edits and queued sync.** Changes update immediately in IndexedDB and queue for MAL. Starting a planned title moves it to Watching. Last Updated order changes after MAL acknowledges the edit.
 - **Discovery and details.** Search MAL, explore popular and seasonal anime, identify English dubs, and view characters, recommendations, review excerpts, tags, trailers, and airing information where available.
 - **Personal statistics and preferences.** Explore score and format distributions, and choose English or Romaji titles.

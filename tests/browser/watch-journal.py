@@ -48,9 +48,17 @@ with sync_playwright() as p:
     expect(rating).to_be_visible(timeout=5000)
     for width,height,label in [(1440,1000,'desktop'),(820,1180,'tablet'),(390,844,'phone'),(320,760,'narrow')]:
         page.set_viewport_size({'width':width,'height':height})
+        for offset in range(0,page.evaluate('document.documentElement.scrollHeight'),500):
+            page.evaluate('(offset)=>scrollTo(0,offset)',offset)
+            page.wait_for_timeout(100)
+        page.wait_for_timeout(700)
+        page.evaluate('scrollTo(0,0)')
         page.screenshot(path=str(OUT/f'{label}.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'Overflow at {width}'
         expect(rating).to_be_visible()
+        for button in page.locator('.journal-entry .step').all():
+            box=button.bounding_box()
+            assert box['width']>=44 and box['height']>=44,box
     page.set_viewport_size({'width':1440,'height':1000})
     rating.select_option('10')
     expect(rating).to_have_value('10')
@@ -110,6 +118,31 @@ with sync_playwright() as p:
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Long-title overflow'
     page.get_by_role('combobox',name='Status for Sousou no Frieren').select_option('completed')
     expect(page.get_by_role('combobox',name='Status for Sousou no Frieren')).to_have_count(0)
+    # Browse cards use the same real-record mapping, with a controlled MAL response.
+    ranking={'data':[{'node':{'id':r['malId'],'title':r['title'],'alternative_titles':{'en':r['titleEnglish']},'main_picture':r['mainPicture'],'mean':r['mean'],'num_episodes':r['numEpisodes'],'genres':r['genres'],'media_type':r['mediaType'],'start_season':r['startSeason']}} for r in records],'paging':{}}
+    context.route(BASE+'/api/anime/ranking**',lambda route:route.fulfill(json=ranking))
+    page.goto(BASE+'/browse')
+    expect(page.get_by_role('link',name='View Sousou no Frieren details')).to_be_visible()
+    for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
+        page.set_viewport_size({'width':width,'height':height})
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'Browse overflow at {width}'
+        for control in page.locator('[aria-haspopup="menu"]').all():
+            box=control.bounding_box()
+            assert box['width']>=44 and box['height']>=44,box
+        page.screenshot(path=str(OUT/f'browse-{width}.png'),full_page=True)
+    page.get_by_role('button',name='Status: Completed',exact=True).first.click()
+    expect(page.get_by_role('menuitem',name='Remove',exact=True)).to_be_visible()
+    page.get_by_role('menuitem',name='Remove',exact=True).click(timeout=3000)
+    expect(page.get_by_role('button',name='Add Sousou no Frieren to Plan to Watch')).to_be_visible()
+    # The seasonal helper must not seed the season cache from a truncated response.
+    seasonal_requests=[]
+    def seasonal_response(route):
+        seasonal_requests.append(route.request.url)
+        route.fulfill(json=ranking)
+    context.route(BASE+'/api/anime/season/**',seasonal_response)
+    page.get_by_role('button',name='Roll Seasonal Surprise').click()
+    page.wait_for_url(__import__('re').compile('/anime/'))
+    assert len(seasonal_requests)==1 and 'limit=500' in seasonal_requests[0],seasonal_requests
     assert not errors,errors
     print(json.dumps({'result':'PASS','viewports':[1440,820,390,320],'screenshots':str(OUT),'errors':errors}))
     browser.close()

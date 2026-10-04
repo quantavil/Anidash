@@ -63,7 +63,7 @@
 		padding: 24px;
 		border: 1px solid var(--color-border);
 		border-radius: 14px;
-		background: linear-gradient(155deg, #282b25, #1e211c);
+		background: linear-gradient(155deg, var(--color-surface-2), var(--color-surface-1));
 		box-shadow:
 			inset 0 1px 0 #ffffff09,
 			0 8px 24px #0002;

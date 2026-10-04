@@ -9,7 +9,8 @@
 	import { formatListStatus } from '$lib/utils/format';
 
 	import { goto } from '$app/navigation';
-	import { List, LayoutGrid, ArrowUpRight, Bookmark, Star } from 'lucide-svelte';
+	import { List, LayoutGrid, ArrowUpRight } from 'lucide-svelte';
+	import StoryWindow from '$lib/ui/StoryWindow.svelte';
 	import AnimeJournal from '$lib/ui/AnimeJournal.svelte';
 	import CollectionShelf from '$lib/ui/CollectionShelf.svelte';
 	import TabBar from '$lib/ui/TabBar.svelte';
@@ -111,18 +112,7 @@
 			><a class="welcome-browse" href="/browse">Explore anime first <ArrowUpRight size={15} /></a
 			><span class="welcome-footnote">Your list stays with you, even offline.</span>
 		</div>
-		<div class="welcome-art" aria-hidden="true">
-			<div class="journal-spine"></div>
-			<div class="journal-book">
-				<Bookmark size={32} strokeWidth={1} /><span class="book-label">The watch journal</span>
-				<div class="book-title">Every story<br />leaves a mark.</div>
-				<div class="book-rule"></div>
-				<div class="book-stars">
-					{#each Array(5) as _, i (i)}<Star size={16} strokeWidth={1} />{/each}
-				</div>
-				<span class="book-bottom">AniDash / Your collection</span>
-			</div>
-		</div>
+		<div class="welcome-art"><StoryWindow /></div>
 	</section>
 {:else if !userListStore.initialized}
 	<ListPageSkeleton />
@@ -133,7 +123,13 @@
 				<span class="page-note">Your watch journal</span>
 				<h1>{pageTitle}<span class="heading-period" aria-hidden="true">.</span></h1>
 			</div>
-			<p>{currentTab === 'watching' ? 'One episode at a time.' : 'Every story has its place.'}</p>
+			<p class="collection-context">
+				<strong>{filteredEntries.length} titles</strong><span
+					>{currentTab === 'watching'
+						? `${filteredEntries.reduce((sum, entry) => sum + (entry.numEpisodes > 0 ? Math.max(0, entry.numEpisodes - entry.numWatchedEpisodes) : 0), 0)} known episodes ahead`
+						: 'In your collection'}</span
+				>
+			</p>
 		</div>
 		<TabBar counts={userListStore.statusCounts} />
 		<div class="list-toolbar">
@@ -207,6 +203,17 @@
 	.heading-period {
 		color: var(--color-primary);
 	}
+	.collection-context {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	.collection-context strong {
+		color: var(--color-text-primary);
+		font-weight: 500;
+	}
 	.page-heading p {
 		color: var(--color-text-secondary);
 		font-size: 13px;
@@ -268,9 +275,9 @@
 		display: grid;
 		grid-template-columns: 1.2fr 1fr;
 		align-items: center;
-		gap: 72px;
+		gap: 40px;
 		min-height: calc(100dvh - 100px);
-		padding: 60px 24px;
+		padding: 40px 24px;
 	}
 	.welcome-note {
 		color: var(--color-primary);
@@ -303,61 +310,11 @@
 		color: var(--color-text-secondary);
 	}
 	.welcome-art {
-		position: relative;
-		max-width: 350px;
 		width: 100%;
+		max-width: 560px;
 		justify-self: center;
-		transform: rotate(5deg);
-		perspective: 1000px;
 	}
-	.journal-book {
-		min-height: 460px;
-		position: relative;
-		padding: 48px 40px;
-		border-radius: 3px 16px 16px 3px;
-		border: 1px solid #ffffff18;
-		background:
-			radial-gradient(ellipse at top right, #53705b33, transparent 70%),
-			linear-gradient(130deg, #303e32, #202820);
-		box-shadow:
-			inset 8px 0 8px #0003,
-			inset -1px 0 0 #ffffff15,
-			18px 24px 50px #0005,
-			4px 3px 0 #a69f85,
-			7px 5px 0 #393b31;
-		color: var(--color-text-primary);
-	}
-	.journal-book :global(svg) {
-		color: var(--color-primary);
-	}
-	.book-label {
-		display: block;
-		font-size: 11px;
-		margin-top: 30px;
-		color: #c7cfbf;
-	}
-	.book-title {
-		font-family: var(--font-display);
-		font-size: 43px;
-		line-height: 1.2;
-		letter-spacing: -0.035em;
-		margin: 18px 0 30px;
-	}
-	.book-rule {
-		height: 1px;
-		background: #ffffff20;
-	}
-	.book-stars {
-		display: flex;
-		gap: 8px;
-		margin-top: 20px;
-	}
-	.book-bottom {
-		display: block;
-		margin-top: 32px;
-		font-size: 10px;
-		color: #c7cfbf;
-	}
+
 	@media (max-width: 1100px) {
 		.journal-layout {
 			grid-template-columns: minmax(0, 1fr);
@@ -365,13 +322,6 @@
 		.welcome-page {
 			gap: 32px;
 			padding: 50px 0;
-		}
-		.journal-book {
-			min-height: 400px;
-			padding: 32px;
-		}
-		.book-title {
-			font-size: 36px;
 		}
 	}
 	@media (max-width: 640px) {
@@ -382,7 +332,19 @@
 			margin-bottom: 22px;
 		}
 		.page-heading p {
-			display: none;
+			font-size: 11px;
+			text-align: left;
+			padding: 0;
+		}
+		.page-heading {
+			align-items: start;
+			flex-direction: column;
+			gap: 12px;
+		}
+		.collection-context {
+			flex-direction: row;
+			flex-wrap: wrap;
+			gap: 12px;
 		}
 		.list-toolbar {
 			display: grid;
@@ -417,14 +379,7 @@
 			font-size: 15px;
 		}
 		.welcome-art {
-			max-width: 260px;
-		}
-		.journal-book {
-			min-height: 330px;
-			padding: 28px;
-		}
-		.book-title {
-			font-size: 32px;
+			max-width: 380px;
 		}
 	}
 </style>

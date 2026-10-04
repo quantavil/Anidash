@@ -93,7 +93,7 @@
 				><Mic size={12} /> English dub</span
 			>{/if}
 		{#if inList && listEntry}<div class="relative z-[2] mt-auto pt-1">
-				<StatusBadge malId={listEntry.malId} status={listEntry.status} showLabel />
+				<StatusBadge malId={listEntry.malId} status={listEntry.status} showLabel quiet />
 			</div>{/if}
 
 		<!-- Add to List button (if not in list) -->

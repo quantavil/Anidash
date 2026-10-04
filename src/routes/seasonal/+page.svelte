@@ -131,7 +131,7 @@
 	<!-- Header -->
 	<div class="flex items-end justify-between gap-4">
 		<div>
-			<h1 class="text-2xl font-bold text-text-primary">
+			<h1 class="route-title">
 				{capitalize(seasonKey)}
 				{seasonYear}
 			</h1>
@@ -143,8 +143,9 @@
 		<!-- Season Navigation -->
 		<div class="flex items-center gap-2">
 			<button
+				aria-label="Previous season: {capitalize(prev.season)} {prev.year}"
 				onclick={() => goToSeason(prev.year, prev.season)}
-				class="flex items-center gap-1 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
+				class="flex items-center gap-1 min-h-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
 			>
 				<ChevronLeft size={16} />
 				<span class="hidden sm:inline">{capitalize(prev.season)} {prev.year}</span>
@@ -160,8 +161,9 @@
 			{/if}
 
 			<button
+				aria-label="Next season: {capitalize(next.season)} {next.year}"
 				onclick={() => goToSeason(next.year, next.season)}
-				class="flex items-center gap-1 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
+				class="flex items-center gap-1 min-h-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
 			>
 				<span class="hidden sm:inline">{capitalize(next.season)} {next.year}</span>
 				<ChevronRight size={16} />

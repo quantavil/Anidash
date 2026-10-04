@@ -4,6 +4,7 @@
 	let {
 		value = $bindable(''),
 		placeholder = 'Search...',
+		label = 'Search anime',
 		id,
 		loading = false,
 		isDebouncing = false,
@@ -13,6 +14,7 @@
 	}: {
 		value: string;
 		placeholder?: string;
+		label?: string;
 		id?: string;
 		loading?: boolean;
 		isDebouncing?: boolean;
@@ -33,7 +35,7 @@
 	}
 </script>
 
-<div class="relative w-full group">
+<div class="search-field relative w-full group">
 	{#if loading || isDebouncing}
 		<LoaderCircle
 			size={15}
@@ -48,19 +50,20 @@
 
 	<input
 		type="text"
+		aria-label={label}
 		{placeholder}
 		{id}
 		{value}
 		oninput={handleInput}
 		{onkeydown}
-		class="w-full rounded-full border border-white/5 bg-white/5 py-2.5 pl-10 pr-9 text-sm text-text-primary placeholder:text-text-muted outline-none transition-all duration-500 ease-spring focus:bg-white/10 focus:outline-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+		class="search-box w-full rounded-lg border border-border bg-surface-1 py-3 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-secondary transition-colors focus:border-primary"
 	/>
 
 	{#if value}
 		<button
 			onclick={handleClear}
 			aria-label="Clear search"
-			class="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
+			class="absolute right-1 top-1/2 flex h-11 w-11 items-center justify-center -translate-y-1/2 text-text-secondary hover:text-text-primary transition-colors"
 		>
 			<X size={15} />
 		</button>

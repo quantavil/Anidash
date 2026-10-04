@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { authStore } from '$lib/auth/auth.svelte';
-	import { getUrlParam } from '$lib/utils/url-state';
+	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { sortEntries, type SortKey } from '$lib/utils/sort';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { matchesFuzzy } from '$lib/utils/search';
 	import { formatListStatus } from '$lib/utils/format';
 
+	import { goto } from '$app/navigation';
+	import { List, LayoutGrid, ArrowUpRight } from 'lucide-svelte';
+	import StoryWindow from '$lib/ui/StoryWindow.svelte';
+	import AnimeJournal from '$lib/ui/AnimeJournal.svelte';
+	import CollectionShelf from '$lib/ui/CollectionShelf.svelte';
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import AnimeGrid from '$lib/ui/AnimeGrid.svelte';
@@ -19,6 +24,18 @@
 	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
 
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
+
+	const gridView = $derived(getUrlParam(page.url, 'view', '') === 'grid');
+	const pageTitle = $derived(
+		currentTab === 'all'
+			? 'Your collection'
+			: currentTab === 'plan_to_watch'
+				? 'Planned'
+				: formatListStatus(currentTab)
+	);
+	function setView(grid: boolean) {
+		goto(setUrlParam(page.url, 'view', grid ? 'grid' : ''), { keepFocus: true, noScroll: true });
+	}
 
 	// ─── Derived Data & Stable Sort State ───
 	// Keep card ordering stable while user interacts with episode counts/scores on the page,
@@ -82,67 +99,287 @@
 </script>
 
 {#if !authStore.isAuthenticated}
-	<div class="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-		<div class="mb-6 rounded-full bg-surface-2 p-6 shadow-xl shadow-black/20 border border-white/5">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="48"
-				height="48"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="1.5"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				class="text-primary"
-				><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 Z"
-				></path></svg
-			>
+	<section class="welcome-page">
+		<div class="welcome-copy">
+			<span class="welcome-note">A little space for the stories you love</span>
+			<h1>Your next episode.<br />Your own pace.</h1>
+			<p>
+				A home for your anime collection. Keep track of the stories you’re watching, rate your
+				favourites, and find what comes next.
+			</p>
+			<button class="primary-button" onclick={() => authStore.login()}
+				>Connect with MyAnimeList <ArrowUpRight size={17} /></button
+			><a class="welcome-browse" href="/browse">Explore anime first <ArrowUpRight size={15} /></a
+			><span class="welcome-footnote">Your list stays with you, even offline.</span>
 		</div>
-		<h1 class="text-3xl font-bold text-text-primary mb-3">Track Your Anime</h1>
-		<p class="text-text-secondary max-w-md mb-8">
-			AniDash connects securely with your MyAnimeList account to provide a fast, beautiful, and
-			offline-capable dashboard.
-		</p>
-		<button
-			onclick={() => authStore.login()}
-			class="rounded-full bg-primary px-8 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
-		>
-			Connect with MyAnimeList
-		</button>
-	</div>
+		<div class="welcome-art"><StoryWindow /></div>
+	</section>
 {:else if !userListStore.initialized}
 	<ListPageSkeleton />
 {:else}
-	<div class="py-6">
-		<!-- Header -->
-		<div class="mb-5">
-			<h1 class="text-2xl font-bold text-text-primary">My Anime List</h1>
-		</div>
-
-		<!-- Tabs -->
-		<div class="mb-4">
-			<TabBar counts={userListStore.statusCounts} />
-		</div>
-
-		<!-- Filters -->
-		<div class="mb-5">
-			<FilterBar />
-		</div>
-
-		<!-- Grid / List -->
-		<AnimeGrid
-			entries={filteredEntries}
-			resetKey="{currentTab}-{currentSort}-{currentQuery}"
-			loading={false}
-			empty={emptyState}
-		/>
-
-		<!-- Stats footer -->
-		{#if filteredEntries.length > 0}
-			<div class="mt-6 border-t border-border pt-4 text-center text-xs text-text-muted">
-				Showing {filteredEntries.length} of {userListStore.totalCount} entries
+	<div class="list-page">
+		<div class="page-heading">
+			<div>
+				<span class="page-note">Your watch journal</span>
+				<h1>{pageTitle}<span class="heading-period" aria-hidden="true">.</span></h1>
 			</div>
-		{/if}
+			<p class="collection-context">
+				<strong>{filteredEntries.length} titles</strong><span
+					>{currentTab === 'watching'
+						? `${filteredEntries.reduce((sum, entry) => sum + (entry.numEpisodes > 0 ? Math.max(0, entry.numEpisodes - entry.numWatchedEpisodes) : 0), 0)} known episodes ahead`
+						: 'In your collection'}</span
+				>
+			</p>
+		</div>
+		<TabBar counts={userListStore.statusCounts} />
+		<div class="list-toolbar">
+			<FilterBar />
+			<div class="view-switch" aria-label="List display">
+				<button
+					class:active={!gridView}
+					aria-pressed={!gridView}
+					aria-label="Journal view"
+					title="Journal view"
+					onclick={() => setView(false)}><List size={18} /></button
+				><button
+					class:active={gridView}
+					aria-pressed={gridView}
+					aria-label="Poster grid"
+					title="Poster grid"
+					onclick={() => setView(true)}><LayoutGrid size={17} /></button
+				>
+			</div>
+		</div>
+		<div class="journal-layout" class:full-width={gridView}>
+			<div class="list-content">
+				{#if gridView}<AnimeGrid
+						entries={filteredEntries}
+						resetKey="{currentTab}-{currentSort}-{currentQuery}"
+						loading={false}
+						empty={emptyState}
+					/>{:else}<AnimeJournal
+						entries={filteredEntries}
+						feature={currentTab === 'watching' && !currentQuery}
+						resetKey="{currentTab}-{currentSort}-{currentQuery}"
+						empty={emptyState}
+					/>{/if}
+				{#if filteredEntries.length > 0}<footer class="list-footer">
+						<span
+							>{filteredEntries.length}
+							{currentTab === 'watching' ? 'in your rotation' : 'in this list'}</span
+						><span>Edits save on this device</span>
+					</footer>{/if}
+			</div>
+			{#if !gridView}<CollectionShelf />{/if}
+		</div>
 	</div>
 {/if}
+
+<style>
+	.list-page {
+		padding: 40px 0 24px;
+	}
+	.page-heading {
+		display: flex;
+		align-items: end;
+		justify-content: space-between;
+		gap: 24px;
+		margin-bottom: 28px;
+	}
+	.page-note {
+		display: block;
+		color: var(--color-text-secondary);
+		font-size: 12px;
+		margin-bottom: 8px;
+	}
+	h1 {
+		font-family: var(--font-display);
+		font-size: clamp(42px, 5vw, 66px);
+		font-weight: 400;
+		line-height: 1.05;
+		letter-spacing: -0.045em;
+		text-wrap: balance;
+	}
+	.heading-period {
+		color: var(--color-primary);
+	}
+	.collection-context {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	.collection-context strong {
+		color: var(--color-text-primary);
+		font-weight: 500;
+	}
+	.page-heading p {
+		color: var(--color-text-secondary);
+		font-size: 13px;
+		padding-bottom: 8px;
+	}
+	.list-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 22px 0 26px;
+	}
+	.list-toolbar :global(.filter-bar) {
+		flex: 1;
+	}
+	.view-switch {
+		display: flex;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 3px;
+		flex-shrink: 0;
+		background: var(--color-surface-1);
+	}
+	.view-switch button {
+		width: 44px;
+		height: 44px;
+		display: grid;
+		place-items: center;
+		color: var(--color-text-secondary);
+		border-radius: 5px;
+		cursor: pointer;
+	}
+	.view-switch button.active {
+		background: var(--color-surface-3);
+		color: var(--color-text-primary);
+		box-shadow: 0 2px 5px #0003;
+	}
+	.journal-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 310px;
+		gap: 32px;
+		align-items: start;
+	}
+	.journal-layout.full-width {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.list-content {
+		min-width: 0;
+	}
+	.list-footer {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 20px 0;
+		color: var(--color-text-secondary);
+		font-size: 11px;
+	}
+	.welcome-page {
+		display: grid;
+		grid-template-columns: 1.2fr 1fr;
+		align-items: center;
+		gap: 40px;
+		min-height: calc(100dvh - 100px);
+		padding: 40px 24px;
+	}
+	.welcome-note {
+		color: var(--color-primary);
+		font-size: 13px;
+	}
+	.welcome-copy h1 {
+		font-size: clamp(48px, 6.5vw, 88px);
+		margin: 22px 0;
+	}
+	.welcome-copy p {
+		color: var(--color-text-secondary);
+		max-width: 410px;
+		font-size: 16px;
+		line-height: 1.8;
+		margin-bottom: 32px;
+	}
+	.welcome-browse {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: fit-content;
+		min-height: 44px;
+		margin-top: 12px;
+		font-size: 13px;
+	}
+	.welcome-footnote {
+		display: block;
+		font-size: 11px;
+		margin-top: 32px;
+		color: var(--color-text-secondary);
+	}
+	.welcome-art {
+		width: 100%;
+		max-width: 560px;
+		justify-self: center;
+	}
+
+	@media (max-width: 1100px) {
+		.journal-layout {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.welcome-page {
+			gap: 32px;
+			padding: 50px 0;
+		}
+	}
+	@media (max-width: 640px) {
+		.list-page {
+			padding-top: 28px;
+		}
+		.page-heading {
+			margin-bottom: 22px;
+		}
+		.page-heading p {
+			font-size: 11px;
+			text-align: left;
+			padding: 0;
+		}
+		.page-heading {
+			align-items: start;
+			flex-direction: column;
+			gap: 12px;
+		}
+		.collection-context {
+			flex-direction: row;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+		.list-toolbar {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 10px;
+			padding: 18px 0 22px;
+		}
+		.list-toolbar :global(.filter-bar) {
+			display: contents;
+		}
+		.list-toolbar :global(.search-field) {
+			grid-column: 1 / -1;
+			max-width: none;
+		}
+		.list-toolbar :global(.sort-control) {
+			grid-column: 1;
+		}
+		.view-switch {
+			grid-column: 2;
+			margin-left: auto;
+		}
+
+		.welcome-page {
+			grid-template-columns: 1fr;
+			padding: 42px 0;
+			gap: 40px;
+		}
+		.welcome-copy h1 {
+			font-size: 52px;
+		}
+		.welcome-copy p {
+			font-size: 15px;
+		}
+		.welcome-art {
+			max-width: 380px;
+		}
+	}
+</style>

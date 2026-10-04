@@ -16,7 +16,7 @@
 	<div
 		class="h-full transition-all duration-700 ease-spring {isComplete
 			? 'bg-success'
-			: 'bg-gradient-to-r from-primary to-cyan-400'}"
+			: 'bg-primary'}"
 		style="width: {progressPct}%"
 	></div>
 </div>

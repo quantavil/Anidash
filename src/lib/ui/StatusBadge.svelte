@@ -28,36 +28,31 @@
 		watching: {
 			label: 'Watching',
 			icon: Play,
-			badgeClass:
-				'bg-primary/25 text-[#bfb5ff] border-primary/50 hover:bg-primary/35 shadow-[0_0_12px_rgba(139,126,248,0.3)]',
+			badgeClass: 'bg-primary/25 text-primary border-primary/50 hover:bg-primary/35',
 			iconClass: 'text-primary'
 		},
 		completed: {
 			label: 'Completed',
 			icon: Check,
-			badgeClass:
-				'bg-success/25 text-success border-success/50 hover:bg-success/35 shadow-[0_0_12px_rgba(34,197,94,0.3)]',
+			badgeClass: 'bg-success/25 text-success border-success/50 hover:bg-success/35',
 			iconClass: 'text-success'
 		},
 		plan_to_watch: {
 			label: 'PTW',
 			icon: Bookmark,
-			badgeClass:
-				'bg-info/25 text-info border-info/50 hover:bg-info/35 shadow-[0_0_12px_rgba(59,130,246,0.3)]',
+			badgeClass: 'bg-info/25 text-info border-info/50 hover:bg-info/35',
 			iconClass: 'text-info'
 		},
 		on_hold: {
 			label: 'On Hold',
 			icon: Pause,
-			badgeClass:
-				'bg-warning/25 text-warning border-warning/50 hover:bg-warning/35 shadow-[0_0_12px_rgba(234,179,8,0.3)]',
+			badgeClass: 'bg-warning/25 text-warning border-warning/50 hover:bg-warning/35',
 			iconClass: 'text-warning'
 		},
 		dropped: {
 			label: 'Dropped',
 			icon: XCircle,
-			badgeClass:
-				'bg-error/25 text-error border-error/50 hover:bg-error/35 shadow-[0_0_12px_rgba(239,68,68,0.3)]',
+			badgeClass: 'bg-error/25 text-error border-error/50 hover:bg-error/35',
 			iconClass: 'text-error'
 		}
 	};
@@ -113,9 +108,9 @@
 		onclick={handleToggle}
 		aria-expanded={open}
 		aria-haspopup="menu"
-		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 focus:outline-none {showLabel
+		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 {showLabel
 			? 'px-3 py-1.5 gap-2 rounded-xl'
-			: 'h-7 w-7 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
+			: 'h-11 w-11 rounded-lg'} {STATUS_CONFIG[status]?.badgeClass} {className}"
 		title="{STATUS_CONFIG[status]?.label} (Click to change status)"
 		aria-label="Status: {STATUS_CONFIG[status]?.label}"
 	>
@@ -133,7 +128,7 @@
 		<div
 			role="menu"
 			transition:fade={{ duration: 120 }}
-			class="absolute left-0 top-full z-50 mt-1.5 min-w-[140px] whitespace-nowrap rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl backdrop-blur-2xl"
+			class="absolute left-0 top-full z-50 mt-1.5 min-w-[140px] whitespace-nowrap rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl"
 		>
 			{#each ALL_STATUSES as s (s)}
 				{@const cfg = STATUS_CONFIG[s]}

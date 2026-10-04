@@ -4,215 +4,360 @@
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages, Mic } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
-	import Logo from './Logo.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
+	import { connection } from '$lib/utils/connection.svelte';
+	import {
+		List,
+		Search,
+		Calendar,
+		ChartNoAxesColumn,
+		RefreshCw,
+		Languages,
+		Mic,
+		LogOut,
+		Settings2,
+		X
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-
-	async function handleSync() {
-		toast.loading('Syncing list with MAL...', { id: 'manual-sync' });
-		try {
-			const result = await userListStore.syncFromRemote();
-			if (result.ok) {
-				toast.success('Sync complete!', { id: 'manual-sync' });
-			} else {
-				toast.error(result.error.message || 'Sync failed', { id: 'manual-sync' });
-			}
-		} catch {
-			toast.error('Sync failed unexpectedly', { id: 'manual-sync' });
-		}
-	}
-
-	function handleLogout() {
-		authStore.logout();
-	}
-
-	const NAV_ITEMS = [
-		{ href: '/', label: 'My List', icon: List },
+	import Logo from './Logo.svelte';
+	let settingsOpen = $state(false);
+	const items = [
+		{ href: '/', label: 'My list', icon: List },
 		{ href: '/browse', label: 'Browse', icon: Search },
 		{ href: '/seasonal', label: 'Seasonal', icon: Calendar },
-		{ href: '/stats', label: 'Stats', icon: User }
+		{ href: '/stats', label: 'Stats', icon: ChartNoAxesColumn }
 	];
+	const syncLabel = $derived(
+		!connection.isOnline
+			? 'Offline'
+			: syncStore.isSyncing
+				? 'Syncing'
+				: syncStore.syncError
+					? 'Sync delayed'
+					: syncStore.lastSynced
+						? 'Last sync ' +
+							new Date(syncStore.lastSynced).toLocaleTimeString([], {
+								hour: '2-digit',
+								minute: '2-digit'
+							})
+						: 'Not synced yet'
+	);
+	async function handleSync() {
+		const result = await userListStore.syncFromRemote();
+		if (result.ok) toast.success('List synced');
+		else
+			toast.error('Sync delayed', {
+				description: 'Your local changes are saved. Try again when connected.'
+			});
+	}
+	$effect(() => {
+		void page.url.pathname;
+		settingsOpen = false;
+	});
 </script>
 
-{#snippet globalActions(isMobile: boolean)}
-	<div class="flex items-center {isMobile ? 'gap-2' : 'gap-2 pr-1'}">
-		<!-- Dub Mode Toggle -->
-		<button
-			onclick={() => dubStore.toggleDubMode()}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile
-				? 'h-8 w-8'
-				: 'group h-9 w-9'} {dubStore.dubMode ? 'text-primary' : 'text-text-muted'}"
-			title="Toggle Dub Mode"
-			aria-label="Toggle Dub Mode"
-		>
-			<Mic size={isMobile ? 14 : 16} class={dubStore.dubMode ? 'animate-pulse' : ''} />
-		</button>
+<svelte:window
+	onkeydown={(e) => {
+		if (e.key === 'Escape') settingsOpen = false;
+	}}
+/>
 
-		<!-- Title Preference Toggle -->
-		<button
-			onclick={() => settingsStore.togglePreferEnglish()}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile
-				? 'h-8 w-8'
-				: 'group h-9 w-9'} {settingsStore.preferEnglish ? 'text-primary' : 'text-text-muted'}"
-			title="Toggle English/Romaji titles"
-			aria-label="Toggle language preference"
+<header class="app-header">
+	<div class="header-inner">
+		<a class="wordmark" href="/" aria-label="AniDash home"
+			><Logo size={25} /><span>AniDash<span class="wordmark-dot">.</span></span></a
 		>
-			<Languages size={isMobile ? 14 : 16} />
-		</button>
-
-		<!-- Sync Button -->
-		<button
-			onclick={handleSync}
-			disabled={syncStore.isSyncing}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 disabled:opacity-50 text-text-secondary {isMobile
-				? 'h-8 w-8'
-				: 'group h-9 w-9'}"
-			title="Sync"
-			aria-label="Sync list with MyAnimeList"
-		>
-			<RefreshCw
-				size={isMobile ? 14 : 16}
-				class="transition-transform duration-700 ease-spring {isMobile
-					? ''
-					: 'group-hover:scale-110'} {syncStore.isSyncing ? 'animate-spin' : ''}"
-			/>
-		</button>
-
-		<!-- Profile / Logout / Login -->
-		{#if authStore.isAuthenticated}
-			<div
-				class="flex items-center {isMobile
-					? 'gap-1.5 ml-1 pr-2'
-					: 'gap-2 pl-1 pr-3'} rounded-full border border-white/5 bg-surface-2/50 py-1 pl-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-			>
-				<a
-					href="/stats"
-					class="flex items-center transition-transform hover:scale-105 active:scale-95"
-					title="View Profile Stats"
-					aria-label="View Profile Stats"
-				>
-					{#if authStore.user?.picture}
-						<img
-							src={authStore.user.picture}
-							alt={authStore.user.name}
-							class="{isMobile ? 'h-6 w-6' : 'h-7 w-7'} rounded-full object-cover"
-						/>
-					{:else}
-						<div
-							class="flex {isMobile
-								? 'h-6 w-6'
-								: 'h-7 w-7'} items-center justify-center rounded-full bg-surface-3"
-						>
-							<User size={isMobile ? 12 : 14} class="text-text-muted" />
-						</div>
-					{/if}
-				</a>
-				<button
-					onclick={handleLogout}
-					class="text-text-muted transition-colors hover:text-error {isMobile ? '' : 'ml-1'}"
-					title="Logout"
-					aria-label="Logout"
-				>
-					<LogOut size={isMobile ? 14 : 16} />
-				</button>
-			</div>
-		{:else}
+		<nav class="desktop-nav" aria-label="Main navigation">
+			{#each items as item (item.href)}<a
+					href={item.href}
+					class:active={page.url.pathname === item.href}
+					aria-current={page.url.pathname === item.href ? 'page' : undefined}>{item.label}</a
+				>{/each}
+		</nav>
+		<div class="header-actions">
+			{#if authStore.isAuthenticated}<button
+					class="sync-button"
+					disabled={syncStore.isSyncing || !connection.isOnline}
+					onclick={handleSync}
+					aria-label="Sync your list with MyAnimeList"
+					title={syncLabel}
+					><span class="sync-dot" class:delayed={!connection.isOnline || !!syncStore.syncError}
+					></span><span>{syncLabel}</span><RefreshCw
+						size={14}
+						class={syncStore.isSyncing ? 'animate-spin' : ''}
+					/></button
+				>{/if}
 			<button
-				onclick={() => authStore.login()}
-				class="ml-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95"
+				class="settings-trigger"
+				aria-label="Settings and account"
+				aria-expanded={settingsOpen}
+				onclick={() => (settingsOpen = !settingsOpen)}
+				>{#if settingsOpen}<X size={18} />{:else}<Settings2 size={18} />{/if}</button
 			>
-				Login
-			</button>
-		{/if}
+			{#if !authStore.isAuthenticated && !authStore.isLoading}<button
+					class="connect-button"
+					onclick={() => authStore.login()}>Connect MAL</button
+				>{/if}
+		</div>
 	</div>
-{/snippet}
-
-<!-- Desktop / Floating Pill Nav -->
-<header
-	class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-max hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-surface-1/40 px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-2xl transition-all duration-700 ease-spring"
->
-	<!-- Brand -->
-	<a
-		href="/"
-		class="flex items-center gap-2 px-3 pl-1 transition-transform duration-700 ease-spring hover:scale-105 active:scale-95 group"
-	>
-		<div
-			class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-colors group-hover:bg-primary/20"
-		>
-			<Logo size={18} />
-		</div>
-		<span class="text-sm font-bold tracking-wide text-text-primary">AniDash</span>
-	</a>
-
-	<div class="mx-2 h-6 w-px bg-white/10"></div>
-
-	<!-- Links -->
-	<nav class="flex items-center gap-1">
-		{#each NAV_ITEMS as item, _idx (_idx)}
-			{@const isActive =
-				page.url.pathname === item.href ||
-				(item.href !== '/' && page.url.pathname.startsWith(item.href + '/'))}
-			<a
-				href={item.href}
-				class="group relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-700 ease-spring active:scale-95
-          {isActive ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'}"
+	{#if settingsOpen}
+		<div class="settings-panel" role="region" aria-label="Your preferences">
+			<h2>Your preferences</h2>
+			<button
+				class="preference"
+				aria-pressed={dubStore.dubMode}
+				onclick={() => dubStore.toggleDubMode()}
+				><Mic size={17} /><span>Dubbed anime only</span><span class="preference-value"
+					>{dubStore.dubMode ? 'On' : 'Off'}</span
+				></button
 			>
-				{#if isActive}
-					<div
-						class="absolute inset-0 -z-10 rounded-full bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all"
-						in:fade={{ duration: 200 }}
-					></div>
-				{/if}
-				<item.icon
-					size={16}
-					class="transition-transform duration-700 ease-spring group-hover:scale-110 group-hover:-translate-y-[1px]"
-				/>
-				{item.label}
-			</a>
-		{/each}
-	</nav>
-
-	<div class="mx-2 h-6 w-px bg-white/10"></div>
-
-	<!-- Actions -->
-	{@render globalActions(false)}
-</header>
-
-<!-- Mobile Top Header -->
-<header
-	class="fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b border-white/5 bg-surface-1/95 px-4 py-3 backdrop-blur-xl md:hidden"
->
-	<!-- Brand -->
-	<a href="/" class="flex items-center gap-2 group">
-		<div
-			class="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-		>
-			<Logo size={16} />
+			<button
+				class="preference"
+				aria-pressed={settingsStore.preferEnglish}
+				onclick={() => settingsStore.togglePreferEnglish()}
+				><Languages size={17} /><span>English titles</span><span class="preference-value"
+					>{settingsStore.preferEnglish ? 'On' : 'Off'}</span
+				></button
+			>
+			{#if authStore.isAuthenticated}<p class="account-name">Connected as {authStore.user?.name}</p>
+				<button
+					class="preference logout"
+					onclick={() => {
+						settingsOpen = false;
+						authStore.logout();
+					}}><LogOut size={17} /><span>Disconnect account</span></button
+				>{/if}
 		</div>
-		<span class="text-sm font-bold tracking-wide text-text-primary">AniDash</span>
-	</a>
-
-	<!-- Actions -->
-	{@render globalActions(true)}
+	{/if}
 </header>
-
-<!-- Mobile Bottom Tab Bar -->
-<nav
-	class="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-white/10 bg-surface-1/80 backdrop-blur-xl md:hidden pb-safe"
->
-	{#each NAV_ITEMS as item, _idx (_idx)}
-		{@const isActive =
-			page.url.pathname === item.href ||
-			(item.href !== '/' && page.url.pathname.startsWith(item.href + '/'))}
-		<a
+{#if settingsOpen}
+	<button
+		class="settings-dismiss"
+		aria-label="Close settings"
+		onclick={() => (settingsOpen = false)}
+	></button>
+{/if}
+<nav class="mobile-nav" aria-label="Mobile navigation">
+	{#each items as item (item.href)}<a
 			href={item.href}
-			class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors
-        {isActive ? 'text-primary' : 'text-text-muted'}"
-		>
-			<item.icon size={20} />
-			{item.label}
-		</a>
-	{/each}
+			class:active={page.url.pathname === item.href}
+			aria-current={page.url.pathname === item.href ? 'page' : undefined}
+			><item.icon size={20} strokeWidth={1.6} /><span>{item.label}</span></a
+		>{/each}
 </nav>
+
+<style>
+	.app-header {
+		position: relative;
+		z-index: 40;
+		border-bottom: 1px solid var(--color-border);
+		background: var(--color-surface-0);
+	}
+	.header-inner {
+		height: 80px;
+		padding: 0 32px;
+		max-width: 1440px;
+		margin: auto;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+	}
+	.wordmark {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-family: var(--font-display);
+		font-size: 25px;
+		letter-spacing: -0.035em;
+		flex-shrink: 0;
+	}
+	.wordmark-dot {
+		color: var(--color-primary);
+	}
+	.desktop-nav {
+		display: flex;
+		align-self: stretch;
+		gap: 32px;
+	}
+	.desktop-nav a {
+		display: flex;
+		align-items: center;
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		position: relative;
+	}
+	.desktop-nav a:hover,
+	.desktop-nav a.active {
+		color: var(--color-text-primary);
+	}
+	.desktop-nav a.active::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -1px;
+		height: 2px;
+		background: var(--color-primary);
+	}
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+	.sync-button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		font-size: 11px;
+	}
+	.sync-button:hover:not(:disabled) {
+		color: var(--color-text-primary);
+	}
+	.sync-dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--color-success);
+	}
+	.sync-dot.delayed {
+		background: var(--color-warning);
+	}
+	.settings-trigger {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		border: 1px solid var(--color-border);
+		border-radius: 50%;
+		cursor: pointer;
+		background: var(--color-surface-1);
+	}
+	.settings-trigger:hover {
+		border-color: var(--color-primary);
+	}
+	.connect-button {
+		min-height: 44px;
+		padding: 0 14px;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	.settings-panel {
+		position: absolute;
+		right: max(16px, calc((100vw - 1376px) / 2));
+		top: 70px;
+		width: min(300px, calc(100vw - 32px));
+		padding: 18px;
+		border-radius: 12px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface-1);
+		box-shadow:
+			0 12px 50px #0008,
+			inset 0 1px 0 #ffffff0a;
+		z-index: 50;
+	}
+	.settings-panel h2 {
+		font-family: var(--font-display);
+		font-size: 21px;
+		margin-bottom: 12px;
+	}
+	.preference {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 48px;
+		text-align: left;
+		cursor: pointer;
+		font-size: 13px;
+	}
+	.preference-value {
+		margin-left: auto;
+		color: var(--color-primary);
+	}
+	.account-name {
+		padding-top: 16px;
+		margin-top: 8px;
+		border-top: 1px solid var(--color-border);
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+	.logout {
+		color: var(--color-error);
+	}
+	.settings-dismiss {
+		position: fixed;
+		inset: 0;
+		z-index: 35;
+		cursor: default;
+	}
+	.mobile-nav {
+		display: none;
+	}
+	@media (max-width: 900px) {
+		.header-inner {
+			padding: 0 24px;
+			gap: 20px;
+		}
+		.desktop-nav {
+			gap: 22px;
+		}
+		.sync-button > span:not(.sync-dot) {
+			display: none;
+		}
+	}
+	@media (max-width: 640px) {
+		.header-inner {
+			height: 64px;
+			padding: 0 18px;
+			gap: 12px;
+		}
+		.wordmark {
+			font-size: 23px;
+		}
+		.desktop-nav {
+			display: none;
+		}
+		.header-actions {
+			gap: 6px;
+		}
+		.settings-trigger {
+			width: 44px;
+			height: 44px;
+		}
+		.mobile-nav {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			z-index: 40;
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+			background: var(--color-surface-1);
+			border-top: 1px solid var(--color-border);
+			box-shadow: 0 -6px 20px #0002;
+		}
+		.mobile-nav a {
+			min-height: 48px;
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+			align-items: center;
+			justify-content: center;
+			color: var(--color-text-secondary);
+			font-size: 10px;
+		}
+		.mobile-nav a.active {
+			color: var(--color-primary);
+		}
+		.settings-panel {
+			top: 58px;
+		}
+	}
+</style>

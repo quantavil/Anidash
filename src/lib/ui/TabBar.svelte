@@ -21,15 +21,6 @@
 		label: k === 'all' ? 'All' : formatListStatus(k)
 	}));
 
-	const activeColors: Record<string, string> = {
-		all: 'bg-surface-2 text-text-primary',
-		watching: 'bg-primary/15 text-primary',
-		completed: 'bg-success/15 text-success',
-		on_hold: 'bg-warning/15 text-warning',
-		dropped: 'bg-error/15 text-error',
-		plan_to_watch: 'bg-info/15 text-info'
-	};
-
 	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching') as TabKey);
 
 	function selectTab(key: TabKey) {
@@ -67,7 +58,7 @@
 </script>
 
 <div
-	class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none"
+	class="journal-tabs flex overflow-x-auto scrollbar-none"
 	role="tablist"
 	aria-label="Anime list status tabs"
 >
@@ -79,18 +70,53 @@
 			tabindex={isActive ? 0 : -1}
 			onclick={() => selectTab(tab.key)}
 			onkeydown={(e) => handleKeydown(e, idx)}
-			class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
-        {isActive
-				? (activeColors[tab.key] ?? activeColors.all)
-				: 'text-text-muted hover:bg-surface-2 hover:text-text-secondary'}"
+			class="journal-tab {isActive ? 'selected' : ''}"
 		>
 			{tab.label}
-			<span
-				class="min-w-[1.25rem] rounded-full px-1.5 text-center text-xs
-          {isActive ? 'opacity-80' : 'bg-surface-2 text-text-muted'}"
-			>
+			<span class="tab-count">
 				{getCount(tab.key)}
 			</span>
 		</button>
 	{/each}
 </div>
+
+<style>
+	.journal-tabs {
+		border-bottom: 1px solid var(--color-border);
+		gap: 22px;
+	}
+	.journal-tab {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+		min-height: 48px;
+		padding: 0 3px;
+		border-bottom: 2px solid transparent;
+		color: var(--color-text-secondary);
+		font-size: 13px;
+		cursor: pointer;
+	}
+	.journal-tab:hover {
+		color: var(--color-text-primary);
+	}
+	.journal-tab.selected {
+		color: var(--color-text-primary);
+		border-bottom-color: var(--color-primary);
+	}
+	.tab-count {
+		font-size: 11px;
+		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	@media (max-width: 640px) {
+		.journal-tabs {
+			gap: 20px;
+			margin-right: -18px;
+			padding-right: 18px;
+		}
+		.journal-tab {
+			font-size: 12px;
+		}
+	}
+</style>

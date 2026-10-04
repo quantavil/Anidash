@@ -108,16 +108,16 @@
 		justify-content: space-between;
 		width: 100%;
 		max-width: 220px; /* Cap width for detail pane / list rows */
-		height: 38px;
-		border-radius: 22px;
-		padding: 4px 12px;
+		height: 48px;
+		border-radius: 8px;
+		padding: 2px;
 		position: relative;
 		overflow: hidden;
 		transition:
 			border-color 0.2s ease,
 			background-color 0.2s ease,
 			box-shadow 0.2s ease;
-		background: rgba(18, 18, 20, 0.8);
+		background: var(--color-surface-1);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 	}
@@ -125,14 +125,14 @@
 	.pill-base.compact {
 		width: 100%;
 		max-width: 100%; /* Fill the card controls space completely */
-		height: 30px;
-		border-radius: 16px;
-		padding: 2px 6px;
+		height: 46px;
+		border-radius: 8px;
+		padding: 1px;
 	}
 
 	.pill-base:hover {
-		border-color: rgba(139, 126, 248, 0.3);
-		background: rgba(26, 26, 28, 0.9);
+		border-color: var(--color-primary);
+		background: var(--color-surface-2);
 	}
 
 	.pill-base.complete {
@@ -142,23 +142,25 @@
 
 	.pill-btn {
 		display: flex;
-		height: 28px;
-		width: 28px;
+		height: 44px;
+		width: 44px;
+		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		border-radius: 50%;
+		border-radius: 6px;
 		cursor: pointer;
 		border: 1px solid transparent;
 		background: transparent;
 		color: #a3a3a3; /* text-secondary */
 		transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
-		outline: none;
+
 		z-index: 1;
 	}
 
 	.pill-base.compact .pill-btn {
-		height: 24px;
-		width: 24px;
+		height: 44px;
+		width: 44px;
+		flex-shrink: 0;
 	}
 
 	.pill-btn:hover:not(:disabled) {
@@ -190,7 +192,7 @@
 
 	.pill-count.pulse {
 		transform: scale(1.12);
-		color: #ada3ff; /* primary-hover */
+		color: var(--color-primary); /* primary-hover */
 	}
 
 	.pill-count.complete {
@@ -250,5 +252,26 @@
 	}
 	.animate-complete-pop {
 		animation: complete-pop 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+	}
+
+	@media (max-width: 480px) {
+		.pill-base.compact {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(44px, 1fr));
+			height: auto;
+			gap: 2px;
+			padding: 3px;
+		}
+		.pill-base.compact .pill-count {
+			grid-column: 1 / -1;
+			grid-row: 1;
+			text-align: center;
+			min-height: 24px;
+		}
+		.pill-base.compact .pill-btn {
+			grid-row: 2;
+			width: 100%;
+			height: 44px;
+		}
 	}
 </style>

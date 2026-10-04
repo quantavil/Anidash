@@ -227,6 +227,7 @@
 				<ImageWithFallback
 					src={anime.mainPicture?.large ?? anime.mainPicture?.medium}
 					alt={anime.title}
+					priority
 					class="w-full sm:w-[200px] h-full object-cover"
 				/>
 				{#if listEntry}
@@ -234,7 +235,7 @@
 				{/if}
 				{#if dubStore.hasDub(anime.malId)}
 					<div
-						class="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/95 text-white backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/20"
+						class="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/95 text-white shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/20"
 						title="Dubbed"
 					>
 						<Mic size={14} fill="currentColor" />
@@ -341,7 +342,7 @@
 
 				<!-- ─── User List Controls ─── -->
 				<div
-					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 backdrop-blur-xl p-5 shadow-2xl relative z-20"
+					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 p-5 shadow-2xl relative z-20"
 				>
 					<!-- Glowing accent effect in background -->
 					<div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">

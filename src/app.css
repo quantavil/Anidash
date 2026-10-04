@@ -1,5 +1,12 @@
-@import '@fontsource-variable/outfit';
 @import 'tailwindcss';
+
+@font-face {
+	font-family: 'Outfit';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url('@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2') format('woff2');
+}
 
 :root {
 	--mobile-header-height: 3.25rem;
@@ -8,27 +15,28 @@
 /* ── AniDash High-End Theme ── */
 @theme {
 	/* Brand accents */
-	--color-primary: #8b7ef8;
-	--color-primary-hover: #ada3ff;
-	--color-primary-dim: #38307d;
+	--color-primary: #f08b73;
+	--color-primary-hover: #ffac96;
+	--color-primary-dim: #553a30;
 
 	/* Ethereal OLED Glass palette */
-	--color-surface-0: #050505;
-	--color-surface-1: #0a0a0c;
-	--color-surface-2: #121214;
-	--color-surface-3: #1a1a1c;
-	--color-border: rgba(255, 255, 255, 0.08);
+	--color-surface-0: #181917;
+	--color-surface-1: #20221e;
+	--color-surface-2: #262922;
+	--color-surface-3: #30342b;
+	--color-border: rgba(228, 235, 211, 0.12);
 
-	--color-text-primary: #f8f8f8;
-	--color-text-secondary: #a3a3a3;
-	--color-text-muted: #666666;
+	--color-text-primary: #f1eee5;
+	--color-text-secondary: #b4b5aa;
+	--color-text-muted: #969c8e;
 
-	--color-success: #34d399;
-	--color-warning: #fbbf24;
-	--color-error: #f87171;
-	--color-info: #60a5fa;
+	--color-success: #8fc7a1;
+	--color-warning: #e6c578;
+	--color-error: #ee9186;
+	--color-info: #9cbccf;
 
 	--font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+	--font-display: Georgia, 'Times New Roman', serif;
 
 	/* Physics easing curves */
 	--ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
@@ -81,10 +89,10 @@ body {
 	width: min(calc(100vw - 2rem), var(--dialog-max-w, 28rem));
 	max-height: min(86vh, 44rem);
 	max-height: min(86dvh, 44rem);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(228, 235, 211, 0.12);
 	border-radius: 1rem;
 	padding: 1.5rem;
-	background: linear-gradient(to bottom, color-mix(in srgb, #0a0a0c 95%, transparent), #121214);
+	background: linear-gradient(to bottom, color-mix(in srgb, #20221e 95%, transparent), #262922);
 	color: var(--color-text-primary);
 	box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
 	overflow-y: auto;
@@ -112,7 +120,7 @@ body {
 }
 .anidash-dialog::backdrop {
 	background: rgba(0, 0, 0, 0.65);
-	backdrop-filter: blur(8px);
+
 	transition: overlay 0.18s allow-discrete;
 }
 
@@ -158,7 +166,7 @@ a,
 
 /* ── UI Components (DRY) ── */
 .glass-dropdown {
-	@apply z-50 min-w-[160px] rounded-xl border border-white/10 bg-surface-1/95 backdrop-blur-2xl p-1.5 shadow-2xl;
+	@apply z-50 min-w-[160px] rounded-xl border border-white/10 bg-surface-1/95  p-1.5 shadow-2xl;
 	box-shadow:
 		0 25px 50px -12px rgba(0, 0, 0, 0.5),
 		inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -169,7 +177,7 @@ a,
 }
 
 .glass-card {
-	@apply rounded-2xl border border-white/5 bg-surface-1/40 backdrop-blur-md shadow-xl;
+	@apply rounded-2xl border border-white/5 bg-surface-1/40  shadow-xl;
 }
 
 .glass-badge {
@@ -177,12 +185,12 @@ a,
 }
 
 .glass-icon-wrapper {
-	@apply mb-3 inline-flex rounded-2xl bg-white/5 p-3 sm:p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:bg-white/10 group-hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/5;
+	@apply mb-3 inline-flex rounded-2xl bg-white/5 p-3 sm:p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]  transition-all duration-500 group-hover:scale-110 group-hover:bg-white/10 group-hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/5;
 }
 
 /* ── External Links (MAL & Mirrors) ── */
 .ext-group {
-	@apply relative inline-flex items-stretch rounded-full border border-white/10 bg-surface-1/50 backdrop-blur-sm transition-all duration-200 hover:border-white/20;
+	@apply relative inline-flex items-stretch rounded-full border border-white/10 bg-surface-1/50  transition-all duration-200 hover:border-white/20;
 }
 .ext-group:hover {
 	border-color: color-mix(in srgb, var(--site-color) 30%, transparent);
@@ -206,10 +214,116 @@ a,
 	color: white;
 }
 .ext-link {
-	@apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-1/50 px-3 py-1.5 text-xs text-text-muted backdrop-blur-sm transition-all duration-200;
+	@apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-1/50 px-3 py-1.5 text-xs text-text-muted  transition-all duration-200;
 }
 .ext-link:hover {
 	color: var(--site-color);
 	border-color: color-mix(in srgb, var(--site-color) 30%, transparent);
 	box-shadow: 0 0 12px color-mix(in srgb, var(--site-color) 15%, transparent);
+}
+
+/* Watch journal: shared structure and interaction surfaces. */
+.app-shell {
+	min-height: 100dvh;
+	background: var(--color-surface-0);
+}
+.app-content {
+	max-width: 1440px;
+	margin: 0 auto;
+	padding: 0 32px;
+}
+main {
+	min-width: 0;
+}
+main:focus {
+	outline: none;
+}
+.skip-link {
+	position: fixed;
+	left: 16px;
+	top: 12px;
+	z-index: 100;
+	padding: 12px 18px;
+	border-radius: 8px;
+	background: var(--color-primary);
+	color: #25140f;
+	transform: translateY(-150%);
+}
+.skip-link:focus {
+	transform: none;
+}
+.primary-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	min-height: 48px;
+	padding: 12px 22px;
+	border: 1px solid #ffbba044;
+	border-radius: 8px;
+	background: linear-gradient(180deg, #f29a83, var(--color-primary));
+	box-shadow:
+		inset 0 1px 0 #ffffff30,
+		0 4px 10px #0003;
+	color: #25140f;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		transform 0.15s,
+		background 0.15s;
+}
+.primary-button:hover {
+	background: var(--color-primary-hover);
+}
+.primary-button:active {
+	transform: translateY(1px);
+}
+button,
+a,
+select,
+input {
+	touch-action: manipulation;
+}
+select {
+	color-scheme: dark;
+}
+main > div > h1,
+main > div > div > h1 {
+	font-family: var(--font-display);
+	font-weight: 400;
+	letter-spacing: -0.03em;
+}
+.glass-card {
+	background: linear-gradient(145deg, var(--color-surface-2), var(--color-surface-1));
+	box-shadow:
+		inset 0 1px 0 #ffffff0a,
+		0 8px 24px #0002;
+}
+@media (max-width: 900px) {
+	.app-content {
+		padding: 0 24px;
+	}
+}
+@media (max-width: 640px) {
+	.app-content {
+		padding: 0 18px calc(88px + env(safe-area-inset-bottom));
+	}
+}
+
+.route-title {
+	font-family: var(--font-display);
+	font-size: clamp(36px, 4vw, 54px);
+	font-weight: 400;
+	line-height: 1.15;
+	letter-spacing: -0.035em;
+	text-wrap: balance;
+}
+.bg-primary {
+	color: #25140f;
+}
+@media (max-width: 640px) {
+	.route-title {
+		font-size: 36px;
+	}
 }

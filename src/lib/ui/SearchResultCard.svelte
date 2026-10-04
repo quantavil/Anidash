@@ -4,7 +4,7 @@
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { toast } from 'svelte-sonner';
-	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
+	import { formatMediaType } from '$lib/utils/format';
 	import { Star, Plus, Mic } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
@@ -62,20 +62,6 @@
 			class="h-full w-full transition-transform duration-300 group-hover:scale-105"
 		/>
 
-		<!-- Score overlay -->
-		{#if anime.mean}
-			<div
-				class="glass-badge absolute right-2 top-2 px-2 py-0.5 text-[10px] font-bold tracking-tight z-10"
-			>
-				<Star size={10} class="text-warning" fill="currentColor" />
-				<span class="text-text-primary">{anime.mean.toFixed(1)}</span>
-				{#if anime.numListUsers && anime.numListUsers > 0}
-					<span class="mx-0.5 opacity-40">|</span>
-					<span class="text-text-secondary">{formatNumberShort(anime.numListUsers)}</span>
-				{/if}
-			</div>
-		{/if}
-
 		<!-- Status badge overlay -->
 		{#if inList && listEntry}
 			<div class="absolute left-2 top-2 z-10">
@@ -100,6 +86,12 @@
 			interactive={false}
 			class="line-clamp-2 text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
 		/>
+
+		<div class="flex items-center gap-1.5 text-xs text-warning">
+			<Star size={12} fill="currentColor" /><span
+				>{anime.mean != null ? anime.mean.toFixed(2) : '—'}</span
+			><span class="text-text-secondary">MAL</span>
+		</div>
 
 		<div class="flex items-center gap-2 text-xs text-text-muted">
 			{#if anime.mediaType}
@@ -128,7 +120,7 @@
 				onclick={handleAdd}
 				disabled={adding}
 				aria-label="Add {anime.title} to Plan to Watch"
-				class="relative z-[2] mt-2 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+				class="relative z-[2] mt-2 flex items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/10 min-h-11 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
 			>
 				{#if adding}
 					<div

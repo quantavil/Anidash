@@ -173,7 +173,7 @@
 <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
 	<!-- PTW Roulette Widget -->
 	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-500 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {rollingPTW
+		class="group relative overflow-hidden rounded-2xl border transition-all duration-500 sm:p-6 bg-surface-1 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {rollingPTW
 			? 'border-primary/40 shadow-[0_0_20px_rgba(139,126,248,0.25)]'
 			: 'border-white/5 hover:border-primary/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(139,126,248,0.12)]'}"
 	>
@@ -246,7 +246,7 @@
 
 	<!-- Seasonal Surprise Widget -->
 	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {loading
+		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {loading
 			? 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.25)]'
 			: 'border-white/5 hover:border-pink-500/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(244,114,182,0.12)]'}"
 	>

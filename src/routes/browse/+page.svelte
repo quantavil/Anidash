@@ -363,7 +363,7 @@
 
 <div class="py-6">
 	<!-- Header -->
-	<h1 class="text-2xl font-bold text-text-primary">Browse Anime</h1>
+	<h1 class="route-title">Discover<span class="text-primary" aria-hidden="true">.</span></h1>
 	<p class="mt-1 text-sm text-text-secondary">Search and discover anime to add to your list</p>
 
 	<!-- Search Bar -->

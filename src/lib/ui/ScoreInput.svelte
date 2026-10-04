@@ -1,175 +1,107 @@
 <script lang="ts">
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { Star } from 'lucide-svelte';
-
-	let {
-		malId,
-		score
-	}: {
-		malId: number;
-		score: number; // 0-10 MAL scale, 0 = unrated
-	} = $props();
-
-	const numScore = $derived(Number(score));
-	let hoveredScore = $state<number | null>(null);
-	const displayScore = $derived(hoveredScore ?? numScore);
-
-	const SCORE_DESCRIPTIONS: Record<number, string> = {
-		1: 'Appalling',
-		2: 'Horrible',
-		3: 'Very Bad',
-		4: 'Bad',
-		5: 'Average',
-		6: 'Fine',
-		7: 'Good',
-		8: 'Very Good',
-		9: 'Great',
-		10: 'Masterpiece'
-	};
-
-	const size = 36; // Enlarge to fill container and increase tapability
-
-	function starFill(i: number): number {
-		const s = displayScore;
-		if (s >= i * 2 + 2) return 1;
-		if (s === i * 2 + 1) return 0.5;
-		return 0;
-	}
-
-	function handleSelect(val: number) {
-		const newScore = numScore === val ? 0 : val;
-		userListStore.setScore(malId, newScore);
-	}
-
-	function handleKeyDown(e: KeyboardEvent) {
-		if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-			e.preventDefault();
-			const next = Math.min(numScore + 1, 10);
-			userListStore.setScore(malId, next);
-		} else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-			e.preventDefault();
-			const prev = Math.max(numScore - 1, 0);
-			userListStore.setScore(malId, prev);
-		} else if (e.key === 'Escape') {
-			e.preventDefault();
-			userListStore.setScore(malId, 0);
-		}
-	}
-
-	const instanceId = Math.random().toString(36).slice(2, 7);
-	const gradId = $derived(`halfGrad-${malId}-${instanceId}`);
+	let { malId, score }: { malId: number; score: number } = $props();
+	const descriptions = [
+		'Not rated',
+		'Appalling',
+		'Horrible',
+		'Very bad',
+		'Bad',
+		'Average',
+		'Fine',
+		'Good',
+		'Very good',
+		'Great',
+		'Masterpiece'
+	];
 </script>
 
-<!-- SVG Gradient definition for half-stars -->
-<svg width="0" height="0" class="absolute pointer-events-none">
-	<defs>
-		<linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-			<stop offset="50%" stop-color="var(--color-warning)" />
-			<stop offset="50%" stop-color="transparent" stop-opacity="0" />
-		</linearGradient>
-	</defs>
-</svg>
-
-<div class="flex flex-col gap-2 w-full">
-	<!-- Label, Score, and Clear Button in one row -->
-	<div class="flex flex-wrap items-center justify-between gap-1 w-full">
-		<div class="flex items-center gap-2 min-w-0 flex-wrap">
-			<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-				Your Rating
-			</span>
-			{#if displayScore > 0}
-				<div class="flex items-center gap-1.5">
-					<span class="text-sm font-bold text-warning tabular-nums">
-						{displayScore}
-					</span>
-					<span class="text-[10px] text-text-muted">/10</span>
-					<span
-						class="text-[10px] text-text-secondary font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/5"
-					>
-						{SCORE_DESCRIPTIONS[displayScore]}
-					</span>
-				</div>
-			{:else}
-				<span
-					class="text-[10px] text-text-muted font-semibold bg-white/5 px-1.5 py-0.5 rounded border border-white/5"
-				>
-					Not Rated
-				</span>
-			{/if}
+<div class="score-input">
+	<div class="score-header">
+		<span>Your rating</span>
+		<div>
+			<Star size={15} fill={score > 0 ? 'currentColor' : 'none'} /><strong
+				>{score > 0 ? score : '—'}<span> / 10</span></strong
+			>
 		</div>
-
-		{#if numScore > 0}
-			<button
-				onclick={() => userListStore.setScore(malId, 0)}
-				class="flex items-center justify-center rounded-lg p-1.5 text-error hover:bg-error/10 border border-transparent hover:border-error/20 transition-all active:scale-95"
-				title="Clear rating"
-			>
-				<!-- Simple SVG Cross (Red) -->
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<line x1="18" y1="6" x2="6" y2="18"></line>
-					<line x1="6" y1="6" x2="18" y2="18"></line>
-				</svg>
-			</button>
-		{/if}
 	</div>
-
-	<!-- 5-Star Interactive Rating Bar -->
-	<div
-		class="flex items-center justify-between py-1.5 select-none w-full"
-		role="slider"
-		tabindex="0"
-		aria-label="Anime rating out of 10 represented by 5 stars"
-		aria-valuenow={numScore}
-		aria-valuemin={0}
-		aria-valuemax={10}
-		onmouseleave={() => (hoveredScore = null)}
-		onkeydown={handleKeyDown}
-	>
-		{#each Array(5) as _, i (i)}
-			{@const fill = starFill(i)}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div
-				class="relative aspect-square w-9 h-9 flex items-center justify-center transition-all duration-200 hover:scale-120 active:scale-90"
-			>
-				{#if fill === 1}
-					<Star
-						{size}
-						class="text-warning fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
-						stroke-width={0}
-					/>
-				{:else}
-					<Star
-						{size}
-						class={fill === 0.5 ? 'text-warning' : 'text-white/10'}
-						fill={fill === 0.5 ? `url(#${gradId})` : 'none'}
-						stroke={fill === 0.5 ? 'var(--color-warning)' : 'currentColor'}
-						stroke-width={1.5}
-					/>
-				{/if}
-
-				<!-- Mouse Hover/Tap Zones (Invisible overlays) -->
-				<div
-					class="absolute left-0 top-0 w-1/2 h-full cursor-pointer z-10"
-					onmouseenter={() => (hoveredScore = i * 2 + 1)}
-					onclick={() => handleSelect(i * 2 + 1)}
-				></div>
-				<div
-					class="absolute right-0 top-0 w-1/2 h-full cursor-pointer z-10"
-					onmouseenter={() => (hoveredScore = i * 2 + 2)}
-					onclick={() => handleSelect(i * 2 + 2)}
-				></div>
-			</div>
-		{/each}
+	<div class="score-options" role="group" aria-label="Choose your rating out of 10">
+		{#each descriptions.slice(1) as description, i (description)}<button
+				class:selected={score === i + 1}
+				aria-pressed={score === i + 1}
+				aria-label="Rate {i + 1} out of 10: {description}"
+				title={description}
+				onclick={() => userListStore.setScore(malId, score === i + 1 ? 0 : i + 1)}>{i + 1}</button
+			>{/each}
+	</div>
+	<div class="score-footer">
+		<span>{descriptions[score] ?? 'Not rated'}</span>{#if score > 0}<button
+				onclick={() => userListStore.setScore(malId, 0)}>Clear rating</button
+			>{/if}
 	</div>
 </div>
+
+<style>
+	.score-input {
+		width: 100%;
+	}
+	.score-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 12px;
+		font-size: 13px;
+	}
+	.score-header > div {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--color-warning);
+	}
+	.score-header strong {
+		font-size: 20px;
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
+	.score-header strong span {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		font-weight: 400;
+	}
+	.score-options {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+		gap: 6px;
+	}
+	.score-options button {
+		min-height: 44px;
+		border-radius: 7px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface-2);
+		color: var(--color-text-secondary);
+		font-size: 13px;
+		cursor: pointer;
+	}
+	.score-options button:hover,
+	.score-options button.selected {
+		background: var(--color-warning);
+		border-color: var(--color-warning);
+		color: #282212;
+	}
+	.score-footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+	.score-footer button {
+		min-height: 44px;
+		color: var(--color-text-secondary);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+		cursor: pointer;
+	}
+</style>

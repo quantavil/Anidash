@@ -76,7 +76,20 @@ with sync_playwright() as p:
     record=records[0]
     detail=dict(id=record['malId'],title=record['title'],alternative_titles={'en':record['titleEnglish']},main_picture=record['mainPicture'],mean=record['mean'],num_episodes=record['numEpisodes'],media_type='tv',status='finished_airing',start_season=record['startSeason'],genres=record['genres'],studios=[],num_list_users=1000000,num_scoring_users=500000,synopsis='A journey after the final battle.')
     context.route(BASE+f"/api/anime/{record['malId']}?**",lambda r:r.fulfill(json=detail))
+    detail['recommendations']=[{'node':{'id':99999,'title':'MAL-only recommendation'},'num_recommendations':5}]
+    rec_nodes=[{'rating':92-i,'mediaRecommendation':{'id':20000+i,'idMal':1000+i if i<5 else None,'title':{'romaji':f'Recommended anime {i+1} with a long title that must remain readable','english':None},'coverImage':{'large':records[4]['mainPicture']['large'],'medium':None}}} for i in range(6)]
+    anilist_requests=[]
+    def detail_enrichment(route):
+        anilist_requests.append(route.request.post_data_json)
+        route.fulfill(json={'data':{'Media':{'id':154587,'idMal':52991,'tags':[],'characters':{'edges':[]},'recommendations':{'nodes':rec_nodes},'reviews':{'nodes':[]},'nextAiringEpisode':None,'trailer':None}}})
+    context.route('https://graphql.anilist.co/**',detail_enrichment)
     page.goto(BASE+'/anime/52991')
+    rec_section=page.get_by_role('region',name='Recommendations')
+    expect(rec_section.get_by_role('link')).to_have_count(6)
+    expect(page.get_by_text('MAL-only recommendation',exact=True)).to_have_count(0)
+    expect(rec_section.get_by_text('Support 92',exact=True)).to_be_visible()
+    expect(rec_section.get_by_role('link').last).to_have_attribute('href','https://anilist.co/anime/20005')
+    expect(rec_section.get_by_role('link').last).to_have_attribute('rel','noopener noreferrer')
     rating = page.get_by_role('group',name='Your rating')
     expect(rating.get_by_role('button',name='Rate 9 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
     rating.get_by_role('button',name='Rate 8 out of 10',exact=True).click()
@@ -101,6 +114,11 @@ with sync_playwright() as p:
         assert minus['width']>=44 and minus['height']>=44 and plus['width']>=44 and plus['height']>=44
         status=page.get_by_role('button',name='Status: Watching',exact=True).bounding_box()
         assert status['x']+status['width']<=minus['x'] or status['y']+status['height']<=minus['y'],f'Overlapping status and progress {width}'
+        rec_links=rec_section.get_by_role('link')
+        first,second=rec_links.nth(0).bounding_box(),rec_links.nth(1).bounding_box()
+        assert abs(first['y']-second['y'])<1,f'Recommendations not inline {width}'
+        assert second['x']>=first['x']+first['width'],f'Recommendations overlap {width}'
+        rec_section.screenshot(path=str(OUT/f'recommendations-{width}.png'))
         page.locator('.detail-controls').screenshot(path=str(OUT/f'controls-{width}.png'))
         page.screenshot(path=str(OUT/f'detail-{width}.png'),full_page=True)
     page.get_by_role('button',name='Status: Watching',exact=True).click()
@@ -109,6 +127,7 @@ with sync_playwright() as p:
     expect(page.get_by_role('button',name='Status: On Hold',exact=True)).to_be_visible()
     page.get_by_role('button',name='Status: On Hold',exact=True).click()
     page.get_by_role('menuitem',name='Watching',exact=True).click()
+    assert len(anilist_requests)==1,anilist_requests
     # Browse uses stable discovery actions even when ranking is loading or empty.
     nodes=[dict(id=r['malId'],title=r['title'],main_picture=r['mainPicture'],mean=r['mean'],num_episodes=r['numEpisodes'],media_type=r['mediaType'],status=r['animeStatus'],genres=r['genres'],start_season=r['startSeason']) for r in records]
     context.route(BASE+'/api/anime/ranking?**',lambda r:r.fulfill(json={'data':[{'node':n} for n in nodes],'paging':{}}))

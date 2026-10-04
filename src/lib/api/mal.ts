@@ -195,7 +195,6 @@ const DETAIL_FIELDS = [
 	'genres',
 	'studios',
 	'related_anime',
-	'recommendations',
 	'start_season',
 	'status',
 	'media_type',
@@ -236,19 +235,6 @@ export function mapDetailToRecord(detail: MalAnimeDetail): DetailedAnimeRecord {
 					: null,
 				mediaType: r.node.media_type ?? null,
 				relationType: r.relation_type ?? 'unknown'
-			})) ?? null,
-		recommendations:
-			detail.recommendations?.map((r) => ({
-				id: r.node.id,
-				title: r.node.title,
-				mainPicture: r.node.main_picture
-					? {
-							medium: r.node.main_picture.medium ?? null,
-							large: r.node.main_picture.large ?? null
-						}
-					: null,
-				mean: r.node.mean ?? null,
-				numRecommendations: r.num_recommendations ?? 0
 			})) ?? null,
 		type: 'detail',
 		cachedAt: Date.now()

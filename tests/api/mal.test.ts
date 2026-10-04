@@ -5,7 +5,8 @@ import {
 	mapDetailToRecord,
 	searchAnime,
 	getSeasonal,
-	getRanking
+	getRanking,
+	getAnimeDetail
 } from '$lib/api/mal';
 import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from '$lib/api/schemas/mal.schema';
 import { MalAnimeLeanSchema, MalUserListResponseSchema } from '$lib/api/schemas/mal.schema';
@@ -116,12 +117,6 @@ describe('MAL API Mappers', () => {
 					relation_type: 'sequel',
 					relation_type_formatted: 'Sequel'
 				}
-			],
-			recommendations: [
-				{
-					node: { id: 200, title: 'Rec Anime', mean: 8.0 },
-					num_recommendations: 50
-				}
 			]
 		};
 
@@ -139,15 +134,6 @@ describe('MAL API Mappers', () => {
 					mainPicture: null,
 					mediaType: null,
 					relationType: 'sequel'
-				}
-			],
-			recommendations: [
-				{
-					id: 200,
-					title: 'Rec Anime',
-					mainPicture: null,
-					mean: 8.0,
-					numRecommendations: 50
 				}
 			],
 			type: 'detail'
@@ -333,5 +319,28 @@ describe('MAL Schema Resilience for Real-World MAL Responses', () => {
 		expect(requestedUrl).toContain('is_rewatching');
 		expect(requestedUrl).toContain('start_date');
 		expect(requestedUrl).toContain('finish_date');
+	});
+});
+
+describe('AniList-only recommendations', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it('does not request or retain the retired MAL recommendation payload', async () => {
+		let fields: string[] = [];
+		vi.stubGlobal('fetch', async (url: string) => {
+			fields = new URL(url, 'https://anidash.test').searchParams.get('fields')!.split(',');
+			return new Response(
+				JSON.stringify({
+					id: 99,
+					title: 'Anime',
+					recommendations: [{ node: { id: 200, title: 'MAL-only anime' }, num_recommendations: 50 }]
+				}),
+				{ status: 200, headers: { 'Content-Type': 'application/json' } }
+			);
+		});
+		const result = await getAnimeDetail(99);
+		expect(result.ok).toBe(true);
+		expect(fields).not.toContain('recommendations');
+		if (result.ok) expect(result.value).not.toHaveProperty('recommendations');
 	});
 });

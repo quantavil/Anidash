@@ -18,7 +18,7 @@
 		formatNumberShort,
 		formatCharacterName
 	} from '$lib/utils/format';
-	import { formatReviewExcerpt } from '$lib/utils/review-text';
+	import ReviewText from '$lib/ui/ReviewText.svelte';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 
@@ -85,10 +85,6 @@
 	);
 
 	const displayedCharacters = $derived(expandedCharacters ? characters : characters.slice(0, 12));
-
-	const hasRecommendations = $derived(
-		(anime?.recommendations && anime.recommendations.length > 0) || recommendations.length > 0
-	);
 
 	// ─── Load Anime Detail ───
 
@@ -499,11 +495,13 @@
 				{#if anilistEnriched.tagsRanked.length > 0}
 					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
 						<h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">Tags</h3>
-						<div class="flex flex-wrap gap-1.5">
-							{#each anilistEnriched.tagsRanked.slice(0, 20) as t (t.name)}
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex (Scrollable region needs keyboard access.) -->
+						<div class="tag-list" role="region" aria-label="Anime tags" tabindex="0">
+							{#each anilistEnriched.tagsRanked as t (t.name)}
 								<span
 									class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-text-secondary max-w-full break-all"
-									>{t.name} <span class="text-text-muted">{t.rank}%</span></span
+									>{t.name}
+									{#if t.rank !== null}<span class="text-text-muted">{t.rank}%</span>{/if}</span
 								>
 							{/each}
 						</div>
@@ -557,119 +555,56 @@
 				</div>
 			{/if}
 
-			<!-- Section 3: Recommendations -->
-			{#if hasRecommendations}
-				<div class="space-y-4">
-					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">
-						Recommendations
-					</h3>
-
-					<!-- MAL Recommendations -->
-					{#if anime.recommendations && anime.recommendations.length > 0}
-						<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-							{#each anime.recommendations.slice(0, 6) as rec (rec.id)}
+			<!-- AniList recommendations share the existing detail enrichment request. -->
+			{#if recommendations.length > 0 || recsLoading || recsError}
+				<section class="recommendation-section" aria-label="Recommendations">
+					<div class="recommendation-heading">
+						<h3>Recommendations</h3>
+						<span>From AniList</span>
+					</div>
+					{#if recsLoading}
+						<div class="recommendation-grid" aria-busy="true" aria-label="Loading recommendations">
+							{#each Array(6) as _, i (i)}<div
+									class="recommendation-placeholder animate-pulse"
+								></div>{/each}
+						</div>
+					{:else if recsError}
+						<div class="recommendation-error">
+							<p>{recsError}</p>
+							<button onclick={() => loadAnilistData(Number(page.params.id))}>Retry</button>
+						</div>
+					{:else}
+						<div class="recommendation-grid">
+							{#each recommendations as rec (rec.id)}
+								{@const external = !rec.idMal}
 								<a
-									href="/anime/{rec.id}"
-									class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
+									class="recommendation-card"
+									href={rec.idMal ? `/anime/${rec.idMal}` : `https://anilist.co/anime/${rec.id}`}
+									target={external ? '_blank' : undefined}
+									rel={external ? 'noopener noreferrer' : undefined}
+									title={rec.title}
 								>
-									<div class="relative aspect-[3/4] overflow-hidden rounded-lg">
-										<ImageWithFallback
-											src={rec.mainPicture?.medium}
-											alt={rec.title}
-											class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-										/>
-										{#if rec.mean}
-											<div
-												class="glass-badge absolute right-1.5 top-1.5 px-1.5 py-0.5 text-[9px] font-bold"
-											>
-												★ {rec.mean.toFixed(1)}
-											</div>
-										{/if}
+									<div class="recommendation-cover">
+										<ImageWithFallback src={rec.cover} alt="" class="h-full w-full" />
 									</div>
-									<div class="min-w-0">
-										<p
-											class="truncate text-xs font-semibold text-text-primary group-hover:text-primary transition-colors"
-										>
-											{rec.title}
-										</p>
-										{#if rec.numRecommendations}
-											<p class="text-[9px] text-text-muted">
-												{rec.numRecommendations} user{rec.numRecommendations === 1 ? '' : 's'}
-											</p>
-										{/if}
+									<div class="recommendation-copy">
+										<h4>{rec.title}</h4>
+										<div class="recommendation-meta">
+											{#if rec.rating !== null}<span
+													title="AniList community recommendation support, not an anime score"
+													>Support {rec.rating}</span
+												>{/if}
+											{#if external}<span
+													class="recommendation-external"
+													aria-label="Opens AniList in a new tab"><ExternalLink size={14} /></span
+												>{/if}
+										</div>
 									</div>
 								</a>
 							{/each}
 						</div>
 					{/if}
-
-					<!-- Community Recommendations -->
-					{#if recsLoading}
-						<div class="grid gap-3 sm:grid-cols-2">
-							{#each Array(2) as _, _idx (_idx)}
-								<div class="h-28 animate-pulse rounded-xl bg-surface-1"></div>
-							{/each}
-						</div>
-					{:else if recsError}
-						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
-							<p class="text-xs text-text-muted">{recsError}</p>
-							<button
-								onclick={() => loadAnilistData(Number(page.params.id))}
-								class="mt-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
-							>
-								Retry
-							</button>
-						</div>
-					{:else if recommendations.length > 0}
-						<div class="space-y-3">
-							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">
-								AniList Recommendations
-							</h4>
-							<div class="grid gap-3 md:grid-cols-2">
-								{#each recommendations.slice(0, 4) as rec (rec.id)}
-									{@const href = rec.idMal
-										? `/anime/${rec.idMal}`
-										: `https://anilist.co/anime/${rec.id}`}
-									{@const external = !rec.idMal}
-									<div
-										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
-									>
-										<a
-											{href}
-											target={external ? '_blank' : undefined}
-											rel={external ? 'noopener noreferrer' : undefined}
-											class="shrink-0 h-20 w-14 overflow-hidden rounded-lg border border-white/5 shadow-md hover:opacity-85 transition-opacity"
-										>
-											<ImageWithFallback
-												src={rec.cover}
-												alt={rec.title}
-												class="h-full w-full object-cover"
-											/>
-										</a>
-										<div class="min-w-0 flex-1 flex flex-col justify-between">
-											<div class="flex items-start justify-between gap-2 min-w-0 w-full">
-												<a
-													{href}
-													target={external ? '_blank' : undefined}
-													rel={external ? 'noopener noreferrer' : undefined}
-													class="flex-1 min-w-0 truncate text-xs font-bold text-text-primary hover:text-primary transition-colors"
-												>
-													{rec.title}
-												</a>
-												{#if rec.rating}
-													<span
-														class="shrink-0 text-[9px] font-bold bg-surface-2 px-1.5 py-0.5 rounded text-text-muted"
-														>★ {rec.rating}</span
-													>
-												{/if}
-											</div>
-										</div>
-									</div>
-								{/each}
-							</div>
-						</div>
-					{/if}
-				</div>
+				</section>
 			{/if}
 
 			<!-- Section 4: Characters -->
@@ -773,11 +708,7 @@
 											>★ {r.rating}</span
 										>{/if}
 								</div>
-								{#if r.body}<p
-										class="mt-2 line-clamp-4 text-xs leading-relaxed text-text-secondary break-words [overflow-wrap:anywhere]"
-									>
-										{formatReviewExcerpt(r.body)}
-									</p>{/if}
+								{#if r.body}<ReviewText body={r.body} />{/if}
 								{#if r.user}<p class="mt-2 text-[10px] text-text-muted">— {r.user}</p>{/if}
 							</div>
 						{/each}
@@ -806,6 +737,135 @@
 <CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />
 
 <style>
+	.tag-list {
+		display: flex;
+		flex-wrap: wrap;
+		align-content: flex-start;
+		gap: 6px;
+		max-height: 128px;
+		overflow-y: auto;
+		overscroll-behavior-y: contain;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-border) transparent;
+		scrollbar-gutter: stable;
+		padding-right: 4px;
+	}
+	@media (min-width: 640px) {
+		.tag-list {
+			max-height: 160px;
+		}
+	}
+
+	.recommendation-section {
+		min-width: 0;
+	}
+	.recommendation-heading {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+	.recommendation-heading h3 {
+		font-size: 18px;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.recommendation-heading > span {
+		flex-shrink: 0;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+	.recommendation-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 12px;
+	}
+	.recommendation-card {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		overflow: hidden;
+		background: var(--color-surface-1);
+		transition:
+			border-color 140ms,
+			background-color 140ms;
+	}
+	.recommendation-card:hover {
+		border-color: var(--color-primary);
+		background: var(--color-surface-2);
+	}
+	.recommendation-cover {
+		aspect-ratio: 3 / 4;
+		overflow: hidden;
+		background: var(--color-surface-2);
+	}
+	.recommendation-copy {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px;
+	}
+	.recommendation-copy h4 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		overflow-wrap: anywhere;
+		min-height: 2.8em;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.4;
+		color: var(--color-text-primary);
+	}
+	.recommendation-meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+		margin-top: auto;
+		min-height: 18px;
+		color: var(--color-text-secondary);
+		font-size: 11px;
+	}
+	.recommendation-external {
+		margin-left: auto;
+	}
+	.recommendation-placeholder {
+		aspect-ratio: 3 / 5;
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		background: var(--color-surface-2);
+	}
+	.recommendation-error {
+		padding: 16px;
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		color: var(--color-text-secondary);
+		font-size: 13px;
+	}
+	.recommendation-error button {
+		min-height: 44px;
+		min-width: 44px;
+		margin-top: 8px;
+		color: var(--color-primary-hover);
+		cursor: pointer;
+	}
+	@media (min-width: 640px) {
+		.recommendation-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 1100px) {
+		.recommendation-grid {
+			grid-template-columns: repeat(6, minmax(0, 1fr));
+		}
+	}
+
 	.tracking-layout {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(268px, 0.85fr);

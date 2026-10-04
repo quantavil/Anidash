@@ -32,7 +32,6 @@ export interface DetailedAnimeRecord extends BaseAnimeRecord {
 	synopsis: string | null;
 	broadcast: { day_of_the_week: string; start_time?: string } | null;
 	relatedAnime: RelatedAnimeRecord[] | null;
-	recommendations: RecommendationRecord[] | null;
 	cachedAt: number; // epoch ms
 }
 
@@ -44,14 +43,6 @@ export interface RelatedAnimeRecord {
 	mainPicture: { medium: string | null; large: string | null } | null;
 	mediaType: string | null;
 	relationType: string;
-}
-
-export interface RecommendationRecord {
-	id: number;
-	title: string;
-	mainPicture: { medium: string | null; large: string | null } | null;
-	mean: number | null;
-	numRecommendations: number;
 }
 
 export type AnimeStatus = 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';

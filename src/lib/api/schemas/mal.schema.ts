@@ -149,21 +149,6 @@ export const MalAnimeDetailSchema = MalAnimeLeanSchema.extend({
 			})
 		)
 		.nullable()
-		.optional(),
-	recommendations: z
-		.array(
-			z.object({
-				node: z.object({
-					id: z.number(),
-					title: z.string(),
-					main_picture: PictureSchema.nullable().optional(),
-					mean: z.number().nullable().optional(),
-					media_type: z.string().nullable().optional()
-				}),
-				num_recommendations: z.number().nullable().optional()
-			})
-		)
-		.nullable()
 		.optional()
 });
 

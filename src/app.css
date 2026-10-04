@@ -10,6 +10,8 @@
 
 :root {
 	--mobile-header-height: 3.25rem;
+	--radius-m: 10px;
+	--color-on-primary: #25140f;
 }
 
 /* ── AniDash High-End Theme ── */
@@ -17,18 +19,18 @@
 	/* Brand accents */
 	--color-primary: #f08b73;
 	--color-primary-hover: #ffac96;
-	--color-primary-dim: #553a30;
+	--color-primary-dim: #50312f;
 
-	/* Ethereal OLED Glass palette */
-	--color-surface-0: #181917;
-	--color-surface-1: #20221e;
-	--color-surface-2: #262922;
-	--color-surface-3: #30342b;
-	--color-border: rgba(228, 235, 211, 0.12);
+	/* Deep ink surfaces, warm ivory type. */
+	--color-surface-0: #101117;
+	--color-surface-1: #191b24;
+	--color-surface-2: #222530;
+	--color-surface-3: #2d303d;
+	--color-border: rgba(236, 229, 220, 0.12);
 
 	--color-text-primary: #f1eee5;
-	--color-text-secondary: #b4b5aa;
-	--color-text-muted: #969c8e;
+	--color-text-secondary: #b9b5be;
+	--color-text-muted: #96919f;
 
 	--color-success: #8fc7a1;
 	--color-warning: #e6c578;
@@ -89,10 +91,10 @@ body {
 	width: min(calc(100vw - 2rem), var(--dialog-max-w, 28rem));
 	max-height: min(86vh, 44rem);
 	max-height: min(86dvh, 44rem);
-	border: 1px solid rgba(228, 235, 211, 0.12);
+	border: 1px solid rgba(236, 229, 220, 0.12);
 	border-radius: 1rem;
 	padding: 1.5rem;
-	background: linear-gradient(to bottom, color-mix(in srgb, #20221e 95%, transparent), #262922);
+	background: linear-gradient(to bottom, color-mix(in srgb, #191b24 95%, transparent), #222530);
 	color: var(--color-text-primary);
 	box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
 	overflow-y: auto;
@@ -137,7 +139,7 @@ body {
 /* ── Selection ── */
 ::selection {
 	background-color: var(--color-primary);
-	color: white;
+	color: var(--color-on-primary);
 }
 
 /* ── Touch action for mobile ── */
@@ -326,4 +328,14 @@ main > div > div > h1 {
 	.route-title {
 		font-size: 36px;
 	}
+}
+
+.num {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Open card menus must escape paint containment and sit above adjacent posters. */
+.feed-card-contain:has([aria-expanded='true']) {
+	content-visibility: visible;
+	z-index: 10;
 }

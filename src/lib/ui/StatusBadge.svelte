@@ -8,11 +8,13 @@
 		malId,
 		status,
 		showLabel = false,
+		quiet = false,
 		class: className = ''
 	}: {
 		malId: number;
 		status: AnimeStatus;
 		showLabel?: boolean;
+		quiet?: boolean;
 		class?: string;
 	} = $props();
 
@@ -104,21 +106,25 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div bind:this={rootEl} class="relative inline-block" onclick={(e) => e.stopPropagation()}>
 	<button
+		class:quiet
 		bind:this={triggerEl}
 		onclick={handleToggle}
 		aria-expanded={open}
 		aria-haspopup="menu"
 		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 {showLabel
-			? 'px-3 py-1.5 gap-2 rounded-xl'
+			? 'min-h-11 px-3 py-1.5 gap-2 rounded-lg text-xs'
 			: 'h-11 w-11 rounded-lg'} {STATUS_CONFIG[status]?.badgeClass} {className}"
 		title="{STATUS_CONFIG[status]?.label} (Click to change status)"
 		aria-label="Status: {STATUS_CONFIG[status]?.label}"
 	>
-		<ActiveIcon
-			size={13}
-			fill={status === 'completed' || status === 'dropped' ? 'none' : 'currentColor'}
-			class="transition-transform group-hover:scale-110 shrink-0"
-		/>
+		{#if quiet}<span class="status-dot {STATUS_CONFIG[status]?.iconClass}" aria-hidden="true"
+			></span>{:else}
+			<ActiveIcon
+				size={13}
+				fill={status === 'completed' || status === 'dropped' ? 'none' : 'currentColor'}
+				class="transition-transform group-hover:scale-110 shrink-0"
+			/>
+		{/if}
 		{#if showLabel}
 			<span class="font-medium">{STATUS_CONFIG[status]?.label}</span>
 		{/if}
@@ -135,7 +141,7 @@
 				<button
 					role="menuitem"
 					onclick={() => handleSelect(s)}
-					class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
+					class="flex w-full min-h-11 items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
 					{s === status ? 'bg-white/15 text-text-primary font-semibold' : 'text-text-secondary'}"
 				>
 					<cfg.icon
@@ -155,7 +161,7 @@
 			<button
 				role="menuitem"
 				onclick={handleRemove}
-				class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
+				class="flex w-full min-h-11 items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
 			>
 				<Trash2 size={13} />
 				<span class="flex-1 text-left">Remove</span>
@@ -163,3 +169,37 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.quiet {
+		justify-content: flex-start;
+		gap: 7px;
+		min-height: 44px;
+		min-width: 44px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+		color: var(--color-text-secondary);
+		font-size: 12px;
+		transform: none;
+	}
+	.quiet:hover {
+		color: var(--color-text-primary);
+		background: transparent;
+		transform: none;
+	}
+	.quiet:active {
+		transform: none;
+	}
+	.quiet .status-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: currentColor;
+		flex: none;
+	}
+	.quiet > span:last-child {
+		font-weight: 400;
+	}
+</style>

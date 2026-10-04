@@ -39,6 +39,7 @@
 
 <style>
 	.journal-list {
+		container-type: inline-size;
 		min-width: 0;
 	}
 	.journal-empty {

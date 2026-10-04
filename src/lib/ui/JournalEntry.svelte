@@ -3,22 +3,16 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { formatMediaType } from '$lib/utils/format';
-	import { Plus, Minus, Check, Star, ArrowUpRight, Mic } from 'lucide-svelte';
+	import { Star, ArrowUpRight, Mic } from 'lucide-svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
-	import EpisodeProgress from './EpisodeProgress.svelte';
+	import EpisodeStepper from './EpisodeStepper.svelte';
 	import RatingSelect from './RatingSelect.svelte';
 	let {
 		entry,
 		featured = false,
 		index = 0
 	}: { entry: UserListRecord; featured?: boolean; index?: number } = $props();
-	const complete = $derived(entry.numEpisodes > 0 && entry.numWatchedEpisodes >= entry.numEpisodes);
-	function increment() {
-		const result = userListStore.incrementEpisode(entry.malId);
-		if (result && result.total > 0 && result.watched >= result.total)
-			userListStore.triggerCompletePrompt(entry.malId);
-	}
 </script>
 
 <article class="journal-entry" class:featured>
@@ -72,33 +66,13 @@
 		</div>
 	</div>
 	<div class="entry-tracking">
-		<div class="progress-caption">
-			<span>{featured ? 'Your progress' : 'Episodes'}</span><strong
-				>{entry.numWatchedEpisodes}<span> / {entry.numEpisodes || '?'}</span></strong
-			>
-		</div>
-		<EpisodeProgress watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
-		<div class="episode-actions">
-			<button
-				class="decrement"
-				disabled={entry.numWatchedEpisodes === 0}
-				aria-label="Decrease episode count for {entry.title}"
-				onclick={() => userListStore.setEpisodeCount(entry.malId, entry.numWatchedEpisodes - 1)}
-				><Minus size={16} /></button
-			>
-			<button
-				class="increment"
-				disabled={complete}
-				aria-label={complete
-					? `${entry.title}: all episodes watched`
-					: `Mark episode ${entry.numWatchedEpisodes + 1} watched`}
-				onclick={increment}
-			>
-				{#if complete}<Check size={17} /> <span>Watched</span>{:else}<Plus size={17} /><span
-						>{featured ? `Mark episode ${entry.numWatchedEpisodes + 1}` : '1 episode'}</span
-					>{/if}
-			</button>
-		</div>
+		<span class="tracking-label">{featured ? 'Your next episode' : 'Episode progress'}</span>
+		<EpisodeStepper
+			malId={entry.malId}
+			title={entry.title}
+			watched={entry.numWatchedEpisodes}
+			total={entry.numEpisodes}
+		/>
 		{#if featured}<a class="details-link" href="/anime/{entry.malId}"
 				>Explore this series <ArrowUpRight size={14} /></a
 			>{/if}
@@ -108,9 +82,9 @@
 <style>
 	.journal-entry {
 		display: grid;
-		grid-template-columns: 76px minmax(0, 1fr) 172px;
+		grid-template-columns: 64px minmax(0, 1fr) 172px;
 		gap: 18px;
-		padding: 20px 0;
+		padding: 16px 0;
 		border-bottom: 1px solid var(--color-border);
 		align-items: center;
 		position: relative;
@@ -179,68 +153,13 @@
 	.entry-ratings :global(.rating-control) {
 		min-width: 0;
 	}
-	.progress-caption {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
+	.tracking-label {
+		display: block;
 		font-size: 11px;
 		color: var(--color-text-secondary);
 		margin-bottom: 8px;
 	}
-	.progress-caption strong {
-		color: var(--color-text-primary);
-		font-size: 14px;
-		font-variant-numeric: tabular-nums;
-		font-weight: 500;
-	}
-	.progress-caption strong span {
-		color: var(--color-text-secondary);
-	}
-	.episode-actions {
-		display: flex;
-		gap: 6px;
-		margin-top: 12px;
-	}
-	.episode-actions button {
-		height: 44px;
-		border-radius: 8px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		cursor: pointer;
-		transition:
-			background 0.15s,
-			transform 0.15s;
-	}
-	.episode-actions button:active:not(:disabled) {
-		transform: translateY(1px);
-	}
-	.decrement {
-		width: 44px;
-		flex: none;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text-secondary);
-	}
-	.increment {
-		flex: 1;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text-primary);
-		font-size: 12px;
-		font-weight: 500;
-	}
-	.increment:hover:not(:disabled),
-	.decrement:hover:not(:disabled) {
-		background: var(--color-surface-3);
-		border-color: var(--color-primary);
-	}
-	button:disabled {
-		opacity: 0.4;
-		cursor: default;
-	}
+
 	.entry-status {
 		display: inline-block;
 		margin-top: 0;
@@ -251,6 +170,10 @@
 		font-size: 11px;
 		min-height: 44px;
 		max-width: 100%;
+		padding: 0 8px;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		background: var(--color-surface-1);
 		cursor: pointer;
 	}
 	.entry-status option {
@@ -265,7 +188,7 @@
 		border-radius: 16px;
 		background:
 			radial-gradient(ellipse at 90% 0%, #f08b730a, transparent 65%),
-			linear-gradient(140deg, #292b26, #1c1e1a);
+			linear-gradient(140deg, var(--color-surface-2), var(--color-surface-1));
 		box-shadow:
 			inset 0 1px 0 #ffffff0c,
 			0 14px 36px #0002;
@@ -301,21 +224,10 @@
 		border-radius: 50%;
 	}
 	.featured .entry-tracking {
+		width: 100%;
+		max-width: 440px;
 		grid-column: 2;
 		align-self: end;
-	}
-	.featured .increment {
-		background: linear-gradient(180deg, #f29a83, var(--color-primary));
-		color: #25140f;
-		border-color: #ffbba044;
-		box-shadow:
-			inset 0 1px 0 #ffffff30,
-			0 3px 8px #0003;
-		font-size: 13px;
-		font-weight: 650;
-	}
-	.featured .increment:hover:not(:disabled) {
-		background: var(--color-primary-hover);
 	}
 	.details-link {
 		display: flex;
@@ -349,7 +261,7 @@
 			align-self: start;
 		}
 		.entry-tracking {
-			grid-column: 2;
+			grid-column: 1 / -1;
 		}
 		.entry-status {
 			margin-top: 0;
@@ -409,6 +321,42 @@
 		}
 		.community-rating {
 			font-size: 12px;
+		}
+	}
+	@container (min-width: 720px) {
+		.journal-entry:not(.featured) {
+			grid-template-columns: 64px minmax(0, 1fr) 150px 172px;
+			gap: 4px 18px;
+		}
+		.journal-entry:not(.featured) .entry-info {
+			display: contents;
+		}
+		.journal-entry:not(.featured) .entry-cover {
+			grid-column: 1;
+			grid-row: 1 / 3;
+		}
+		.journal-entry:not(.featured) .entry-title {
+			grid-column: 2;
+			grid-row: 1;
+			align-self: end;
+		}
+		.journal-entry:not(.featured) .entry-meta {
+			grid-column: 2;
+			grid-row: 2;
+			align-self: start;
+			margin-top: 0;
+		}
+		.journal-entry:not(.featured) .entry-ratings {
+			grid-column: 3;
+			grid-row: 1 / 3;
+			flex-direction: column;
+			align-items: start;
+			margin: 0;
+			gap: 4px;
+		}
+		.journal-entry:not(.featured) .entry-tracking {
+			grid-column: 4;
+			grid-row: 1 / 3;
 		}
 	}
 </style>

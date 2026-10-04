@@ -4,7 +4,7 @@
   "description": "Personal anime tracker powered by MyAnimeList",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#181917",
+  "background_color": "#101117",
   "theme_color": "#f08b73",
   "icons": [
     {

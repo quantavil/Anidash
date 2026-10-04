@@ -70,7 +70,7 @@
 		const cached = await getSeasonalCache(cacheKey);
 		if (cached && cached.value.length > 0) return cached.value;
 
-		const result = await getSeasonal(current.year, current.season, { limit: 50 });
+		const result = await getSeasonal(current.year, current.season, { limit: 500 });
 		if (!result.ok || result.value.data.length === 0) return [];
 
 		const fetched = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
@@ -170,130 +170,44 @@
 	}
 </script>
 
-<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
-	<!-- PTW Roulette Widget -->
-	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-500 sm:p-6 bg-surface-1 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {rollingPTW
-			? 'border-primary/40 shadow-[0_0_20px_rgba(139,126,248,0.25)]'
-			: 'border-white/5 hover:border-primary/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(139,126,248,0.12)]'}"
-	>
+<div class="discovery-actions">
+	<div class="discovery-choice">
 		<button
+			class="discovery-main"
 			onclick={runRoulette}
 			disabled={rollingPTW}
-			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
 			aria-label="Roll Plan to Watch Roulette"
-		></button>
-
-		<button
-			onclick={(e) => {
-				e.stopPropagation();
-				filterDialogOpen = true;
-			}}
-			aria-expanded={filterDialogOpen}
-			class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-all hover:bg-primary/10 hover:border-primary/20 hover:text-primary-hover hover:rotate-45 active:scale-90 cursor-pointer"
-			title="Filter Settings"
 		>
-			<Settings size={14} />
+			<Dice5 size={22} />
+			<span
+				><strong>{rollingPTW ? rolledTitle : 'From your planned list'}</strong><small
+					>{rollingPTW
+						? 'Choosing a story…'
+						: `${matchingPTW.length} ${matchingPTW.length === 1 ? 'title' : 'titles'} to choose from`}</small
+				></span
+			>
 		</button>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
-		></div>
-
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-primary"
-		>
-			<Dice5 size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div
-				class="glass-icon-wrapper border-primary/10 bg-primary/5 text-primary group-hover:bg-primary/10 group-hover:border-primary/20"
-			>
-				{#if rollingPTW}
-					<LoaderCircle
-						size={24}
-						class="animate-spin text-primary drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Dice5 size={24} class="text-primary drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				{#if rollingPTW}
-					{rolledTitle}
-				{:else}
-					PTW Roulette
-				{/if}
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{#if rollingPTW}
-					Spinning...
-				{:else if ptwEntries.length === 0}
-					Backlog is empty
-				{:else if selectedGenres.length > 0 || selectedFormats.length > 0 || minScore > 0}
-					{matchingPTW.length} match{matchingPTW.length === 1 ? '' : 'es'} ({selectedGenres.length +
-						selectedFormats.length +
-						(minScore > 0 ? 1 : 0)} active)
-				{:else}
-					Random from backlog
-				{/if}
-			</p>
-		</div>
-	</div>
-
-	<!-- Seasonal Surprise Widget -->
-	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1 flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {loading
-			? 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.25)]'
-			: 'border-white/5 hover:border-pink-500/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(244,114,182,0.12)]'}"
-	>
 		<button
-			onclick={getRandomSeasonal}
-			disabled={loading}
-			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
-			aria-label="Roll Seasonal Surprise"
-		></button>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
-		></div>
-
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-pink-400"
+			class="discovery-settings"
+			onclick={() => (filterDialogOpen = true)}
+			aria-expanded={filterDialogOpen}
+			aria-label="Filter planned roulette"
+			title="Filter planned roulette"><Settings size={18} /></button
 		>
-			<Sparkles size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div
-				class="glass-icon-wrapper border-pink-500/10 bg-pink-500/5 text-pink-400 group-hover:bg-pink-500/10 group-hover:border-pink-500/20"
-			>
-				{#if loading}
-					<LoaderCircle
-						size={24}
-						class="animate-spin text-pink-400 drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Sparkles size={24} class="text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				Seasonal Surprise
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{#if loading}
-					Loading...
-				{:else}
-					Random airing anime
-				{/if}
-			</p>
-		</div>
 	</div>
+	<button
+		class="discovery-choice discovery-main"
+		onclick={getRandomSeasonal}
+		disabled={loading}
+		aria-label="Roll Seasonal Surprise"
+	>
+		{#if loading}<LoaderCircle size={22} class="animate-spin" />{:else}<Sparkles size={22} />{/if}
+		<span
+			><strong>Something this season</strong><small
+				>{loading ? 'Finding a story…' : 'Pick an airing anime'}</small
+			></span
+		>
+	</button>
 </div>
 
 <!-- PTW Filters Modal -->
@@ -305,7 +219,7 @@
 		</h2>
 		<button
 			onclick={() => (filterDialogOpen = false)}
-			class="rounded-full p-1.5 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all active:scale-95 cursor-pointer"
+			class="min-h-11 min-w-11 flex items-center justify-center rounded-full p-1.5 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all active:scale-95 cursor-pointer"
 			aria-label="Close filters"
 		>
 			<X size={16} />
@@ -331,7 +245,7 @@
 									: [...selectedGenres, genre.id];
 							}}
 							aria-pressed={active}
-							class="rounded-full border px-2.5 py-1 text-xs font-medium transition-all cursor-pointer {active
+							class="min-h-11 rounded-full border px-2.5 py-1 text-xs font-medium transition-all cursor-pointer {active
 								? 'border-primary/40 bg-primary/10 text-primary-hover shadow-[0_0_8px_rgba(139,126,248,0.15)]'
 								: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 						>
@@ -360,7 +274,7 @@
 									: [...selectedFormats, format];
 							}}
 							aria-pressed={active}
-							class="rounded-full border px-2.5 py-1 text-xs font-medium uppercase transition-all cursor-pointer {active
+							class="min-h-11 rounded-full border px-2.5 py-1 text-xs font-medium uppercase transition-all cursor-pointer {active
 								? 'border-primary/40 bg-primary/10 text-primary-hover shadow-[0_0_8px_rgba(139,126,248,0.15)]'
 								: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 						>
@@ -390,7 +304,7 @@
 					step="0.5"
 					bind:value={minScore}
 					aria-label="Minimum MAL rating"
-					class="flex-1 accent-primary cursor-pointer h-1.5 rounded-full bg-white/10 border-none outline-none"
+					class="flex-1 accent-primary cursor-pointer min-h-11 rounded-full bg-white/10 border-none outline-none"
 				/>
 				<span class="text-xs text-text-muted">10</span>
 			</div>
@@ -412,17 +326,87 @@
 					selectedFormats = [];
 					minScore = 0;
 				}}
-				class="flex-1 rounded-xl border border-white/10 bg-surface-2 py-2.5 text-xs font-semibold text-text-secondary transition-all hover:bg-white/10 hover:text-text-primary cursor-pointer"
+				class="min-h-11 flex-1 rounded-xl border border-white/10 bg-surface-2 py-2.5 text-xs font-semibold text-text-secondary transition-all hover:bg-white/10 hover:text-text-primary cursor-pointer"
 			>
 				Reset
 			</button>
 			<button
 				onclick={runRoulette}
 				disabled={matchingPTW.length === 0}
-				class="flex-[2] rounded-xl bg-gradient-to-r from-primary to-primary-hover text-white py-2.5 text-xs font-bold transition-all hover:shadow-[0_0_15px_rgba(139,126,248,0.3)] active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center"
+				class="min-h-11 flex-[2] rounded-xl bg-primary text-[#25140f] py-2.5 text-xs font-bold transition-all hover:shadow-[0_0_15px_rgba(139,126,248,0.3)] active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center"
 			>
 				Roll Selected
 			</button>
 		</div>
 	</div>
 </Dialog>
+
+<style>
+	.discovery-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 12px;
+		margin-top: 24px;
+	}
+	.discovery-choice {
+		display: flex;
+		align-items: stretch;
+		min-width: 0;
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+		background: linear-gradient(145deg, var(--color-surface-2), var(--color-surface-1));
+	}
+	.discovery-main {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		min-width: 0;
+		min-height: 76px;
+		padding: 14px 18px;
+		text-align: left;
+		flex: 1;
+	}
+	.discovery-main :global(svg) {
+		color: var(--color-primary);
+		flex-shrink: 0;
+	}
+	.discovery-main > span {
+		min-width: 0;
+	}
+	.discovery-main strong {
+		display: block;
+		font-size: 14px;
+		font-weight: 550;
+		overflow-wrap: anywhere;
+	}
+	.discovery-main small {
+		display: block;
+		margin-top: 3px;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+	.discovery-main:hover:not(:disabled) {
+		background: #ffffff04;
+	}
+	.discovery-settings {
+		min-width: 48px;
+		display: grid;
+		place-items: center;
+		border-left: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+	}
+	.discovery-settings:hover {
+		color: var(--color-primary);
+	}
+	@media (max-width: 640px) {
+		.discovery-actions {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 10px;
+			margin-top: 20px;
+		}
+		.discovery-main {
+			min-height: 72px;
+			padding: 12px 16px;
+		}
+	}
+</style>

@@ -23,7 +23,7 @@ with sync_playwright() as p:
     context = browser.new_context(viewport={'width':1440,'height':1000})
     context.route(BASE + '/api/**', lambda route: route.fulfill(status=503,json={'error':'Isolated browser verification'}))
     context.route('https://graphql.anilist.co/**', lambda route: route.fulfill(status=404,json={'data':{'Media':None}}))
-    context.route('**/raw.githubusercontent.com/**', lambda route: route.fulfill(json={'dubbed':[]}))
+    context.route('**/raw.githubusercontent.com/**', lambda route: route.fulfill(json={'dubbed':[52991,54492,1]}))
     page = context.new_page()
     errors=[]
     page.on('pageerror',lambda error: errors.append(str(error)))
@@ -75,12 +75,29 @@ with sync_playwright() as p:
     page.set_viewport_size({'width':320,'height':760})
     page.get_by_role('button',name='Poster grid').click()
     expect(page).to_have_url(__import__('re').compile('view=grid'))
+    for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
+        page.set_viewport_size({'width':width,'height':height})
+        rows={}
+        for card in page.locator('.poster-card').all():
+            box=card.bounding_box();footer=card.locator('.card-action').bounding_box()
+            rows.setdefault(round(box['y']),[]).append(round(footer['y'],1))
+            art=card.locator('.poster-art').bounding_box();badge=card.get_by_role('button',name='Status: Watching',exact=True).bounding_box()
+            assert badge['width']>=44 and badge['height']>=44,badge
+            assert badge['x']>=art['x'] and badge['x']+badge['width']<=art['x']+art['width'],badge
+        for positions in rows.values(): assert max(positions)-min(positions)<=1,positions
+        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'Poster overflow at {width}'
+        page.screenshot(path=str(OUT/f'grid-{width}.png'),full_page=True)
     for button in page.locator('.poster-card .step').all():
         box=button.bounding_box()
         assert box['width']>=44 and box['height']>=44,box
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Grid overflow'
-    page.get_by_role('combobox',name='Your rating for Sousou no Frieren').select_option('8')
-    expect(page.get_by_role('combobox',name='Your rating for Sousou no Frieren')).to_have_value('8')
+    expect(page.locator('.poster-card .rating-control')).to_have_count(0)
+    for status in page.locator('.poster-card [aria-haspopup="menu"]').all():
+        art=status.locator('xpath=ancestor::div[contains(@class,"poster-art")]')
+        assert art.count()==1,'Status must overlay the artwork'
+    page.locator('.poster-card').first.get_by_role('button',name='Status: Watching',exact=True).click()
+    expect(page.get_by_role('menuitem',name='On Hold',exact=True)).to_be_visible()
+    page.keyboard.press('Escape')
     page.screenshot(path=str(OUT/'grid-phone.png'),full_page=True)
     # Long episode counts must stay between the touch buttons, not under them.
     page.evaluate("""async()=>{
@@ -90,7 +107,7 @@ with sync_playwright() as p:
       await new Promise(r=>tx.oncomplete=r);db.close();
     }""")
     page.reload()
-    long_card=page.get_by_role('combobox',name='Your rating for Dandadan').locator('xpath=ancestor::div[contains(@class,"poster-card")]')
+    long_card=page.locator('.poster-card').filter(has=page.get_by_role('link',name='View Dandadan details'))
     expect(long_card.locator('.count strong')).to_have_text('1050')
     plus=long_card.locator('.plus').bounding_box()
     minus=long_card.locator('.minus').bounding_box()
@@ -98,6 +115,7 @@ with sync_playwright() as p:
         box=part.bounding_box()
         assert box['x']>=minus['x']+minus['width'] and box['x']+box['width']<=plus['x'],box
     page.get_by_role('button',name='Journal view').click()
+    page.get_by_role('combobox',name='Your rating for Sousou no Frieren').select_option('8')
     page.get_by_role('textbox',name='Search your list').fill('nothing-matches')
     expect(page.get_by_text('No matches',exact=True)).to_be_visible()
     page.get_by_role('button',name='Clear search').click()
@@ -136,6 +154,7 @@ with sync_playwright() as p:
     expect(page.get_by_role('combobox',name='Status for Sousou no Frieren')).to_have_count(0)
     # Browse cards use the same real-record mapping, with a controlled MAL response.
     ranking={'data':[{'node':{'id':r['malId'],'title':r['title'],'alternative_titles':{'en':r['titleEnglish']},'main_picture':r['mainPicture'],'mean':r['mean'],'num_episodes':r['numEpisodes'],'genres':r['genres'],'media_type':r['mediaType'],'start_season':r['startSeason']}} for r in records],'paging':{}}
+    ranking['data'].append({'node':{'id':20,'title':'Naruto','main_picture':{'medium':'https://cdn.myanimelist.net/images/anime/13/17405.jpg'},'mean':7.99,'num_episodes':220,'media_type':'tv','start_season':{'year':2002,'season':'fall'}}})
     context.route(BASE+'/api/anime/ranking**',lambda route:route.fulfill(json=ranking))
     page.goto(BASE+'/browse')
     expect(page.get_by_role('link',name='View Sousou no Frieren details')).to_be_visible()
@@ -145,6 +164,16 @@ with sync_playwright() as p:
         for control in page.locator('main [aria-haspopup="menu"]:visible, main [aria-pressed]:visible').all():
             box=control.bounding_box()
             assert box['width']>=44 and box['height']>=44,box
+        footers=page.locator('.search-card .card-action').all()
+        assert len(footers)==len(records)+1
+        rows={}
+        for footer in footers:
+            card=footer.locator('xpath=ancestor::div[contains(@class,"search-card")]')
+            c=card.bounding_box();box=footer.bounding_box()
+            rows.setdefault(round(c['y']),[]).append(round(box['y'],1))
+            button=footer.get_by_role('button').bounding_box()
+            assert abs(button['width']-c['width'])<1 and button['height']>=44,button
+        for positions in rows.values(): assert max(positions)-min(positions)<=1,positions
         page.screenshot(path=str(OUT/f'browse-{width}.png'),full_page=True)
     page.get_by_role('button',name='Status: Completed',exact=True).first.click()
     expect(page.get_by_role('menuitem',name='Remove',exact=True)).to_be_visible()
@@ -163,7 +192,7 @@ with sync_playwright() as p:
     for route in ['seasonal','stats']:
         page.goto(BASE+'/'+route)
         expect(page.get_by_role('heading',level=1)).to_be_visible()
-        if route=='seasonal': expect(page.get_by_text('6 anime this season',exact=True)).to_be_visible()
+        if route=='seasonal': expect(page.get_by_text('7 anime this season',exact=True)).to_be_visible()
         for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
             page.set_viewport_size({'width':width,'height':height})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'{route} overflow at {width}'

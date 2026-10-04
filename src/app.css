@@ -352,3 +352,43 @@ main > div > div > h1 {
 .ext-link {
 	color: var(--color-text-secondary);
 }
+
+/* Poster grids share content rows and a bottom-anchored action area. */
+.card-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+	padding-top: 12px;
+	min-width: 0;
+}
+.poster-title {
+	min-height: 2.5em;
+	overflow-wrap: anywhere;
+}
+.card-metadata {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	min-height: 18px;
+	font-size: 12px;
+	color: var(--color-text-secondary);
+}
+.card-dub {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 18px;
+	font-size: 12px;
+	color: var(--color-text-secondary);
+}
+.card-action {
+	position: relative;
+	z-index: 2;
+	padding-top: 8px;
+	margin-top: auto;
+}
+.poster-status {
+	max-width: calc(100% - 16px);
+}

@@ -7,7 +7,6 @@
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import RatingSelect from './RatingSelect.svelte';
 	import EpisodeStepper from './EpisodeStepper.svelte';
 
 	let {
@@ -29,14 +28,22 @@
 			aria-label="View {entry.title} details"
 		></a>
 		<!-- Cover Image -->
-		<div class="relative aspect-[2/3] w-full overflow-hidden bg-surface-2 rounded-xl">
+		<div class="poster-art relative aspect-[2/3] w-full">
 			<ImageWithFallback
 				src={imageUrl}
 				alt={entry.title}
 				{index}
-				class="h-full w-full transition-transform duration-200 ease-spring group-hover:scale-[1.02]"
+				class="rounded-xl h-full w-full transition-transform duration-200 ease-spring group-hover:scale-[1.02]"
 			/>
 
+			<div class="poster-status absolute left-2 top-2 z-[3]">
+				<StatusBadge
+					malId={entry.malId}
+					status={entry.status}
+					showLabel
+					class="!bg-surface-0/95 !border-white/20 !shadow-none !transform-none"
+				/>
+			</div>
 			<!-- Progress Line -->
 			<ProgressLine watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
 
@@ -49,14 +56,14 @@
 		</div>
 
 		<!-- Info -->
-		<div class="flex flex-1 flex-col gap-2 pt-3">
+		<div class="card-body">
 			<!-- Title -->
 			<AnimeTitle
 				title={entry.title}
 				titleEnglish={entry.titleEnglish ?? null}
 				tag="h3"
 				interactive={false}
-				class="line-clamp-2 text-[15px] font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
+				class="poster-title line-clamp-2 text-[15px] font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
 			/>
 
 			<div class="flex items-center gap-1.5 text-xs text-warning">
@@ -66,7 +73,7 @@
 			</div>
 
 			<!-- Type + Season -->
-			<div class="flex items-center gap-2 text-xs text-text-muted">
+			<div class="card-metadata">
 				{#if entry.mediaType}
 					<span>{formatMediaType(entry.mediaType)}</span>
 				{/if}
@@ -75,17 +82,8 @@
 				{/if}
 			</div>
 
-			<div class="relative z-[2] card-editors">
-				<StatusBadge malId={entry.malId} status={entry.status} showLabel quiet />
-				<RatingSelect malId={entry.malId} title={entry.title} score={entry.score} />
-			</div>
-
 			<!-- Progress Controls -->
-			<div
-				class="relative z-[2] mt-auto pt-2 flex items-center justify-between"
-				onclick={(e) => e.stopPropagation()}
-				role="presentation"
-			>
+			<div class="card-action" onclick={(e) => e.stopPropagation()} role="presentation">
 				<EpisodeStepper
 					malId={entry.malId}
 					watched={entry.numWatchedEpisodes}
@@ -102,19 +100,7 @@
 	.poster-card {
 		min-width: 0;
 	}
-	.card-editors {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px 8px;
-		align-items: center;
-	}
 	.poster-card:has(:global([aria-expanded='true'])) {
 		z-index: 20;
-	}
-	@media (max-width: 480px) {
-		.card-editors {
-			display: grid;
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

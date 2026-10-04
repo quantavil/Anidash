@@ -9,12 +9,14 @@
 		status,
 		showLabel = false,
 		quiet = false,
+		fullWidth = false,
 		class: className = ''
 	}: {
 		malId: number;
 		status: AnimeStatus;
 		showLabel?: boolean;
 		quiet?: boolean;
+		fullWidth?: boolean;
 		class?: string;
 	} = $props();
 
@@ -104,7 +106,12 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<div bind:this={rootEl} class="relative inline-block" onclick={(e) => e.stopPropagation()}>
+<div
+	bind:this={rootEl}
+	class:stretch={fullWidth}
+	class="relative inline-block"
+	onclick={(e) => e.stopPropagation()}
+>
 	<button
 		class:quiet
 		bind:this={triggerEl}
@@ -171,6 +178,16 @@
 </div>
 
 <style>
+	.stretch {
+		display: block;
+		width: 100%;
+	}
+	.stretch > button {
+		width: 100%;
+		min-height: 44px;
+		transform: none;
+		box-shadow: none;
+	}
 	.quiet {
 		justify-content: flex-start;
 		gap: 7px;

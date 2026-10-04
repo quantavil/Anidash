@@ -1,143 +1,84 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import type { UserListRecord } from '$lib/cache/db';
-	import type { SortKey } from '$lib/utils/sort';
-	import { ArrowDown } from 'lucide-svelte';
-	import ListRow from './ListRow.svelte';
-	import EmptyState from './EmptyState.svelte';
-
+	import JournalEntry from './JournalEntry.svelte';
 	let {
 		entries,
-		sort,
-		onsort,
+		feature = false,
 		resetKey,
 		empty
 	}: {
 		entries: UserListRecord[];
-		sort: SortKey;
-		onsort: (key: SortKey) => void;
+		feature?: boolean;
 		resetKey: string;
 		empty: { title: string; hint: string; href?: string; cta?: string };
 	} = $props();
-
-	const PAGE_SIZE = 40;
-	let limit = $state(PAGE_SIZE);
-	let sentinel = $state<HTMLElement | null>(null);
-
+	let limit = $state(20);
 	$effect(() => {
 		void resetKey;
-		untrack(() => (limit = PAGE_SIZE));
+		limit = 20;
 	});
-
-	// Load the next page shortly before the end of the list scrolls into view.
-	$effect(() => {
-		if (!sentinel) return;
-		const observer = new IntersectionObserver(
-			(hits) => {
-				if (hits[0]?.isIntersecting) limit += PAGE_SIZE;
-			},
-			{ rootMargin: '600px' }
-		);
-		observer.observe(sentinel);
-		return () => observer.disconnect();
-	});
-
-	const columns: { key: SortKey | null; label: string; align?: 'end' }[] = [
-		{ key: 'title', label: 'Title' },
-		{ key: 'progress', label: 'Progress' },
-		{ key: 'mean', label: 'MAL' },
-		{ key: 'score', label: 'Yours' },
-		{ key: null, label: 'Status' },
-		{ key: 'updated', label: 'Updated', align: 'end' }
-	];
 </script>
 
 {#if entries.length === 0}
-	<EmptyState {...empty} />
-{:else}
-	<div class="ledger">
-		<div class="head" role="presentation">
-			<span></span>
-			{#each columns as col (col.label)}
-				{#if col.key}
-					{@const key = col.key}
-					<button
-						type="button"
-						class:active={sort === key}
-						class:end={col.align === 'end'}
-						aria-label="Sort by {col.label}"
-						aria-pressed={sort === key}
-						onclick={() => onsort(key)}
-						>{col.label}{#if sort === key}<ArrowDown size={12} />{/if}</button
-					>
-				{:else}
-					<span class="plain">{col.label}</span>
-				{/if}
-			{/each}
-		</div>
-		<div class="rows">
-			{#each entries.slice(0, limit) as entry, index (entry.malId)}
-				<ListRow {entry} {index} />
-			{/each}
-		</div>
-		{#if limit < entries.length}
-			<div bind:this={sentinel} class="more">
-				<button class="btn" onclick={() => (limit += PAGE_SIZE)}
-					>Show more <span class="muted num">{entries.length - limit} left</span></button
-				>
-			</div>
-		{/if}
+	<div class="journal-empty">
+		<span class="empty-mark">—</span>
+		<h2>{empty.title}</h2>
+		<p>{empty.hint}</p>
+		{#if empty.href}<a class="primary-button" href={empty.href}>{empty.cta}</a>{/if}
 	</div>
+{:else}
+	<div class="journal-list">
+		{#each entries.slice(0, limit) as entry, index (entry.malId)}
+			<JournalEntry {entry} featured={feature && index === 0} {index} />
+		{/each}
+	</div>
+	{#if limit < entries.length}<button class="load-entries" onclick={() => (limit += 20)}
+			>Show more <span>{entries.length - limit} remaining</span></button
+		>{/if}
 {/if}
 
 <style>
-	.head {
-		display: none;
+	.journal-list {
+		min-width: 0;
 	}
-	.more {
+	.journal-empty {
+		padding: 56px 24px;
+		text-align: center;
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		background: var(--color-surface-1);
+	}
+	.empty-mark {
+		color: var(--color-primary);
+		font-size: 32px;
+	}
+	h2 {
+		font-family: var(--font-display);
+		font-size: 28px;
+		margin: 8px 0;
+	}
+	p {
+		color: var(--color-text-secondary);
+		max-width: 350px;
+		margin: 0 auto 24px;
+		font-size: 14px;
+	}
+	.load-entries {
 		display: flex;
 		justify-content: center;
-		padding: 24px 0;
+		align-items: center;
+		gap: 12px;
+		padding: 14px;
+		width: 100%;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		margin-top: 20px;
+		font-size: 13px;
+		background: var(--color-surface-1);
+		cursor: pointer;
 	}
-	.muted {
-		color: var(--color-text-muted);
-		font-weight: 400;
-	}
-	@container ledger (min-width: 880px) {
-		/* Header columns mirror ListRow's table grid. */
-		.head {
-			position: sticky;
-			top: 0;
-			z-index: 5;
-			display: grid;
-			grid-template-columns: var(--cols);
-			gap: 0 16px;
-			padding: 0 12px;
-			margin: 0 -12px;
-			background: var(--color-surface-0);
-			border-bottom: 1px solid var(--color-border);
-			align-items: center;
-			min-height: 40px;
-			font-size: 12px;
-			color: var(--color-text-muted);
-		}
-		.head button,
-		.head .plain {
-			display: inline-flex;
-			align-items: center;
-			gap: 4px;
-			min-height: 40px;
-			font-weight: 500;
-		}
-		.head button:hover,
-		.head button.active {
-			color: var(--color-text-primary);
-		}
-		.head button.active :global(svg) {
-			color: var(--color-primary);
-		}
-		.head .end {
-			justify-self: end;
-		}
+	.load-entries span {
+		color: var(--color-text-secondary);
+		font-size: 11px;
 	}
 </style>

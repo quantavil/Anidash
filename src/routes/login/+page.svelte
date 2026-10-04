@@ -13,18 +13,22 @@
 	});
 </script>
 
-<div class="flex min-h-dvh items-center justify-center bg-surface-0 px-4">
+<div class="flex min-h-screen items-center justify-center bg-surface-0 px-4">
 	<div class="w-full max-w-sm space-y-8 text-center">
 		<!-- Brand -->
 		<div class="space-y-2">
-			<Logo size={52} class="mx-auto" />
-			<h1 class="page-title">anidash</h1>
-			<p class="text-sm text-text-secondary">A tracker for your MyAnimeList</p>
+			<div
+				class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+			>
+				<Logo size={36} />
+			</div>
+			<h1 class="text-3xl font-bold text-text-primary">AniDash</h1>
+			<p class="text-sm text-text-secondary">Personal anime tracker powered by MAL</p>
 		</div>
 
 		<!-- Error display -->
 		{#if errorCode}
-			<div class="rounded-[var(--radius-m)] bg-error/10 px-4 py-3 text-sm text-error">
+			<div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">
 				{#if errorCode === 'access_denied'}
 					Authorization was denied. Please try again.
 				{:else if errorCode === 'no_code_or_state'}
@@ -36,13 +40,16 @@
 		{/if}
 
 		{#if authStore.error}
-			<div class="rounded-[var(--radius-m)] bg-error/10 px-4 py-3 text-sm text-error">
+			<div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">
 				{authStore.error}
 			</div>
 		{/if}
 
 		<!-- Login button -->
-		<button onclick={() => authStore.login()} class="btn btn-primary w-full">
+		<button
+			onclick={() => authStore.login()}
+			class="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none"
+		>
 			Login with MyAnimeList
 		</button>
 

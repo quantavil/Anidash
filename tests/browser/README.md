@@ -17,7 +17,7 @@ VITE_MAL_CLIENT_ID=dummy npm run build
 VITE_MAL_CLIENT_ID=dummy npm run preview -- --host 127.0.0.1 --port 4173
 ```
 
-Run checks in another terminal (set `CHROMIUM_PATH` to use an existing Chromium binary instead of Playwright's download):
+Run checks in another terminal:
 
 ```sh
 /tmp/anidash-browser-env/bin/python tests/browser/watch-journal.py http://127.0.0.1:4173

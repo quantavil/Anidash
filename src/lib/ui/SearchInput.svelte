@@ -3,12 +3,11 @@
 
 	let {
 		value = $bindable(''),
-		placeholder = 'Search…',
+		placeholder = 'Search...',
 		label = 'Search anime',
 		id,
 		loading = false,
 		isDebouncing = false,
-		hint,
 		oninput,
 		onclear,
 		onkeydown
@@ -19,30 +18,36 @@
 		id?: string;
 		loading?: boolean;
 		isDebouncing?: boolean;
-		/** Keyboard hint shown while empty, e.g. the shortcut that focuses this field. */
-		hint?: string;
 		oninput?: (e: Event) => void;
 		onclear?: () => void;
 		onkeydown?: (e: KeyboardEvent) => void;
 	} = $props();
 
 	function handleInput(e: Event) {
-		value = (e.target as HTMLInputElement).value;
-		oninput?.(e);
+		const target = e.target as HTMLInputElement;
+		value = target.value;
+		if (oninput) oninput(e);
 	}
 
 	function handleClear() {
 		value = '';
-		onclear?.();
+		if (onclear) onclear();
 	}
 </script>
 
-<div class="field search-field">
+<div class="search-field relative w-full group">
 	{#if loading || isDebouncing}
-		<LoaderCircle size={16} class="animate-spin text-primary shrink-0" />
+		<LoaderCircle
+			size={15}
+			class="absolute left-3.5 top-1/2 -translate-y-1/2 animate-spin text-primary"
+		/>
 	{:else}
-		<Search size={16} class="shrink-0" />
+		<Search
+			size={15}
+			class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-primary"
+		/>
 	{/if}
+
 	<input
 		type="text"
 		aria-label={label}
@@ -51,37 +56,16 @@
 		{value}
 		oninput={handleInput}
 		{onkeydown}
-		autocomplete="off"
-		spellcheck="false"
+		class="search-box w-full rounded-lg border border-border bg-surface-1 py-3 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-secondary transition-colors focus:border-primary"
 	/>
+
 	{#if value}
-		<button class="clear" onclick={handleClear} aria-label="Clear search"><X size={15} /></button>
-	{:else if hint}
-		<span class="kbd hint" aria-hidden="true">{hint}</span>
+		<button
+			onclick={handleClear}
+			aria-label="Clear search"
+			class="absolute right-1 top-1/2 flex h-11 w-11 items-center justify-center -translate-y-1/2 text-text-secondary hover:text-text-primary transition-colors"
+		>
+			<X size={15} />
+		</button>
 	{/if}
 </div>
-
-<style>
-	.search-field {
-		width: 100%;
-	}
-	.clear {
-		display: grid;
-		place-items: center;
-		width: 44px;
-		height: 44px;
-		margin-right: -12px;
-		color: var(--color-text-muted);
-	}
-	.clear:hover {
-		color: var(--color-text-primary);
-	}
-	.hint {
-		display: none;
-	}
-	@media (hover: hover) and (min-width: 900px) {
-		.hint {
-			display: inline-grid;
-		}
-	}
-</style>

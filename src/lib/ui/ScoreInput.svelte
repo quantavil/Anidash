@@ -88,7 +88,7 @@
 	.score-options button.selected {
 		background: var(--color-warning);
 		border-color: var(--color-warning);
-		color: var(--color-on-primary);
+		color: #282212;
 	}
 	.score-footer {
 		display: flex;

@@ -1,0 +1,277 @@
+<script lang="ts">
+	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { Plus, Minus, Check } from 'lucide-svelte';
+
+	let {
+		malId,
+		watched,
+		total,
+		compact = false
+	}: {
+		malId: number;
+		watched: number;
+		total: number;
+		compact?: boolean;
+	} = $props();
+
+	const unknown = $derived(total === 0);
+	const isComplete = $derived(!unknown && watched >= total && total > 0);
+
+	let pulse = $state(false);
+	let isFirstRun = true;
+
+	$effect(() => {
+		// Access watched to register it as a dependency
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		watched;
+		if (isFirstRun) {
+			isFirstRun = false;
+			return;
+		}
+		pulse = true;
+		const timer = setTimeout(() => (pulse = false), 400);
+		return () => clearTimeout(timer);
+	});
+
+	function increment() {
+		const result = userListStore.incrementEpisode(malId);
+		if (result && result.watched >= result.total && result.total > 0) {
+			userListStore.triggerCompletePrompt(malId);
+		}
+	}
+
+	function decrement() {
+		if (watched > 0) {
+			userListStore.setEpisodeCount(malId, watched - 1);
+		}
+	}
+</script>
+
+<div
+	class="pill-base {isComplete ? 'complete' : ''} {compact ? 'compact' : ''}"
+	onclick={(e) => e.stopPropagation()}
+	role="presentation"
+>
+	<!-- Decrement Button -->
+	<button
+		onclick={(e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			decrement();
+		}}
+		disabled={watched <= 0}
+		class="pill-btn pill-btn-minus"
+		title="Decrease episode"
+		aria-label="Decrease episode count"
+	>
+		<div class="minus-wrapper">
+			<Minus size={compact ? 12 : 14} strokeWidth={2.5} />
+		</div>
+	</button>
+
+	<!-- Episode count -->
+	<div class="pill-count" class:pulse class:complete={isComplete}>
+		<span class="watched-num">{watched}</span>/<span>{unknown ? '?' : total}</span>
+		{#if !compact}
+			<span class="ep-lbl">ep</span>
+		{/if}
+	</div>
+
+	<!-- Increment Button -->
+	<button
+		onclick={(e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			increment();
+		}}
+		disabled={isComplete}
+		class="pill-btn pill-btn-plus {isComplete ? 'complete' : ''}"
+		title="Increase episode"
+		aria-label="Increase episode count"
+	>
+		{#if isComplete}
+			<div class="animate-complete-pop">
+				<Check size={compact ? 12 : 14} strokeWidth={2.5} />
+			</div>
+		{:else}
+			<div class="plus-wrapper">
+				<Plus size={compact ? 12 : 14} strokeWidth={2.5} />
+			</div>
+		{/if}
+	</button>
+</div>
+
+<style>
+	.pill-base {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		max-width: 220px; /* Cap width for detail pane / list rows */
+		height: 48px;
+		border-radius: 8px;
+		padding: 2px;
+		position: relative;
+		overflow: hidden;
+		transition:
+			border-color 0.2s ease,
+			background-color 0.2s ease,
+			box-shadow 0.2s ease;
+		background: var(--color-surface-1);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+	}
+
+	.pill-base.compact {
+		width: 100%;
+		max-width: 100%; /* Fill the card controls space completely */
+		height: 46px;
+		border-radius: 8px;
+		padding: 1px;
+	}
+
+	.pill-base:hover {
+		border-color: var(--color-primary);
+		background: var(--color-surface-2);
+	}
+
+	.pill-base.complete {
+		border-color: rgba(52, 211, 153, 0.3);
+		background: rgba(18, 28, 24, 0.85);
+	}
+
+	.pill-btn {
+		display: flex;
+		height: 44px;
+		width: 44px;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		border-radius: 6px;
+		cursor: pointer;
+		border: 1px solid transparent;
+		background: transparent;
+		color: #a3a3a3; /* text-secondary */
+		transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+
+		z-index: 1;
+	}
+
+	.pill-base.compact .pill-btn {
+		height: 44px;
+		width: 44px;
+		flex-shrink: 0;
+	}
+
+	.pill-btn:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.12);
+		color: #f8f8f8; /* text-primary */
+	}
+
+	.pill-btn:disabled {
+		opacity: 0.2;
+		cursor: not-allowed;
+	}
+
+	.pill-btn:active:not(:disabled) {
+		transform: scale(0.85);
+	}
+
+	.pill-count {
+		font-size: 12px;
+		font-weight: 500;
+		color: #a3a3a3; /* text-secondary */
+		z-index: 1;
+		user-select: none;
+		transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+	}
+
+	.pill-base.compact .pill-count {
+		font-size: 11px;
+	}
+
+	.pill-count.pulse {
+		transform: scale(1.12);
+		color: var(--color-primary); /* primary-hover */
+	}
+
+	.pill-count.complete {
+		color: #34d399; /* success */
+		text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+	}
+
+	.pill-count .watched-num {
+		color: #f8f8f8; /* text-primary */
+		font-weight: 700;
+		font-size: 14px;
+	}
+
+	.pill-base.compact .pill-count .watched-num {
+		font-size: 13px;
+	}
+
+	.ep-lbl {
+		font-size: 8px;
+		color: #666666; /* text-muted */
+		text-transform: uppercase;
+		margin-left: 2px;
+	}
+
+	.plus-wrapper,
+	.minus-wrapper {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+	}
+
+	.plus-wrapper {
+		transition-duration: 0.5s;
+	}
+
+	.pill-btn-plus:hover:not(:disabled) .plus-wrapper {
+		transform: rotate(90deg);
+	}
+
+	.pill-btn-minus:hover:not(:disabled) .minus-wrapper {
+		transform: scaleX(1.25);
+	}
+
+	@keyframes complete-pop {
+		0% {
+			transform: scale(0.6);
+			opacity: 0;
+		}
+		50% {
+			transform: scale(1.2);
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+	.animate-complete-pop {
+		animation: complete-pop 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+	}
+
+	@media (max-width: 480px) {
+		.pill-base.compact {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(44px, 1fr));
+			height: auto;
+			gap: 2px;
+			padding: 3px;
+		}
+		.pill-base.compact .pill-count {
+			grid-column: 1 / -1;
+			grid-row: 1;
+			text-align: center;
+			min-height: 24px;
+		}
+		.pill-base.compact .pill-btn {
+			grid-row: 2;
+			width: 100%;
+			height: 44px;
+		}
+	}
+</style>

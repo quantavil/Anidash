@@ -8,7 +8,6 @@
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
 	import { formatMediaType, capitalize } from '$lib/utils/format';
 	import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-svelte';
-	import EmptyState from '$lib/ui/EmptyState.svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
@@ -37,26 +36,12 @@
 	let loading = $state(true);
 	let filterType = $state('');
 	let sortByRating = $state(false);
-	let sliceLimit = $state(30);
-	let sentinel = $state<HTMLElement | null>(null);
+	let sliceLimit = $state(20);
 
 	$effect(() => {
 		// Reset slice limit when search filters or season changes
 		const _trigger = `${seasonYear}-${seasonKey}-${filterType}-${sortByRating}-${dubStore.dubMode}`;
-		sliceLimit = 30;
-	});
-
-	// Reveal more posters shortly before the end of the grid scrolls into view.
-	$effect(() => {
-		if (!sentinel) return;
-		const observer = new IntersectionObserver(
-			(hits) => {
-				if (hits[0]?.isIntersecting) sliceLimit += 30;
-			},
-			{ rootMargin: '600px' }
-		);
-		observer.observe(sentinel);
-		return () => observer.disconnect();
+		sliceLimit = 20;
 	});
 
 	const filteredAnime = $derived.by(() => {
@@ -74,7 +59,6 @@
 		return res;
 	});
 
-	const seasonLabel = $derived(`${capitalize(seasonKey)} ${seasonYear}`);
 	const displayedAnime = $derived(filteredAnime.slice(0, sliceLimit));
 
 	const TYPES = MEDIA_TYPE_FILTER_OPTIONS;
@@ -143,125 +127,120 @@
 	<title>Seasonal | AniDash</title>
 </svelte:head>
 
-<div class="page">
-	<div class="page-head">
+<div class="py-6">
+	<!-- Header -->
+	<div class="flex items-end justify-between gap-4">
 		<div>
-			<h1 class="page-title">{seasonLabel}</h1>
-			<p class="page-sub num">
-				{loading ? 'Loading…' : `${anime.length} anime this season`}
+			<h1 class="route-title">
+				{capitalize(seasonKey)}
+				{seasonYear}
+			</h1>
+			<p class="mt-1 text-sm text-text-secondary">
+				{anime.length} anime this season
 			</p>
 		</div>
 
-		<div class="season-nav" role="group" aria-label="Change season">
+		<!-- Season Navigation -->
+		<div class="flex items-center gap-2">
 			<button
-				class="btn"
 				aria-label="Previous season: {capitalize(prev.season)} {prev.year}"
 				onclick={() => goToSeason(prev.year, prev.season)}
-				><ChevronLeft size={17} /><span class="lbl">{capitalize(prev.season)} {prev.year}</span
-				></button
+				class="flex items-center gap-1 min-h-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
 			>
+				<ChevronLeft size={16} />
+				<span class="hidden sm:inline">{capitalize(prev.season)} {prev.year}</span>
+			</button>
+
 			{#if seasonYear !== current.year || seasonKey !== current.season}
-				<button class="btn" onclick={() => goToSeason(current.year, current.season)}>Now</button>
+				<button
+					onclick={() => goToSeason(current.year, current.season)}
+					class="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+				>
+					Current
+				</button>
 			{/if}
+
 			<button
-				class="btn"
 				aria-label="Next season: {capitalize(next.season)} {next.year}"
 				onclick={() => goToSeason(next.year, next.season)}
-				><span class="lbl">{capitalize(next.season)} {next.year}</span><ChevronRight
-					size={17}
-				/></button
+				class="flex items-center gap-1 min-h-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
 			>
+				<span class="hidden sm:inline">{capitalize(next.season)} {next.year}</span>
+				<ChevronRight size={16} />
+			</button>
 		</div>
 	</div>
 
-	<div class="bar">
-		<div class="scroller scrollbar-none" role="group" aria-label="Format">
-			{#each TYPES as t (t.value)}
+	<!-- Type Filter and Sort -->
+	<div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+		<div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+			{#each TYPES as t, _idx (_idx)}
 				<button
-					class="chip"
-					aria-pressed={filterType === t.value}
-					onclick={() => (filterType = t.value)}>{t.label}</button
+					onclick={() => (filterType = t.value)}
+					class="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
+			  {filterType === t.value
+						? 'bg-primary/15 text-primary'
+						: 'bg-surface-1 text-text-muted hover:bg-surface-2 hover:text-text-secondary'}"
 				>
+					{t.label}
+				</button>
 			{/each}
 		</div>
-		<button
-			class="chip sort"
-			aria-pressed={sortByRating}
-			onclick={() => (sortByRating = !sortByRating)}
-			><ArrowUpDown size={14} class="mr-1.5" />Top rated</button
-		>
+
+		<div class="flex items-center gap-2">
+			<button
+				onclick={() => (sortByRating = !sortByRating)}
+				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating
+					? 'text-primary border-primary/30'
+					: 'text-text-secondary'}"
+			>
+				<ArrowUpDown size={14} />
+				Rating
+			</button>
+		</div>
 	</div>
 
-	<div class="results">
+	<!-- Results -->
+	<div class="mt-6">
 		{#if loading}
-			<div class="poster-grid"><AnimeCardSkeleton count={12} /></div>
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+				<AnimeCardSkeleton count={10} />
+			</div>
 		{:else if filteredAnime.length > 0}
-			<div class="poster-grid">
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 				{#each displayedAnime as anime, i (anime.malId)}
-					<SearchResultCard {anime} index={i} season={seasonLabel} />
+					<SearchResultCard {anime} index={i} />
 				{/each}
 			</div>
+
 			{#if filteredAnime.length > sliceLimit}
-				<div bind:this={sentinel} class="more">
-					<button class="btn" onclick={() => (sliceLimit += 30)}
-						>Show more <span class="muted num">{filteredAnime.length - sliceLimit} left</span
-						></button
+				<div class="mt-8 flex justify-center">
+					<button
+						onclick={() => (sliceLimit += 20)}
+						class="rounded-xl border border-white/10 bg-surface-1 px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface-2 transition-all active:scale-95 shadow-md"
 					>
+						Load More
+					</button>
 				</div>
 			{/if}
+
+			{#if filterType && filteredAnime.length < anime.length}
+				<p class="mt-4 text-center text-xs text-text-muted">
+					Showing {filteredAnime.length} of {anime.length} ({capitalize(seasonKey)}
+					{seasonYear})
+				</p>
+			{/if}
 		{:else}
-			<EmptyState
-				title={filterType
-					? `No ${formatMediaType(filterType)} anime this season`
-					: 'No anime found for this season'}
-				hint="Try another format or season."
-			/>
+			<div
+				class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
+			>
+				<div class="mb-3 text-4xl">🌸</div>
+				<p class="text-sm text-text-secondary">
+					{filterType
+						? `No ${formatMediaType(filterType)} anime this season`
+						: 'No anime found for this season'}
+				</p>
+			</div>
 		{/if}
 	</div>
 </div>
-
-<style>
-	.season-nav {
-		display: flex;
-		gap: 8px;
-	}
-	.bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-	}
-	.scroller {
-		display: flex;
-		gap: 8px;
-		padding: 4px 0;
-		overflow-x: auto;
-		min-width: 0;
-		mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-	}
-	.results {
-		margin-top: 20px;
-	}
-	.more {
-		display: flex;
-		justify-content: center;
-		padding: 32px 0 8px;
-	}
-	.muted {
-		color: var(--color-text-muted);
-		font-weight: 400;
-	}
-	@media (max-width: 640px) {
-		.lbl {
-			display: none;
-		}
-		.season-nav .btn {
-			width: 44px;
-			padding: 0;
-		}
-		.season-nav .btn:nth-child(2):not(:last-child) {
-			width: auto;
-			padding: 0 14px;
-		}
-	}
-</style>

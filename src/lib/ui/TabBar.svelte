@@ -3,20 +3,23 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { STATUS_META, STATUS_ORDER } from './status';
+	import { formatListStatus } from '$lib/utils/format';
 
 	type TabKey = 'all' | 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
 
 	let { counts }: { counts: Record<string, number> } = $props();
 
-	const tabs: { key: TabKey; label: string; color?: string }[] = [
-		...STATUS_ORDER.map((s) => ({
-			key: s as TabKey,
-			label: STATUS_META[s].label,
-			color: STATUS_META[s].color
-		})),
-		{ key: 'all', label: 'All' }
-	];
+	const tabs: { key: TabKey; label: string }[] = [
+		'watching',
+		'plan_to_watch',
+		'completed',
+		'on_hold',
+		'dropped',
+		'all'
+	].map((k) => ({
+		key: k as TabKey,
+		label: k === 'all' ? 'All' : formatListStatus(k)
+	}));
 
 	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching') as TabKey);
 
@@ -48,77 +51,72 @@
 			[next]?.focus();
 	}
 
-	const getCount = (key: TabKey) => (key === 'all' ? userListStore.totalCount : (counts[key] ?? 0));
+	function getCount(key: TabKey): number {
+		if (key === 'all') return userListStore.totalCount;
+		return counts[key] ?? 0;
+	}
 </script>
 
-<div class="tabs scrollbar-none" role="tablist" aria-label="Anime list status tabs">
+<div
+	class="journal-tabs flex overflow-x-auto scrollbar-none"
+	role="tablist"
+	aria-label="Anime list status tabs"
+>
 	{#each tabs as tab, idx (tab.key)}
-		{@const selected = currentTab === tab.key}
+		{@const isActive = currentTab === tab.key}
 		<button
 			role="tab"
-			aria-selected={selected}
-			tabindex={selected ? 0 : -1}
+			aria-selected={isActive}
+			tabindex={isActive ? 0 : -1}
 			onclick={() => selectTab(tab.key)}
 			onkeydown={(e) => handleKeydown(e, idx)}
-			class="tab"
-			class:selected
+			class="journal-tab {isActive ? 'selected' : ''}"
 		>
-			{#if tab.color}<span class="status-dot" style:--dot={tab.color}></span>{/if}
 			{tab.label}
-			<span class="count num">{getCount(tab.key)}</span>
+			<span class="tab-count">
+				{getCount(tab.key)}
+			</span>
 		</button>
 	{/each}
 </div>
 
 <style>
-	.tabs {
-		display: flex;
-		gap: 4px;
-		overflow-x: auto;
+	.journal-tabs {
 		border-bottom: 1px solid var(--color-border);
-		/* Last tab fades out at the edge so overflow is discoverable on phones. */
-		mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+		gap: 22px;
 	}
-	@media (min-width: 900px) {
-		.tabs {
-			mask-image: none;
-		}
-	}
-	.tab {
-		position: relative;
+	.journal-tab {
 		display: flex;
 		align-items: center;
 		gap: 8px;
 		flex-shrink: 0;
-		min-height: 46px;
-		padding: 0 12px;
+		min-height: 48px;
+		padding: 0 3px;
+		border-bottom: 2px solid transparent;
 		color: var(--color-text-secondary);
-		font-size: 14px;
-		font-weight: 500;
-		transition: color 0.15s;
+		font-size: 13px;
+		cursor: pointer;
 	}
-	.tab:hover {
+	.journal-tab:hover {
 		color: var(--color-text-primary);
 	}
-	.tab.selected {
+	.journal-tab.selected {
 		color: var(--color-text-primary);
+		border-bottom-color: var(--color-primary);
 	}
-	.tab.selected::after {
-		content: '';
-		position: absolute;
-		left: 12px;
-		right: 12px;
-		bottom: -1px;
-		height: 2px;
-		border-radius: 2px 2px 0 0;
-		background: var(--color-primary);
-	}
-	.count {
-		font-size: 12px;
-		font-weight: 400;
-		color: var(--color-text-muted);
-	}
-	.tab.selected .count {
+	.tab-count {
+		font-size: 11px;
 		color: var(--color-text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	@media (max-width: 640px) {
+		.journal-tabs {
+			gap: 20px;
+			margin-right: -18px;
+			padding-right: 18px;
+		}
+		.journal-tab {
+			font-size: 12px;
+		}
 	}
 </style>

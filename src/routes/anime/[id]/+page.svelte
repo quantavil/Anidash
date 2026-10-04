@@ -25,16 +25,15 @@
 	import ExternalSitesRow from '$lib/ui/ExternalSitesRow.svelte';
 
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
-	import StatusSelect from '$lib/ui/StatusSelect.svelte';
-	import EpisodeStepper from '$lib/ui/EpisodeStepper.svelte';
-	import ConfirmDialog from '$lib/ui/ConfirmDialog.svelte';
-	import EpisodeBar from '$lib/ui/EpisodeBar.svelte';
+	import StatusBadge from '$lib/ui/StatusBadge.svelte';
+	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
 	import ScoreInput from '$lib/ui/ScoreInput.svelte';
 	import GenreBadge from '$lib/ui/GenreBadge.svelte';
 	import AddToListModal from '$lib/ui/AddToListModal.svelte';
 	import CharacterDetailModal from '$lib/ui/CharacterDetailModal.svelte';
 	import AnimeDetailSkeleton from '$lib/ui/skeletons/AnimeDetailSkeleton.svelte';
 	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
+	import ProgressLine from '$lib/ui/ProgressLine.svelte';
 
 	const malId = $derived(Number(page.params.id));
 
@@ -61,7 +60,6 @@
 	// ─── Modals ───
 
 	let showAddModal = $state(false);
-	let showRemoveConfirm = $state(false);
 	let showCharacterModal = $state(false);
 	let selectedCharacter = $state<AnilistEnriched['characters'][number] | null>(null);
 
@@ -182,7 +180,7 @@
 
 	const STATUS_COLORS: Record<string, string> = {
 		currently_airing: 'text-success',
-		finished_airing: 'text-text-secondary',
+		finished_airing: 'text-info',
 		not_yet_aired: 'text-warning'
 	};
 
@@ -209,138 +207,227 @@
 {#if loading && !anime}
 	<AnimeDetailSkeleton />
 {:else if error}
-	<div class="page text-center">
+	<div class="mx-auto max-w-5xl px-4 py-16 text-center">
 		<p class="text-lg text-error">{error}</p>
-		<button class="btn btn-primary mt-4" onclick={() => loadAnime(malId)}>Retry</button>
+		<button
+			onclick={() => loadAnime(malId)}
+			class="mt-4 rounded-lg bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover"
+		>
+			Retry
+		</button>
 	</div>
 {:else if anime}
-	<div class="page overflow-x-hidden">
+	<div class="mx-auto max-w-5xl px-4 py-6 overflow-x-hidden">
 		<!-- ─── Header ─── -->
-		<div class="hero">
-			<div class="cover poster">
+		<div class="flex flex-col gap-6 sm:flex-row">
+			<!-- Cover -->
+			<div
+				class="shrink-0 w-full sm:w-[200px] relative rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5 max-h-[320px] sm:max-h-none"
+			>
 				<ImageWithFallback
 					src={anime.mainPicture?.large ?? anime.mainPicture?.medium}
 					alt={anime.title}
-					aspectRatio="2/3"
 					priority
-					class="w-full"
+					class="w-full sm:w-[200px] h-full object-cover"
 				/>
 				{#if listEntry}
-					<EpisodeBar
-						class="cover-bar"
-						watched={listEntry.numWatchedEpisodes}
-						total={listEntry.numEpisodes}
-					/>
+					<ProgressLine watched={listEntry.numWatchedEpisodes} total={listEntry.numEpisodes} />
 				{/if}
 				{#if dubStore.hasDub(anime.malId)}
-					<span class="glass-badge dub" title="Dubbed"><Mic size={13} fill="currentColor" /></span>
+					<div
+						class="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary/95 text-white shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/20"
+						title="Dubbed"
+					>
+						<Mic size={14} fill="currentColor" />
+					</div>
 				{/if}
 			</div>
 
-			<div class="info">
-				<h1 class="title">
+			<!-- Info -->
+			<div class="flex-1">
+				<div
+					class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl"
+				>
 					<AnimeTitle
 						title={anime.title}
 						titleEnglish={anime.titleEnglish ?? null}
 						tag="span"
 						class=""
 					/>
-				</h1>
+				</div>
 
-				<ul class="facts">
+				<!-- Quick stats row -->
+				<div
+					class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+				>
 					{#if anime.mean}
-						<li
+						<div
+							class="flex items-center gap-1 shrink-0"
 							title={anime.numScoringUsers
 								? anime.numScoringUsers.toLocaleString() + ' users scored this'
-								: 'MyAnimeList community rating'}
+								: ''}
 						>
-							<Star size={15} class="text-warning" fill="currentColor" />
-							<strong class="num">{anime.mean.toFixed(2)}</strong>
-							<span class="muted">MAL</span>
-						</li>
+							<Star size={16} class="text-warning" fill="currentColor" />
+							<span class="font-semibold text-text-primary">{anime.mean.toFixed(1)}</span>
+						</div>
 					{/if}
 					{#if anime.numListUsers}
-						<li>
-							<Users size={14} class="muted" /><span class="num"
+						<div class="flex items-center gap-1 shrink-0">
+							<Users size={14} class="text-text-muted" />
+							<span class="font-semibold text-text-primary"
 								>{formatNumberShort(anime.numListUsers)}</span
-							> <span class="muted">members</span>
-						</li>
+							>
+						</div>
 					{/if}
-					{#if anime.mediaType}<li>
-							<Tv size={14} class="muted" />{formatMediaType(anime.mediaType)}
-						</li>{/if}
-					{#if anime.numEpisodes > 0}<li>
-							<Film size={14} class="muted" /><span class="num">{anime.numEpisodes}</span> eps
-						</li>{/if}
+					{#if anime.mediaType}
+						<div class="flex items-center gap-1 shrink-0">
+							<Tv size={14} class="text-text-muted" />
+							{formatMediaType(anime.mediaType)}
+						</div>
+					{/if}
+					{#if anime.numEpisodes > 0}
+						<div class="flex items-center gap-1 shrink-0">
+							<Film size={14} class="text-text-muted" />
+							{anime.numEpisodes} eps
+						</div>
+					{/if}
 					{#if anime.animeStatus}
-						<li class={STATUS_COLORS[anime.animeStatus] ?? 'text-text-muted'}>
-							{formatAiringStatus(anime.animeStatus)}
-						</li>
+						<div
+							class="flex items-center gap-1 shrink-0 {STATUS_COLORS[anime.animeStatus] ??
+								'text-text-muted'}"
+						>
+							<span>{formatAiringStatus(anime.animeStatus)}</span>
+						</div>
 					{/if}
 					{#if anime.startSeason}
-						<li>
-							<Calendar size={14} class="muted" />{formatSeason(
-								anime.startSeason.year,
-								anime.startSeason.season
-							)}
-						</li>
+						<div class="flex items-center gap-1 shrink-0 text-text-muted">
+							<Calendar size={12} />
+							{formatSeason(anime.startSeason.year, anime.startSeason.season)}
+						</div>
 					{/if}
-				</ul>
+				</div>
 
-				{#if anime.studios.length > 0 || anime.broadcast?.day_of_the_week}
-					<p class="credits">
-						{#if anime.studios.length > 0}<span class="min-w-0 truncate"
-								>{anime.studios.map((s) => s.name).join(', ')}</span
-							>{/if}
-						{#if anime.broadcast?.day_of_the_week}<span
-								><Clock size={12} class="inline -mt-0.5" />
-								{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
-								{formatLocalBroadcast(
+				<!-- Studios & Broadcast row -->
+				<div
+					class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+				>
+					{#if anime.studios.length > 0}
+						<div class="flex items-center gap-1 min-w-0">
+							<Users size={12} class="shrink-0" />
+							<span class="truncate">{anime.studios.map((s) => s.name).join(', ')}</span>
+						</div>
+					{/if}
+					{#if anime.broadcast?.day_of_the_week}
+						<div class="flex items-center gap-1 shrink-0">
+							<Clock size={12} />
+							{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
+							<span
+								>{formatLocalBroadcast(
 									anime.broadcast.day_of_the_week,
 									anime.broadcast.start_time
 								)}</span
-							>{/if}
-					</p>
-				{/if}
+							>
+						</div>
+					{/if}
+				</div>
 
+				<!-- Genres -->
 				{#if anime.genres.length > 0}
-					<div class="genres">
-						{#each anime.genres as genre (genre.id)}<GenreBadge name={genre.name} />{/each}
+					<div class="mt-3 flex flex-wrap gap-1.5">
+						{#each anime.genres as genre (genre.id)}
+							<GenreBadge name={genre.name} />
+						{/each}
 					</div>
 				{/if}
 
-				<!-- ─── Your list controls ─── -->
-				<section class="controls panel" aria-label="Your list">
+				<!-- ─── User List Controls ─── -->
+				<div
+					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 p-5 shadow-2xl relative z-20"
+				>
+					<!-- Glowing accent effect in background -->
+					<div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+						<div
+							class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
+						></div>
+					</div>
+
 					{#if inList && listEntry}
-						<div class="field-group">
-							<span class="label">Status</span>
-							<div class="status-field">
-								<StatusSelect {malId} title={anime.title} status={listEntry.status} />
+						<!-- Responsive layout: side-by-side on large screens, stacked on mobile -->
+						<div class="flex flex-col lg:flex-row lg:items-center gap-6 relative z-10">
+							<!-- Left Side: Status & Progress -->
+							<div class="flex-1 flex flex-col gap-4">
+								<div class="grid grid-cols-2 gap-4 items-center">
+									<!-- Status -->
+									<div class="flex flex-col">
+										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+											Status
+										</span>
+										<div class="mt-1.5 flex">
+											<StatusBadge
+												{malId}
+												status={listEntry.status}
+												showLabel={true}
+												class="h-10 sm:h-8 px-4 sm:px-3 text-xs sm:text-[11px] !rounded-lg flex items-center justify-center shadow-lg"
+											/>
+										</div>
+									</div>
+
+									<!-- Progress Counter -->
+									<div class="flex flex-col items-end">
+										<span
+											class="text-[10px] font-bold uppercase tracking-wider text-text-muted text-right"
+										>
+											Episodes Watched
+										</span>
+										<div class="mt-1 flex justify-end">
+											<EpisodeCounter
+												{malId}
+												watched={listEntry.numWatchedEpisodes}
+												total={listEntry.numEpisodes}
+											/>
+										</div>
+									</div>
+								</div>
+
+								<!-- Custom Progress Bar -->
+								{#if listEntry.numEpisodes > 0}
+									{@const pct = Math.min(
+										(listEntry.numWatchedEpisodes / listEntry.numEpisodes) * 100,
+										100
+									)}
+									<div
+										class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5"
+									>
+										<div
+											class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all duration-500 ease-spring"
+											style="width: {pct}%"
+										></div>
+									</div>
+								{/if}
+							</div>
+
+							<!-- Divider (vertical on desktop, horizontal on mobile) -->
+							<div class="hidden lg:block w-px bg-white/10 self-stretch my-1"></div>
+							<div class="block lg:hidden h-px bg-white/5 w-full"></div>
+
+							<!-- Right Side: Rating / Score section -->
+							<div class="lg:w-[280px] shrink-0">
+								<ScoreInput {malId} score={listEntry.score} />
 							</div>
 						</div>
-						<div class="field-group grow">
-							<span class="label">Progress</span>
-							<EpisodeStepper
-								{malId}
-								title={anime.title}
-								watched={listEntry.numWatchedEpisodes}
-								total={listEntry.numEpisodes}
-							/>
-						</div>
-						<div class="field-group full">
-							<ScoreInput {malId} score={listEntry.score} />
-						</div>
-						<button class="remove" onclick={() => (showRemoveConfirm = true)}
-							>Remove from my list</button
-						>
 					{:else}
-						<button class="btn btn-primary add-btn" onclick={() => (showAddModal = true)}>
-							<Plus size={17} /> Add to my list
+						<button
+							onclick={() => (showAddModal = true)}
+							class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+						>
+							<Plus size={16} />
+							Add to My List
 						</button>
 					{/if}
-				</section>
+				</div>
 
-				<div class="links">
+				<!-- External Links -->
+				<div class="mt-4 flex flex-wrap items-center gap-2">
 					<a
 						href="https://myanimelist.net/anime/{malId}"
 						target="_blank"
@@ -349,7 +436,7 @@
 						style="--site-color: var(--color-primary)"
 					>
 						<ExternalLink size={12} />
-						<span class="font-semibold">MyAnimeList</span>
+						<span class="font-bold tracking-wide">MAL</span>
 					</a>
 					<ExternalSitesRow animeTitle={anime.title} />
 				</div>
@@ -357,12 +444,16 @@
 		</div>
 
 		<!-- ─── Scrollable Page Sections ─── -->
-		<div class="mt-12 space-y-10">
+		<div class="mt-8 space-y-8">
 			<!-- Section 1: Overview (Synopsis) -->
 			<div class="space-y-4">
 				{#if anime.synopsis}
-					<div class="panel p-5 relative overflow-hidden">
-						<h3 class="mb-3 text-xs font-medium text-text-muted">Synopsis</h3>
+					<div
+						class="rounded-xl border border-white/5 bg-surface-1/40 p-5 relative overflow-hidden"
+					>
+						<h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">
+							Synopsis
+						</h3>
 						<p
 							class="text-sm leading-relaxed text-text-secondary transition-all duration-300 {expandedSynopsis
 								? ''
@@ -385,8 +476,8 @@
 			<!-- AniList Enrichment: Trailer / Airing / Tags -->
 			{#if anilistEnriched}
 				{#if safeTrailerId}
-					<div class="panel p-4">
-						<h3 class="mb-3 text-xs font-medium text-text-muted">Trailer</h3>
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
+						<h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Trailer</h3>
 						<div class="aspect-video overflow-hidden rounded-lg">
 							<iframe
 								src="https://www.youtube.com/embed/{safeTrailerId}"
@@ -401,8 +492,12 @@
 					</div>
 				{/if}
 				{#if anilistEnriched.nextAiring}
-					<div class="panel p-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-						<span class="text-xs font-medium text-text-muted shrink-0">Next Episode</span>
+					<div
+						class="rounded-xl border border-white/5 bg-surface-1/40 p-4 flex flex-wrap items-center gap-x-3 gap-y-1"
+					>
+						<span class="text-xs font-bold uppercase tracking-wider text-text-muted shrink-0"
+							>Next Episode</span
+						>
 						<span class="text-sm text-text-primary shrink-0"
 							>EP {anilistEnriched.nextAiring.episode}</span
 						>
@@ -415,8 +510,8 @@
 					</div>
 				{/if}
 				{#if anilistEnriched.tagsRanked.length > 0}
-					<div class="panel p-4">
-						<h3 class="mb-2 text-xs font-medium text-text-muted">Tags</h3>
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4">
+						<h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">Tags</h3>
 						<div class="flex flex-wrap gap-1.5">
 							{#each anilistEnriched.tagsRanked.slice(0, 20) as t (t.name)}
 								<span
@@ -432,18 +527,20 @@
 			<!-- Section 2: Related Anime -->
 			{#if relatedGrouped}
 				<div class="space-y-4">
-					<h3 class="text-base font-semibold text-text-primary">Related Anime</h3>
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">
+						Related Anime
+					</h3>
 					<div class="space-y-4">
 						{#each Object.entries(relatedGrouped) as [type, items] (type)}
 							<div>
-								<h4 class="mb-2 text-xs font-medium text-text-muted">
+								<h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">
 									{type}
 								</h4>
 								<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 									{#each items as item (item.id)}
 										<a
 											href="/anime/{item.id}"
-											class="group flex flex-col gap-1.5 panel p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
+											class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
 										>
 											<div class="relative aspect-[3/4] overflow-hidden rounded-lg">
 												<ImageWithFallback
@@ -476,7 +573,9 @@
 			<!-- Section 3: Recommendations -->
 			{#if hasRecommendations}
 				<div class="space-y-4">
-					<h3 class="text-base font-semibold text-text-primary">Recommendations</h3>
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">
+						Recommendations
+					</h3>
 
 					<!-- MAL Recommendations -->
 					{#if anime.recommendations && anime.recommendations.length > 0}
@@ -484,7 +583,7 @@
 							{#each anime.recommendations.slice(0, 6) as rec (rec.id)}
 								<a
 									href="/anime/{rec.id}"
-									class="group flex flex-col gap-1.5 panel p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
+									class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
 								>
 									<div class="relative aspect-[3/4] overflow-hidden rounded-lg">
 										<ImageWithFallback
@@ -525,7 +624,7 @@
 							{/each}
 						</div>
 					{:else if recsError}
-						<div class="panel p-4 text-center">
+						<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
 							<p class="text-xs text-text-muted">{recsError}</p>
 							<button
 								onclick={() => loadAnilistData(Number(page.params.id))}
@@ -536,14 +635,18 @@
 						</div>
 					{:else if recommendations.length > 0}
 						<div class="space-y-3">
-							<h4 class="text-xs font-medium text-text-muted">AniList Recommendations</h4>
+							<h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">
+								AniList Recommendations
+							</h4>
 							<div class="grid gap-3 md:grid-cols-2">
 								{#each recommendations.slice(0, 4) as rec (rec.id)}
 									{@const href = rec.idMal
 										? `/anime/${rec.idMal}`
 										: `https://anilist.co/anime/${rec.id}`}
 									{@const external = !rec.idMal}
-									<div class="panel p-3 flex gap-3 min-w-0">
+									<div
+										class="rounded-xl border border-white/5 bg-surface-1/30 p-3 flex gap-3 min-w-0"
+									>
 										<a
 											{href}
 											target={external ? '_blank' : undefined}
@@ -585,7 +688,7 @@
 			<!-- Section 4: Characters -->
 			{#if charactersLoading}
 				<div class="space-y-3">
-					<h3 class="text-base font-semibold text-text-primary">Characters</h3>
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
 						{#each Array(8) as _, _idx (_idx)}
 							<div class="flex items-center gap-2 rounded-xl bg-surface-1 p-2">
@@ -600,8 +703,8 @@
 				</div>
 			{:else if charactersError}
 				<div class="space-y-3">
-					<h3 class="text-base font-semibold text-text-primary">Characters</h3>
-					<div class="panel p-4 text-center">
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Characters</h3>
+					<div class="rounded-xl border border-white/5 bg-surface-1/40 p-4 text-center">
 						<p class="text-xs text-text-muted">{charactersError}</p>
 						<button
 							onclick={() => loadAnilistData(Number(page.params.id))}
@@ -614,7 +717,9 @@
 			{:else if characters.length > 0}
 				<div class="space-y-4">
 					<div class="flex items-center justify-between">
-						<h3 class="text-base font-semibold text-text-primary">Characters</h3>
+						<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">
+							Characters
+						</h3>
 						<span class="text-xs text-text-muted">({characters.length} total)</span>
 					</div>
 					<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -622,7 +727,7 @@
 							<button
 								type="button"
 								onclick={() => handleCharacterClick(entry)}
-								class="w-full flex items-center gap-2 panel p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus:bg-white/10"
+								class="w-full flex items-center gap-2 rounded-xl border border-white/5 bg-surface-1/40 p-2 text-left transition-transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer focus:outline-none focus:bg-white/10"
 							>
 								<ImageWithFallback
 									src={entry.image}
@@ -667,10 +772,12 @@
 			<!-- AniList Reviews (if available) -->
 			{#if anilistEnriched?.reviews && anilistEnriched.reviews.length > 0}
 				<div class="space-y-3">
-					<h3 class="text-base font-semibold text-text-primary">Reviews</h3>
+					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">Reviews</h3>
 					<div class="grid gap-3 md:grid-cols-2">
 						{#each anilistEnriched.reviews.slice(0, 4) as r, i (i)}
-							<div class="panel p-4 min-w-0 overflow-hidden">
+							<div
+								class="rounded-xl border border-white/5 bg-surface-1/40 p-4 min-w-0 overflow-hidden"
+							>
 								<div class="flex items-center justify-between gap-2 min-w-0">
 									<p class="truncate text-xs font-semibold text-text-primary min-w-0">
 										{r.summary ?? 'Review'}
@@ -694,17 +801,6 @@
 	</div>
 {/if}
 
-<ConfirmDialog
-	open={showRemoveConfirm}
-	onOpenChange={(v) => (showRemoveConfirm = v)}
-	title="Remove from your list?"
-	description="This removes {anime?.title ??
-		'this anime'} and its progress and rating from your MyAnimeList."
-	confirmLabel="Remove"
-	variant="danger"
-	onConfirm={() => userListStore.removeFromList(malId)}
-/>
-
 <!-- Add to List Modal -->
 <AddToListModal
 	open={showAddModal}
@@ -721,181 +817,3 @@
 
 <!-- Character Detail Modal -->
 <CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />
-
-<style>
-	.hero {
-		display: grid;
-		grid-template-columns: 240px minmax(0, 1fr);
-		gap: 40px;
-		align-items: start;
-	}
-	.cover {
-		position: sticky;
-		top: 24px;
-	}
-	.cover :global(.cover-bar) {
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 5px;
-		border-radius: 0;
-		background: rgb(0 0 0 / 0.55);
-	}
-	.dub {
-		position: absolute;
-		left: 8px;
-		bottom: 14px;
-		width: 28px;
-		height: 28px;
-		color: var(--color-primary);
-	}
-	.title {
-		font-family: var(--font-display);
-		font-size: clamp(30px, 4.4vw, 52px);
-		font-weight: 700;
-		line-height: 1.02;
-		letter-spacing: -0.04em;
-		text-wrap: balance;
-		overflow-wrap: anywhere;
-	}
-	.title :global(span.block) {
-		margin-top: 10px;
-		font-family: var(--font-sans);
-		font-size: 15px;
-		font-weight: 400;
-		letter-spacing: 0;
-		color: var(--color-text-muted);
-	}
-	.facts {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px 18px;
-		margin: 18px 0 0;
-		padding: 0;
-		list-style: none;
-		font-size: 14px;
-		color: var(--color-text-secondary);
-	}
-	.facts li {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-	}
-	.facts strong {
-		color: var(--color-text-primary);
-		font-weight: 650;
-	}
-	.facts :global(.muted),
-	.muted {
-		color: var(--color-text-muted);
-	}
-	.credits {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px 16px;
-		margin-top: 8px;
-		font-size: 13px;
-		color: var(--color-text-muted);
-	}
-	.genres {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		margin-top: 16px;
-	}
-	.controls {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: 20px;
-		margin-top: 24px;
-		padding: 20px;
-	}
-	.field-group {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		min-width: 0;
-	}
-	.field-group.grow {
-		flex: 1 1 240px;
-		max-width: 320px;
-	}
-	.field-group.full {
-		flex: 1 1 100%;
-		padding-top: 18px;
-		border-top: 1px solid var(--color-border);
-	}
-	.label {
-		font-size: 12px;
-		color: var(--color-text-muted);
-	}
-	.status-field {
-		display: flex;
-		min-height: 44px;
-		align-items: center;
-	}
-	.status-field :global(.chip-select) {
-		height: 44px;
-		min-width: 168px;
-	}
-	.add-btn {
-		min-height: 52px;
-		padding: 0 28px;
-		font-size: 15px;
-	}
-	.remove {
-		margin-left: auto;
-		min-height: 44px;
-		color: var(--color-text-muted);
-		font-size: 13px;
-		text-decoration: underline;
-		text-underline-offset: 4px;
-	}
-	.remove:hover {
-		color: var(--color-error);
-	}
-	.links {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		margin-top: 16px;
-	}
-	@media (max-width: 767px) {
-		.hero {
-			grid-template-columns: 112px minmax(0, 1fr);
-			gap: 16px 18px;
-		}
-		.cover {
-			position: static;
-			grid-row: 1;
-		}
-		.info {
-			display: contents;
-		}
-		.title {
-			grid-column: 2;
-			grid-row: 1;
-			align-self: end;
-		}
-		.facts,
-		.credits,
-		.genres,
-		.controls,
-		.links {
-			grid-column: 1 / -1;
-		}
-		.facts {
-			margin-top: 0;
-		}
-		.controls {
-			margin-top: 4px;
-			padding: 16px;
-		}
-		.field-group.grow {
-			max-width: none;
-		}
-	}
-</style>

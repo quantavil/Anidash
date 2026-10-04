@@ -9,8 +9,9 @@
 	import { formatListStatus } from '$lib/utils/format';
 
 	import { goto } from '$app/navigation';
-	import { List, LayoutGrid, ArrowRight, WifiOff, Zap, Compass } from 'lucide-svelte';
+	import { List, LayoutGrid, ArrowUpRight, Bookmark, Star } from 'lucide-svelte';
 	import AnimeJournal from '$lib/ui/AnimeJournal.svelte';
+	import CollectionShelf from '$lib/ui/CollectionShelf.svelte';
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import AnimeGrid from '$lib/ui/AnimeGrid.svelte';
@@ -24,13 +25,13 @@
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
 	const gridView = $derived(getUrlParam(page.url, 'view', '') === 'grid');
-	const pageTitle = $derived(currentTab === 'all' ? 'All anime' : formatListStatus(currentTab));
-	function setSort(key: SortKey) {
-		goto(setUrlParam(page.url, 'sort', key === 'updated' || key === currentSort ? '' : key), {
-			keepFocus: true,
-			noScroll: true
-		});
-	}
+	const pageTitle = $derived(
+		currentTab === 'all'
+			? 'Your collection'
+			: currentTab === 'plan_to_watch'
+				? 'Planned'
+				: formatListStatus(currentTab)
+	);
 	function setView(grid: boolean) {
 		goto(setUrlParam(page.url, 'view', grid ? 'grid' : ''), { keepFocus: true, noScroll: true });
 	}
@@ -94,87 +95,50 @@
 					e !== undefined && (currentTab === 'all' || e.status === currentTab)
 			)
 	);
-
-	// What is ahead of you: titles in this view and episodes still to watch (known totals only).
-	const summary = $derived.by(() => {
-		const titles = filteredEntries.length;
-		const ahead = filteredEntries.reduce(
-			(sum, e) =>
-				e.numEpisodes > 0 ? sum + Math.max(0, e.numEpisodes - e.numWatchedEpisodes) : sum,
-			0
-		);
-		return {
-			titles,
-			ahead,
-			showAhead: currentTab === 'watching' || currentTab === 'plan_to_watch'
-		};
-	});
-	const summaryText = $derived(
-		[
-			`${summary.titles.toLocaleString()} ${summary.titles === 1 ? 'title' : 'titles'}`,
-			summary.showAhead && summary.ahead > 0
-				? `${summary.ahead.toLocaleString()} episodes ahead`
-				: ''
-		]
-			.filter(Boolean)
-			.join(' · ')
-	);
 </script>
 
 {#if !authStore.isAuthenticated}
-	<section class="welcome">
-		<div class="hero">
-			<p class="eyebrow">A tracker for MyAnimeList</p>
-			<h1>Know where<br />you left off.</h1>
-			<p class="lede">
-				Your list, one tap per episode. AniDash syncs with MyAnimeList, opens offline, and keeps the
-				next thing to watch within reach.
+	<section class="welcome-page">
+		<div class="welcome-copy">
+			<span class="welcome-note">A little space for the stories you love</span>
+			<h1>Your next episode.<br />Your own pace.</h1>
+			<p>
+				A home for your anime collection. Keep track of the stories you’re watching, rate your
+				favourites, and find what comes next.
 			</p>
-			<div class="cta">
-				<button class="btn btn-primary big" onclick={() => authStore.login()}
-					>Connect MyAnimeList <ArrowRight size={17} /></button
-				>
-				<a class="btn btn-ghost big" href="/browse">Browse without an account</a>
+			<button class="primary-button" onclick={() => authStore.login()}
+				>Connect with MyAnimeList <ArrowUpRight size={17} /></button
+			><a class="welcome-browse" href="/browse">Explore anime first <ArrowUpRight size={15} /></a
+			><span class="welcome-footnote">Your list stays with you, even offline.</span>
+		</div>
+		<div class="welcome-art" aria-hidden="true">
+			<div class="journal-spine"></div>
+			<div class="journal-book">
+				<Bookmark size={32} strokeWidth={1} /><span class="book-label">The watch journal</span>
+				<div class="book-title">Every story<br />leaves a mark.</div>
+				<div class="book-rule"></div>
+				<div class="book-stars">
+					{#each Array(5) as _, i (i)}<Star size={16} strokeWidth={1} />{/each}
+				</div>
+				<span class="book-bottom">AniDash / Your collection</span>
 			</div>
 		</div>
-		<div class="reel" aria-hidden="true">
-			{#each Array(24) as _, i (i)}<span style:--i={i}></span>{/each}
-		</div>
-		<ul class="points">
-			<li>
-				<Zap size={18} />
-				<h2>One tap per episode</h2>
-				<p>Edits land instantly and sync to MyAnimeList in the background, in order.</p>
-			</li>
-			<li>
-				<WifiOff size={18} />
-				<h2>Opens offline</h2>
-				<p>
-					Your list is cached in this browser, so the app shell and your entries load without a
-					connection.
-				</p>
-			</li>
-			<li>
-				<Compass size={18} />
-				<h2>Find what is next</h2>
-				<p>Search MyAnimeList, browse the season, or let the plan-to-watch roulette pick.</p>
-			</li>
-		</ul>
 	</section>
 {:else if !userListStore.initialized}
 	<ListPageSkeleton />
 {:else}
-	<div class="page">
-		<div class="page-head">
+	<div class="list-page">
+		<div class="page-heading">
 			<div>
-				<h1 class="page-title">{pageTitle}</h1>
-				<p class="page-sub num">{summaryText}</p>
+				<span class="page-note">Your watch journal</span>
+				<h1>{pageTitle}<span class="heading-period" aria-hidden="true">.</span></h1>
 			</div>
+			<p>{currentTab === 'watching' ? 'One episode at a time.' : 'Every story has its place.'}</p>
 		</div>
 		<TabBar counts={userListStore.statusCounts} />
-		<div class="toolbar">
+		<div class="list-toolbar">
 			<FilterBar />
-			<div class="view-switch" role="group" aria-label="List display">
+			<div class="view-switch" aria-label="List display">
 				<button
 					class:active={!gridView}
 					aria-pressed={!gridView}
@@ -190,172 +154,277 @@
 				>
 			</div>
 		</div>
-		{#if gridView}<AnimeGrid
-				entries={filteredEntries}
-				resetKey="{currentTab}-{currentSort}-{currentQuery}"
-				loading={false}
-				empty={emptyState}
-			/>{:else}<AnimeJournal
-				entries={filteredEntries}
-				sort={currentSort}
-				onsort={setSort}
-				resetKey="{currentTab}-{currentSort}-{currentQuery}"
-				empty={emptyState}
-			/>{/if}
-		{#if filteredEntries.length > 0}<p class="foot">
-				Edits save on this device and sync when online.
-			</p>{/if}
+		<div class="journal-layout" class:full-width={gridView}>
+			<div class="list-content">
+				{#if gridView}<AnimeGrid
+						entries={filteredEntries}
+						resetKey="{currentTab}-{currentSort}-{currentQuery}"
+						loading={false}
+						empty={emptyState}
+					/>{:else}<AnimeJournal
+						entries={filteredEntries}
+						feature={currentTab === 'watching' && !currentQuery}
+						resetKey="{currentTab}-{currentSort}-{currentQuery}"
+						empty={emptyState}
+					/>{/if}
+				{#if filteredEntries.length > 0}<footer class="list-footer">
+						<span
+							>{filteredEntries.length}
+							{currentTab === 'watching' ? 'in your rotation' : 'in this list'}</span
+						><span>Edits save on this device</span>
+					</footer>{/if}
+			</div>
+			{#if !gridView}<CollectionShelf />{/if}
+		</div>
 	</div>
 {/if}
 
 <style>
-	.toolbar {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: center;
-		gap: 10px;
-		padding: 16px 0 12px;
+	.list-page {
+		padding: 40px 0 24px;
 	}
-	@media (min-width: 641px) {
-		.toolbar {
-			display: flex;
-		}
+	.page-heading {
+		display: flex;
+		align-items: end;
+		justify-content: space-between;
+		gap: 24px;
+		margin-bottom: 28px;
+	}
+	.page-note {
+		display: block;
+		color: var(--color-text-secondary);
+		font-size: 12px;
+		margin-bottom: 8px;
+	}
+	h1 {
+		font-family: var(--font-display);
+		font-size: clamp(42px, 5vw, 66px);
+		font-weight: 400;
+		line-height: 1.05;
+		letter-spacing: -0.045em;
+		text-wrap: balance;
+	}
+	.heading-period {
+		color: var(--color-primary);
+	}
+	.page-heading p {
+		color: var(--color-text-secondary);
+		font-size: 13px;
+		padding-bottom: 8px;
+	}
+	.list-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 22px 0 26px;
+	}
+	.list-toolbar :global(.filter-bar) {
+		flex: 1;
 	}
 	.view-switch {
 		display: flex;
-		flex: none;
-		margin-left: auto;
-		padding: 3px;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-m);
+		border-radius: 8px;
+		padding: 3px;
+		flex-shrink: 0;
 		background: var(--color-surface-1);
 	}
 	.view-switch button {
+		width: 44px;
+		height: 44px;
 		display: grid;
 		place-items: center;
-		width: 44px;
-		height: 36px;
-		border-radius: 7px;
-		color: var(--color-text-muted);
-		transition:
-			background-color 0.15s,
-			color 0.15s;
-	}
-	.view-switch button:hover {
-		color: var(--color-text-primary);
+		color: var(--color-text-secondary);
+		border-radius: 5px;
+		cursor: pointer;
 	}
 	.view-switch button.active {
 		background: var(--color-surface-3);
 		color: var(--color-text-primary);
+		box-shadow: 0 2px 5px #0003;
 	}
-	.foot {
-		padding: 24px 0 0;
-		color: var(--color-text-muted);
-		font-size: 12px;
-		text-align: center;
+	.journal-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 310px;
+		gap: 32px;
+		align-items: start;
 	}
-
-	/* ── Welcome ── */
-	.welcome {
-		max-width: 1100px;
-		margin: 0 auto;
-		padding: clamp(40px, 9vh, 96px) 0 48px;
+	.journal-layout.full-width {
+		grid-template-columns: minmax(0, 1fr);
 	}
-	.eyebrow {
-		color: var(--color-primary);
-		font-size: 13px;
-		font-weight: 600;
+	.list-content {
+		min-width: 0;
 	}
-	.welcome h1 {
-		margin: 14px 0 20px;
-		font-family: var(--font-display);
-		font-size: clamp(44px, 8.4vw, 104px);
-		font-weight: 700;
-		line-height: 0.95;
-		letter-spacing: -0.055em;
-	}
-	.lede {
-		max-width: 480px;
-		color: var(--color-text-secondary);
-		font-size: clamp(15px, 1.4vw, 18px);
-		line-height: 1.6;
-	}
-	.cta {
+	.list-footer {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 10px;
-		margin-top: 32px;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 20px 0;
+		color: var(--color-text-secondary);
+		font-size: 11px;
 	}
-	.big {
-		min-height: 52px;
-		padding: 0 22px;
-		font-size: 15px;
-	}
-	.reel {
-		display: flex;
-		gap: 4px;
-		margin: clamp(40px, 8vh, 80px) 0 32px;
-	}
-	.reel span {
-		flex: 1;
-		height: 10px;
-		border-radius: 2px;
-		background: var(--color-surface-3);
-		animation: fill 3.2s var(--ease-fluid) infinite;
-		animation-delay: calc(var(--i) * 70ms);
-	}
-	@keyframes fill {
-		0%,
-		12% {
-			background: var(--color-surface-3);
-		}
-		30%,
-		78% {
-			background: var(--color-primary);
-		}
-		100% {
-			background: var(--color-surface-3);
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.reel span {
-			animation: none;
-		}
-		.reel span:nth-child(-n + 17) {
-			background: var(--color-primary);
-		}
-	}
-	.points {
+	.welcome-page {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 32px;
-		list-style: none;
-		padding: 0;
-		margin: 0;
+		grid-template-columns: 1.2fr 1fr;
+		align-items: center;
+		gap: 72px;
+		min-height: calc(100dvh - 100px);
+		padding: 60px 24px;
 	}
-	.points li {
-		padding-top: 20px;
-		border-top: 1px solid var(--color-border-strong);
+	.welcome-note {
+		color: var(--color-primary);
+		font-size: 13px;
 	}
-	.points li :global(svg) {
+	.welcome-copy h1 {
+		font-size: clamp(48px, 6.5vw, 88px);
+		margin: 22px 0;
+	}
+	.welcome-copy p {
+		color: var(--color-text-secondary);
+		max-width: 410px;
+		font-size: 16px;
+		line-height: 1.8;
+		margin-bottom: 32px;
+	}
+	.welcome-browse {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: fit-content;
+		min-height: 44px;
+		margin-top: 12px;
+		font-size: 13px;
+	}
+	.welcome-footnote {
+		display: block;
+		font-size: 11px;
+		margin-top: 32px;
+		color: var(--color-text-secondary);
+	}
+	.welcome-art {
+		position: relative;
+		max-width: 350px;
+		width: 100%;
+		justify-self: center;
+		transform: rotate(5deg);
+		perspective: 1000px;
+	}
+	.journal-book {
+		min-height: 460px;
+		position: relative;
+		padding: 48px 40px;
+		border-radius: 3px 16px 16px 3px;
+		border: 1px solid #ffffff18;
+		background:
+			radial-gradient(ellipse at top right, #53705b33, transparent 70%),
+			linear-gradient(130deg, #303e32, #202820);
+		box-shadow:
+			inset 8px 0 8px #0003,
+			inset -1px 0 0 #ffffff15,
+			18px 24px 50px #0005,
+			4px 3px 0 #a69f85,
+			7px 5px 0 #393b31;
+		color: var(--color-text-primary);
+	}
+	.journal-book :global(svg) {
 		color: var(--color-primary);
 	}
-	.points h2 {
-		margin: 14px 0 6px;
-		font-size: 16px;
-		font-weight: 600;
+	.book-label {
+		display: block;
+		font-size: 11px;
+		margin-top: 30px;
+		color: #c7cfbf;
 	}
-	.points p {
-		color: var(--color-text-secondary);
-		font-size: 14px;
+	.book-title {
+		font-family: var(--font-display);
+		font-size: 43px;
+		line-height: 1.2;
+		letter-spacing: -0.035em;
+		margin: 18px 0 30px;
 	}
-	@media (max-width: 767px) {
-		.points {
-			grid-template-columns: 1fr;
-			gap: 24px;
+	.book-rule {
+		height: 1px;
+		background: #ffffff20;
+	}
+	.book-stars {
+		display: flex;
+		gap: 8px;
+		margin-top: 20px;
+	}
+	.book-bottom {
+		display: block;
+		margin-top: 32px;
+		font-size: 10px;
+		color: #c7cfbf;
+	}
+	@media (max-width: 1100px) {
+		.journal-layout {
+			grid-template-columns: minmax(0, 1fr);
 		}
-		.cta :global(.btn) {
-			flex: 1 1 100%;
+		.welcome-page {
+			gap: 32px;
+			padding: 50px 0;
+		}
+		.journal-book {
+			min-height: 400px;
+			padding: 32px;
+		}
+		.book-title {
+			font-size: 36px;
+		}
+	}
+	@media (max-width: 640px) {
+		.list-page {
+			padding-top: 28px;
+		}
+		.page-heading {
+			margin-bottom: 22px;
+		}
+		.page-heading p {
+			display: none;
+		}
+		.list-toolbar {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 10px;
+			padding: 18px 0 22px;
+		}
+		.list-toolbar :global(.filter-bar) {
+			display: contents;
+		}
+		.list-toolbar :global(.search-field) {
+			grid-column: 1 / -1;
+			max-width: none;
+		}
+		.list-toolbar :global(.sort-control) {
+			grid-column: 1;
+		}
+		.view-switch {
+			grid-column: 2;
+			margin-left: auto;
+		}
+
+		.welcome-page {
+			grid-template-columns: 1fr;
+			padding: 42px 0;
+			gap: 40px;
+		}
+		.welcome-copy h1 {
+			font-size: 52px;
+		}
+		.welcome-copy p {
+			font-size: 15px;
+		}
+		.welcome-art {
+			max-width: 260px;
+		}
+		.journal-book {
+			min-height: 330px;
+			padding: 28px;
+		}
+		.book-title {
+			font-size: 32px;
 		}
 	}
 </style>

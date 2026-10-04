@@ -2,150 +2,105 @@
 	import type { UserListRecord } from '$lib/cache/db';
 	import { formatMediaType } from '$lib/utils/format';
 	import { Star, Mic } from 'lucide-svelte';
+	import StatusBadge from './StatusBadge.svelte';
+	import ProgressLine from './ProgressLine.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
-	import EpisodeBar from './EpisodeBar.svelte';
-	import EpisodeStepper from './EpisodeStepper.svelte';
-	import RatingSelect from './RatingSelect.svelte';
-	import StatusSelect from './StatusSelect.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
+	import RatingSelect from './RatingSelect.svelte';
+	import EpisodeCounter from './EpisodeCounter.svelte';
 
-	let { entry, index = 0 }: { entry: UserListRecord; index?: number } = $props();
-	const year = $derived(entry.startSeason?.year);
+	let {
+		entry,
+		index = 0
+	}: {
+		entry: UserListRecord;
+		index?: number;
+	} = $props();
+
+	const imageUrl = $derived(entry.mainPicture?.medium ?? entry.mainPicture?.large ?? null);
 </script>
 
-<article class="card feed-card-contain">
-	<a class="poster" href="/anime/{entry.malId}" aria-label="View {entry.title} details">
-		<ImageWithFallback
-			src={entry.mainPicture?.medium ?? entry.mainPicture?.large}
-			alt=""
-			{index}
-			aspectRatio="2/3"
-			class="img"
-		/>
-		<EpisodeBar class="poster-bar" watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
-		{#if dubStore.hasDub(entry.malId)}
-			<span class="glass-badge dub" title="Dubbed"><Mic size={12} fill="currentColor" /></span>
-		{/if}
-	</a>
-	<div class="info">
-		<a class="title" href="/anime/{entry.malId}"
-			><AnimeTitle
+<div
+	class="group relative flex flex-col rounded-xl border border-white/10 bg-white/5 p-0.5 transition-all duration-200 hover:bg-white/10 hover:border-white/20 feed-card-contain"
+>
+	<div
+		class="relative flex flex-col h-full overflow-hidden rounded-[14px] bg-surface-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+	>
+		<a
+			href="/anime/{entry.malId}"
+			class="absolute inset-0 z-[1]"
+			aria-label="View {entry.title} details"
+		></a>
+		<!-- Cover Image -->
+		<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-2 border-b border-white/5">
+			<ImageWithFallback
+				src={imageUrl}
+				alt={entry.title}
+				{index}
+				class="h-full w-full transition-transform duration-200 ease-spring group-hover:scale-105"
+			/>
+
+			<!-- Progress Line -->
+			<ProgressLine watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
+
+			<!-- Status badge overlay -->
+			<div class="absolute left-2 top-2 z-10">
+				<StatusBadge malId={entry.malId} status={entry.status} />
+			</div>
+
+			<!-- Dub overlay -->
+			{#if dubStore.hasDub(entry.malId)}
+				<div class="glass-badge absolute bottom-2 left-2 h-6 w-6 border-primary/20 text-primary">
+					<Mic size={12} fill="currentColor" />
+				</div>
+			{/if}
+		</div>
+
+		<!-- Info -->
+		<div class="flex flex-1 flex-col gap-2 p-3">
+			<!-- Title -->
+			<AnimeTitle
 				title={entry.title}
-				titleEnglish={entry.titleEnglish}
+				titleEnglish={entry.titleEnglish ?? null}
 				tag="h3"
 				interactive={false}
-			/></a
-		>
-		<p class="meta">
-			<span>{formatMediaType(entry.mediaType)}</span>
-			{#if year}<span class="num">{year}</span>{/if}
-			<span class="mal" title="MyAnimeList community rating"
-				><Star size={11} fill="currentColor" /><span class="num"
-					>{entry.mean != null ? entry.mean.toFixed(1) : '—'}</span
-				>
-				MAL</span
-			>
-		</p>
-	</div>
-	<EpisodeStepper
-		malId={entry.malId}
-		title={entry.title}
-		watched={entry.numWatchedEpisodes}
-		total={entry.numEpisodes}
-		size="card"
-	/>
-	<div class="chips">
-		<StatusSelect malId={entry.malId} title={entry.title} status={entry.status} compact />
-		<RatingSelect malId={entry.malId} title={entry.title} score={entry.score} compact />
-	</div>
-</article>
+				class="line-clamp-2 text-sm font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
+			/>
 
-<style>
-	.card {
-		container: card / inline-size;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		min-width: 0;
-	}
-	.poster {
-		display: block;
-		position: relative;
-	}
-	.poster :global(.img) {
-		width: 100%;
-		transition: transform 0.4s var(--ease-fluid);
-	}
-	.poster:hover :global(.img) {
-		transform: scale(1.03);
-	}
-	.poster :global(.poster-bar) {
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 4px;
-		border-radius: 0;
-		background: rgb(0 0 0 / 0.55);
-	}
-	.dub {
-		position: absolute;
-		left: 6px;
-		bottom: 12px;
-		width: 22px;
-		height: 22px;
-		color: var(--color-primary);
-	}
-	.info {
-		min-width: 0;
-		flex: 1;
-	}
-	.title :global(h3) {
-		font-size: 14px;
-		font-weight: 600;
-		line-height: 1.3;
-		overflow-wrap: anywhere;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-	.title:hover :global(h3) {
-		text-decoration: underline;
-		text-decoration-color: var(--color-border-strong);
-		text-underline-offset: 3px;
-	}
-	.meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0 8px;
-		margin-top: 2px;
-		font-size: 12px;
-		color: var(--color-text-muted);
-	}
-	.mal {
-		display: inline-flex;
-		align-items: center;
-		gap: 3px;
-		color: var(--color-text-muted);
-	}
-	.mal :global(svg) {
-		color: var(--color-warning);
-	}
-	.mal .num {
-		color: var(--color-text-secondary);
-	}
-	.chips {
-		display: grid;
-		gap: 6px;
-		padding: 2px 0 4px;
-	}
-	/* Narrow cards stack the chips so labels never truncate; wider ones sit side by side. */
-	@container card (min-width: 220px) {
-		.chips {
-			grid-template-columns: minmax(0, 1fr) auto;
-		}
-	}
-</style>
+			<div class="flex items-center gap-1.5 text-xs text-warning">
+				<Star size={12} fill="currentColor" /><span
+					>{entry.mean != null ? entry.mean.toFixed(2) : '—'}</span
+				><span class="text-text-secondary">MAL</span>
+			</div>
+
+			<!-- Type + Season -->
+			<div class="flex items-center gap-2 text-xs text-text-muted">
+				{#if entry.mediaType}
+					<span>{formatMediaType(entry.mediaType)}</span>
+				{/if}
+				{#if entry.startSeason?.year && entry.startSeason?.season}
+					<span>· {entry.startSeason.year}</span>
+				{/if}
+			</div>
+
+			<div class="relative z-[2]">
+				<RatingSelect malId={entry.malId} title={entry.title} score={entry.score} />
+			</div>
+
+			<!-- Progress Controls -->
+			<div
+				class="relative z-[2] mt-auto pt-2 flex items-center justify-between"
+				onclick={(e) => e.stopPropagation()}
+				role="presentation"
+			>
+				<EpisodeCounter
+					malId={entry.malId}
+					watched={entry.numWatchedEpisodes}
+					total={entry.numEpisodes}
+					compact={true}
+				/>
+			</div>
+		</div>
+	</div>
+</div>

@@ -6,20 +6,12 @@
 		/** Alert-style dialogs cannot be dismissed via Esc / backdrop click. */
 		dismissible = true,
 		wide = false,
-		sheet = false,
-		flush = false,
-		label,
 		onclose,
 		children
 	}: {
 		open?: boolean;
 		dismissible?: boolean;
 		wide?: boolean;
-		/** Bottom sheet on phones. */
-		sheet?: boolean;
-		/** No inner padding: the content lays itself out. */
-		flush?: boolean;
-		label?: string;
 		onclose?: () => void;
 		children?: Snippet;
 	} = $props();
@@ -60,11 +52,8 @@
 
 <dialog
 	bind:this={dialogEl}
-	class="anidash-dialog {wide ? 'anidash-dialog-wide' : ''} {sheet
-		? 'anidash-dialog-sheet'
-		: ''} {flush ? 'anidash-dialog-flush' : ''}"
+	class="anidash-dialog {wide ? 'anidash-dialog-wide' : ''}"
 	aria-modal="true"
-	aria-label={label}
 	oncancel={handleCancel}
 	onclose={handleClose}
 	onclick={handleClick}

@@ -3,7 +3,6 @@
 	import { untrack } from 'svelte';
 	import AnimeCard from './AnimeCard.svelte';
 	import AnimeCardSkeleton from './skeletons/AnimeCardSkeleton.svelte';
-	import EmptyState from './EmptyState.svelte';
 
 	let {
 		entries = [],
@@ -61,19 +60,34 @@
 </script>
 
 {#if loading}
-	<div class="poster-grid">
+	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		<AnimeCardSkeleton count={12} />
 	</div>
 {:else if entries.length === 0}
-	<EmptyState {...empty} />
+	<div
+		class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
+	>
+		<div class="mb-3 text-4xl">📺</div>
+		<p class="text-sm text-text-secondary">{empty.title}</p>
+		<p class="mt-1 text-xs text-text-muted">{empty.hint}</p>
+		{#if empty.href && empty.cta}
+			<a
+				href={empty.href}
+				class="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+			>
+				{empty.cta}
+			</a>
+		{/if}
+	</div>
 {:else}
-	<div class="poster-grid">
+	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 		{#each visibleEntries as entry, i (entry.malId)}
 			<AnimeCard {entry} index={i} />
 		{/each}
 	</div>
 
 	{#if limit < entries.length}
-		<div bind:this={loaderRef} class="mt-4 h-10 w-full"></div>
+		<!-- Infinite scroll loader anchor -->
+		<div bind:this={loaderRef} class="h-10 w-full mt-4"></div>
 	{/if}
 {/if}

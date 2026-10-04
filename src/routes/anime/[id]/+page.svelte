@@ -341,21 +341,14 @@
 
 				<!-- ─── User List Controls ─── -->
 				<div
-					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 backdrop-blur-xl p-5 shadow-2xl relative z-20"
+					class="detail-controls mt-5 rounded-2xl border border-white/10 bg-surface-2 p-4 relative z-20"
 				>
-					<!-- Glowing accent effect in background -->
-					<div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-						<div
-							class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
-						></div>
-					</div>
-
 					{#if inList && listEntry}
 						<!-- Responsive layout: side-by-side on large screens, stacked on mobile -->
-						<div class="flex flex-col lg:flex-row lg:items-center gap-6 relative z-10">
+						<div class="tracking-layout">
 							<!-- Left Side: Status & Progress -->
-							<div class="flex-1 flex flex-col gap-4">
-								<div class="grid grid-cols-2 gap-4 items-center">
+							<div class="tracking-progress">
+								<div class="tracking-summary">
 									<!-- Status -->
 									<div class="flex flex-col">
 										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
@@ -366,7 +359,7 @@
 												{malId}
 												status={listEntry.status}
 												showLabel={true}
-												class="h-10 sm:h-8 px-4 sm:px-3 text-xs sm:text-[11px] !rounded-lg flex items-center justify-center shadow-lg"
+												class="min-h-11 min-w-11 px-3 text-xs !rounded-lg flex items-center justify-center"
 											/>
 										</div>
 									</div>
@@ -398,19 +391,14 @@
 										class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5"
 									>
 										<div
-											class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all duration-500 ease-spring"
+											class="h-full bg-primary rounded-full transition-[width] duration-150"
 											style="width: {pct}%"
 										></div>
 									</div>
 								{/if}
 							</div>
 
-							<!-- Divider (vertical on desktop, horizontal on mobile) -->
-							<div class="hidden lg:block w-px bg-white/10 self-stretch my-1"></div>
-							<div class="block lg:hidden h-px bg-white/5 w-full"></div>
-
-							<!-- Right Side: Rating / Score section -->
-							<div class="lg:w-[280px] shrink-0">
+							<div class="tracking-rating">
 								<ScoreInput {malId} score={listEntry.score} />
 							</div>
 						</div>
@@ -816,3 +804,50 @@
 
 <!-- Character Detail Modal -->
 <CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />
+
+<style>
+	.tracking-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(268px, 0.85fr);
+		gap: 24px;
+		align-items: center;
+	}
+	.tracking-summary {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+	}
+	.tracking-summary > div {
+		min-width: 100px;
+	}
+	.tracking-progress {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		min-width: 0;
+	}
+	.tracking-rating {
+		min-width: 0;
+		padding-left: 24px;
+		border-left: 1px solid var(--color-border);
+	}
+	@media (max-width: 1100px) {
+		.tracking-layout {
+			grid-template-columns: 1fr;
+			gap: 20px;
+		}
+		.tracking-rating {
+			padding-left: 0;
+			padding-top: 20px;
+			border-left: 0;
+			border-top: 1px solid var(--color-border);
+		}
+	}
+	@media (max-width: 380px) {
+		.detail-controls {
+			padding: 12px 8px;
+		}
+	}
+</style>

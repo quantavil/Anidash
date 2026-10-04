@@ -17,22 +17,6 @@
 	const unknown = $derived(total === 0);
 	const isComplete = $derived(!unknown && watched >= total && total > 0);
 
-	let pulse = $state(false);
-	let isFirstRun = true;
-
-	$effect(() => {
-		// Access watched to register it as a dependency
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		watched;
-		if (isFirstRun) {
-			isFirstRun = false;
-			return;
-		}
-		pulse = true;
-		const timer = setTimeout(() => (pulse = false), 400);
-		return () => clearTimeout(timer);
-	});
-
 	function increment() {
 		const result = userListStore.incrementEpisode(malId);
 		if (result && result.watched >= result.total && result.total > 0) {
@@ -70,7 +54,7 @@
 	</button>
 
 	<!-- Episode count -->
-	<div class="pill-count" class:pulse class:complete={isComplete}>
+	<div class="pill-count" class:complete={isComplete}>
 		<span class="watched-num">{watched}</span>/<span>{unknown ? '?' : total}</span>
 		{#if !compact}
 			<span class="ep-lbl">ep</span>
@@ -108,9 +92,9 @@
 		justify-content: space-between;
 		width: 100%;
 		max-width: 220px; /* Cap width for detail pane / list rows */
-		height: 38px;
+		height: 48px;
 		border-radius: 22px;
-		padding: 4px 12px;
+		padding: 0 2px;
 		position: relative;
 		overflow: hidden;
 		transition:
@@ -125,9 +109,9 @@
 	.pill-base.compact {
 		width: 100%;
 		max-width: 100%; /* Fill the card controls space completely */
-		height: 30px;
+		height: 48px;
 		border-radius: 16px;
-		padding: 2px 6px;
+		padding: 0 2px;
 	}
 
 	.pill-base:hover {
@@ -142,8 +126,8 @@
 
 	.pill-btn {
 		display: flex;
-		height: 28px;
-		width: 28px;
+		height: 44px;
+		width: 44px;
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%;
@@ -157,8 +141,8 @@
 	}
 
 	.pill-base.compact .pill-btn {
-		height: 24px;
-		width: 24px;
+		height: 44px;
+		width: 44px;
 	}
 
 	.pill-btn:hover:not(:disabled) {
@@ -186,11 +170,6 @@
 
 	.pill-base.compact .pill-count {
 		font-size: 11px;
-	}
-
-	.pill-count.pulse {
-		transform: scale(1.12);
-		color: #ada3ff; /* primary-hover */
 	}
 
 	.pill-count.complete {

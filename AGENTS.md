@@ -6,7 +6,7 @@ Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + 
 
 ## Interface
 
-The original AniDash interface is restored from `c8baa61`: black/violet surfaces, floating navigation, poster/list layouts, and original detail controls. Keep the current illustrated welcome screen (`StoryWindow.svelte`) with its inline login and public Browse link. Do not restore the retired journal redesign. Verify responsive screens at 320, 390, 820, and 1440px using isolated browser storage.
+The original AniDash interface is restored from `c8baa61`: black/violet surfaces, floating navigation, poster/list layouts, and detail controls with native 1–10 rating buttons. Discovery actions are compact rows with full-width format/genre filters. Keep the current illustrated welcome screen (`StoryWindow.svelte`) with its inline login and public Browse link. Do not restore the retired journal redesign. Verify responsive screens at 320, 390, 820, and 1440px using isolated browser storage.
 
 ## Non-Negotiable Constraints
 
@@ -47,9 +47,9 @@ The original AniDash interface is restored from `c8baa61`: black/violet surfaces
 ## Verification Before Push
 
 ```sh
-VITE_MAL_CLIENT_ID=dummy npm run check   # 0 errors
-VITE_MAL_CLIENT_ID=dummy npm test        # all pass (14 files)
-VITE_MAL_CLIENT_ID=dummy npm run build   # Cloudflare production build
+VITE_MAL_CLIENT_ID=dummy bun run check   # 0 errors
+VITE_MAL_CLIENT_ID=dummy bun run test        # all pass (14 files)
+VITE_MAL_CLIENT_ID=dummy bun run build   # Cloudflare production build
 # live GraphQL smoke (no isGeneral):
 # python3 -c "import json,urllib.request; ... Media(idMal:53149) -> 18 chars"
 ```
@@ -57,6 +57,8 @@ VITE_MAL_CLIENT_ID=dummy npm run build   # Cloudflare production build
 Commit style: `type(scope): subject` (e.g. `fix(anilist): reject invalid trailer IDs`). Pushes to `main` trigger the Cloudflare Pages deployment.
 
 ## Dependency Policy
+
+Use Bun 1.4.2 (`packageManager` and `bun.lock`) for installation and script commands. Run `bun install --frozen-lockfile` and `bun run test` (Vitest), not `bun test`. Keep the Node runtime for tools that declare it.
 
 Use the newest versions supported by the active SvelteKit toolchain. Cloudflare Pages must use the Node version pinned in `.node-version`; keep `package.json#engines.node` aligned with it and all direct dependency engine floors. Keep TypeScript on 6.x until `@sveltejs/kit`, `svelte-check`, and `typescript-eslint` all declare TypeScript 7 support; do not add a second compiler alias.
 

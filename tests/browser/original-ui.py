@@ -1,4 +1,4 @@
-"""Run with a local server: python tests/browser/watch-journal.py [base_url].
+"""Run with a local server: python tests/browser/original-ui.py [base_url].
 Uses isolated browser storage and intercepted MAL requests, never a real account.
 """
 import json, sys
@@ -77,17 +77,79 @@ with sync_playwright() as p:
     detail=dict(id=record['malId'],title=record['title'],alternative_titles={'en':record['titleEnglish']},main_picture=record['mainPicture'],mean=record['mean'],num_episodes=record['numEpisodes'],media_type='tv',status='finished_airing',start_season=record['startSeason'],genres=record['genres'],studios=[],num_list_users=1000000,num_scoring_users=500000,synopsis='A journey after the final battle.')
     context.route(BASE+f"/api/anime/{record['malId']}?**",lambda r:r.fulfill(json=detail))
     page.goto(BASE+'/anime/52991')
-    expect(page.get_by_role('slider')).to_have_attribute('aria-valuenow','9')
-    page.get_by_role('slider').focus()
-    page.keyboard.press('ArrowLeft')
-    expect(page.get_by_role('slider')).to_have_attribute('aria-valuenow','8')
+    rating = page.get_by_role('group',name='Your rating')
+    expect(rating.get_by_role('button',name='Rate 9 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
+    rating.get_by_role('button',name='Rate 8 out of 10',exact=True).click()
+    expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
     page.reload()
-    expect(page.get_by_role('slider')).to_have_attribute('aria-valuenow','8')
+    expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
+    rating.get_by_role('button',name='Clear rating',exact=True).click()
+    expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','false')
+    rating.get_by_role('button',name='Rate 8 out of 10',exact=True).focus()
+    page.keyboard.press('Enter')
+    expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
     for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
         page.set_viewport_size({'width':width,'height':height})
         page.wait_for_timeout(300)
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'Detail overflow {width}'
+        for button in rating.get_by_role('button').all():
+            box=button.bounding_box()
+            assert box['width']>=44 and box['height']>=44, f'Rating target too small {width}: {box}'
+            assert box['x']>=0 and box['x']+box['width']<=width,f'Clipped rating button {width}: {box}'
+        minus=page.get_by_role('button',name='Decrease episode count',exact=True).bounding_box()
+        plus=page.get_by_role('button',name='Increase episode count',exact=True).bounding_box()
+        assert minus['width']>=44 and minus['height']>=44 and plus['width']>=44 and plus['height']>=44
+        status=page.get_by_role('button',name='Status: Watching',exact=True).bounding_box()
+        assert status['x']+status['width']<=minus['x'] or status['y']+status['height']<=minus['y'],f'Overlapping status and progress {width}'
+        page.locator('.detail-controls').screenshot(path=str(OUT/f'controls-{width}.png'))
         page.screenshot(path=str(OUT/f'detail-{width}.png'),full_page=True)
+    page.get_by_role('button',name='Status: Watching',exact=True).click()
+    page.get_by_role('menuitem',name='On Hold',exact=True).click()
+    page.reload()
+    expect(page.get_by_role('button',name='Status: On Hold',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Status: On Hold',exact=True).click()
+    page.get_by_role('menuitem',name='Watching',exact=True).click()
+    # Browse uses stable discovery actions even when ranking is loading or empty.
+    nodes=[dict(id=r['malId'],title=r['title'],main_picture=r['mainPicture'],mean=r['mean'],num_episodes=r['numEpisodes'],media_type=r['mediaType'],status=r['animeStatus'],genres=r['genres'],start_season=r['startSeason']) for r in records]
+    context.route(BASE+'/api/anime/ranking?**',lambda r:r.fulfill(json={'data':[{'node':n} for n in nodes],'paging':{}}))
+    page.goto(BASE+'/browse')
+    planned=page.get_by_role('button',name='Pick from your planned list',exact=True)
+    expect(planned).to_be_visible()
+    for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
+        page.set_viewport_size({'width':width,'height':height})
+        expect(planned).to_be_visible()
+        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'Browse overflow {width}'
+        box=planned.bounding_box()
+        assert 72<=box['height']<=100,f'Discovery action too tall {width}: {box}'
+        settings=page.get_by_role('button',name='Filter planned picks',exact=True)
+        sb=settings.bounding_box()
+        assert sb['width']>=44 and sb['height']>=44
+        genres=page.get_by_role('group',name='Genres')
+        assert genres.bounding_box()['width']>=page.get_by_role('group',name='Formats').bounding_box()['width']*.9
+        page.screenshot(path=str(OUT/f'browse-{width}.png'),full_page=True)
+    short_search_requests=[]
+    context.route(BASE+'/api/anime?**',lambda route:(short_search_requests.append(route.request.url),route.fulfill(status=503,json={'error':'Unexpected short-query request'})))
+    page.get_by_placeholder('Search anime by title…').fill('So')
+    expect(page).to_have_url(__import__('re').compile('q=So'))
+    expect(page.get_by_role('link',name=__import__('re').compile('^View .* details$'))).to_have_count(1)
+    expect(page.get_by_text('Loading titles…',exact=True)).to_have_count(0)
+    assert not short_search_requests,short_search_requests
+    page.goto(BASE+'/browse')
+    expect(planned).to_be_visible()
+    settings.click()
+    expect(page.get_by_role('dialog')).to_be_visible()
+    page.get_by_role('button',name='Close filters',exact=True).click()
+    # A cold seasonal pick must fetch the complete season before sharing the cache.
+    seasonal_requests=[]
+    def seasonal_response(route):
+        seasonal_requests.append(route.request.url)
+        route.fulfill(json={'data':[{'node':dict(n,status='currently_airing' if n['id']==57334 else 'finished_airing')} for n in nodes],'paging':{}})
+    context.route(BASE+'/api/anime/season/**',seasonal_response)
+    page.evaluate('Math.random = () => 0')
+    page.get_by_role('button',name='Pick an airing anime',exact=True).click()
+    page.wait_for_url(__import__('re').compile('/anime/'))
+    expect(page).to_have_url(__import__('re').compile('/anime/57334$'))
+    assert len(seasonal_requests)==1 and 'limit=500' in seasonal_requests[0],seasonal_requests
     assert not errors,errors
-    print('PASS original screens, welcome, responsive widths, episode edits, filtering, sorting, rating persistence; errors',errors)
+    print('PASS welcome, list/detail/Browse at four widths, episode/status edits, rating persistence and clearing, short local searches, complete seasonal picks; errors',errors)
     browser.close()

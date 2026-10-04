@@ -119,7 +119,7 @@
 			online = online.filter((a) => dubStore.hasDub(a.malId));
 		}
 
-		if (!hasQuery) {
+		if (!query) {
 			// Landing view: cover what MAL ranking can't express server-side (ONA + genre).
 			const genreName = GENRES.find((g) => g.id === Number(filterGenre))?.name;
 			if (filterType === 'ona' || genreName) {
@@ -216,7 +216,9 @@
 
 			commit(mapped, !!res.value.paging?.next);
 		} else if (q.length < MIN_QUERY_LEN) {
-			// Too short for MAL — keep whatever is on screen (local matches still merge in).
+			// Short searches are local-only.
+			loading = false;
+			loadingMore = false;
 			return;
 		} else {
 			const sortMap = SORT_TO_MAL[sort] ?? {};
@@ -271,6 +273,16 @@
 		currentSearchId++;
 		const searchId = currentSearchId;
 
+		// Short queries search saved records only; MAL rejects fewer than three characters.
+		if (query && !hasQuery) {
+			results = [];
+			loading = false;
+			loadingMore = false;
+			hasNextPage = false;
+			fetchFailed = false;
+			return;
+		}
+
 		// Stale-while-revalidate: paint the cached default landing instantly,
 		// then refresh silently when older than the TTL.
 		if (isDefaultLanding()) {
@@ -299,7 +311,7 @@
 	}
 
 	$effect(() => {
-		const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}&d=${dubStore.dubMode}`;
+		const params = `q=${query}&t=${filterType}&g=${filterGenre}&s=${filterSort}`;
 		if (params !== prevSearchParams) {
 			prevSearchParams = params;
 			runSearch();
@@ -404,34 +416,31 @@
 	</div>
 
 	<!-- Always-visible filter chips -->
-	<div class="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
-		<!-- Type chips -->
-		{#each TYPES as t (t.value)}
-			{@const active = filterType === t.value}
-			<button
-				onclick={() => setFilter('type', active ? '' : t.value)}
-				aria-pressed={active}
-				class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
-					? 'border-primary/50 bg-primary/15 text-primary'
-					: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
-			>
-				{t.label}
-			</button>
-		{/each}
-
-		<span class="h-5 w-px bg-white/10" aria-hidden="true"></span>
+	<div class="browse-filters mt-4">
+		<div class="filter-scroll" role="group" aria-label="Formats">
+			<!-- Type chips -->
+			{#each TYPES as t (t.value)}
+				{@const active = filterType === t.value}
+				<button
+					onclick={() => setFilter('type', active ? '' : t.value)}
+					aria-pressed={active}
+					class="shrink-0 min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
+						? 'border-primary/50 bg-primary/15 text-primary'
+						: 'border-white/5 bg-white/5 text-text-secondary hover:border-white/15 hover:text-text-primary'}"
+				>
+					{t.label}
+				</button>
+			{/each}
+		</div>
 
 		<!-- Genre chips (horizontally scrollable) -->
-		<div
-			class="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none"
-			style="max-width: min(100%, 34rem)"
-		>
+		<div class="filter-scroll" role="group" aria-label="Genres">
 			<button
 				onclick={() => setFilter('genre', '')}
 				aria-pressed={!filterGenre}
-				class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {!filterGenre
+				class="shrink-0 min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {!filterGenre
 					? 'border-primary/50 bg-primary/15 text-primary'
-					: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
+					: 'border-white/5 bg-white/5 text-text-secondary hover:border-white/15 hover:text-text-primary'}"
 			>
 				All Genres
 			</button>
@@ -440,9 +449,9 @@
 				<button
 					onclick={() => setFilter('genre', active ? '' : String(g.id))}
 					aria-pressed={active}
-					class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
+					class="shrink-0 min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
 						? 'border-primary/50 bg-primary/15 text-primary'
-						: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
+						: 'border-white/5 bg-white/5 text-text-secondary hover:border-white/15 hover:text-text-primary'}"
 				>
 					{g.name}
 				</button>
@@ -450,46 +459,26 @@
 		</div>
 	</div>
 
+	{#if isLandingView}
+		<div class="mt-5"><RecommenderWidgets /></div>
+	{/if}
+
 	<!-- Results -->
-	<div class="mt-6">
-		<!-- Result count -->
-		{#if !loading}
-			<p class="mb-4 text-xs text-text-muted" aria-live="polite">
-				{filteredResults.length}
+	<div class="mt-5">
+		<p class="mb-3 min-h-4 text-xs text-text-secondary" aria-live="polite">
+			{#if loading}Loading titles…{:else}{filteredResults.length}
 				{filteredResults.length === 1 ? 'title' : 'titles'}
-				{isLandingView ? '· trending now' : ''}
-			</p>
-		{/if}
+				{isLandingView ? '· trending now' : ''}{/if}
+		</p>
 
 		{#if loading && results.length === 0}
 			<!-- Skeleton mirrors the final layout to prevent shift -->
 			<div>
-				{#if isLandingView}
-					<div class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-						<div
-							class="min-h-[130px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[150px]"
-						></div>
-						<div
-							class="min-h-[130px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[150px]"
-						></div>
-					</div>
-					<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">
-						Popular Anime
-					</h2>
-				{/if}
 				<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 					<AnimeCardSkeleton count={10} />
 				</div>
 			</div>
 		{:else if filteredResults.length > 0}
-			{#if isLandingView}
-				<div transition:fade={{ duration: 150 }}>
-					<RecommenderWidgets />
-				</div>
-				<h2 class="mb-4 mt-8 text-sm font-semibold uppercase tracking-wider text-text-muted">
-					Popular Anime
-				</h2>
-			{/if}
 			<div
 				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
 				transition:fade={{ duration: 150 }}
@@ -557,3 +546,21 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	.browse-filters {
+		display: grid;
+		gap: 10px;
+		min-width: 0;
+	}
+	.filter-scroll {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-border) transparent;
+		padding-bottom: 3px;
+	}
+</style>

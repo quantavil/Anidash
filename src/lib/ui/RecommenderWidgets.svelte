@@ -11,7 +11,7 @@
 	import Dialog from './Dialog.svelte';
 	import { Dice5, Sparkles, LoaderCircle, Settings, ListFilter, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 
 	let loading = $state(false);
 	let filterDialogOpen = $state(false);
@@ -68,10 +68,11 @@
 		const current = getCurrentSeason();
 		const cacheKey = `seasonal:${current.year}:${current.season}`;
 		const cached = await getSeasonalCache(cacheKey);
-		if (cached && cached.value.length > 0) return cached.value;
+		if (cached && cached.value.length > 0 && Date.now() - cached.updatedAt < 24 * 60 * 60 * 1000)
+			return cached.value;
 
-		const result = await getSeasonal(current.year, current.season, { limit: 50 });
-		if (!result.ok || result.value.data.length === 0) return [];
+		const result = await getSeasonal(current.year, current.season, { limit: 500 });
+		if (!result.ok || result.value.data.length === 0) return cached?.value ?? [];
 
 		const fetched = result.value.data.map((item) => mapMalNodeToDisplay(item.node));
 		await setSeasonalCache(cacheKey, fetched);
@@ -97,7 +98,6 @@
 	});
 
 	$effect(() => {
-		const _ = [selectedGenres, selectedFormats, minScore];
 		try {
 			localStorage.setItem(
 				STORAGE_KEYS.PTW_FILTERS,
@@ -109,45 +109,21 @@
 	});
 
 	let rollingPTW = $state(false);
-	let rolledTitle = $state('');
 
-	let rouletteInterval: ReturnType<typeof setInterval> | null = null;
-	let rouletteTimeout: ReturnType<typeof setTimeout> | null = null;
-
-	onDestroy(() => {
-		if (rouletteInterval) clearInterval(rouletteInterval);
-		if (rouletteTimeout) clearTimeout(rouletteTimeout);
-	});
-
-	function runRoulette() {
+	async function pickPlanned() {
 		if (rollingPTW) return;
-		if (matchingPTW.length === 0) {
+		const pick = randomFrom(matchingPTW);
+		if (!pick) {
 			toast.info('No matching anime found. Adjust your filters.');
 			return;
 		}
-
 		rollingPTW = true;
 		filterDialogOpen = false;
-		const duration = 800;
-		const intervalMs = 80;
-		const steps = duration / intervalMs;
-		let step = 0;
-
-		rouletteInterval = setInterval(() => {
-			const temp = matchingPTW[Math.floor(Math.random() * matchingPTW.length)];
-			rolledTitle = temp.titleEnglish || temp.title;
-			step++;
-			if (step >= steps && rouletteInterval) {
-				clearInterval(rouletteInterval);
-				rouletteInterval = null;
-				const finalPick = matchingPTW[Math.floor(Math.random() * matchingPTW.length)];
-				goto(`/anime/${finalPick.malId}`);
-				rouletteTimeout = setTimeout(() => {
-					rollingPTW = false;
-					rouletteTimeout = null;
-				}, 500);
-			}
-		}, intervalMs);
+		try {
+			await goto(`/anime/${pick.malId}`);
+		} finally {
+			rollingPTW = false;
+		}
 	}
 
 	async function getRandomSeasonal() {
@@ -155,12 +131,12 @@
 		loading = true;
 		try {
 			const pool = await getSeasonalPool();
-			const pick = randomFrom(pool);
+			const pick = randomFrom(pool.filter((anime) => anime.animeStatus === 'currently_airing'));
 			if (!pick) {
-				toast.error('Failed to load seasonal anime.');
+				toast.info('No airing anime found. Try browsing this season.');
 				return;
 			}
-			goto(`/anime/${pick.malId}`);
+			await goto(`/anime/${pick.malId}`);
 		} catch (e) {
 			logger.error('Seasonal surprise failed:', e);
 			toast.error('An error occurred.');
@@ -170,130 +146,49 @@
 	}
 </script>
 
-<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 sm:mt-8">
-	<!-- PTW Roulette Widget -->
-	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-500 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {rollingPTW
-			? 'border-primary/40 shadow-[0_0_20px_rgba(139,126,248,0.25)]'
-			: 'border-white/5 hover:border-primary/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(139,126,248,0.12)]'}"
-	>
+<div class="discovery-actions">
+	<div class="discovery-planned">
 		<button
-			onclick={runRoulette}
-			disabled={rollingPTW}
-			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
-			aria-label="Roll Plan to Watch Roulette"
-		></button>
-
-		<button
-			onclick={(e) => {
-				e.stopPropagation();
-				filterDialogOpen = true;
-			}}
-			aria-expanded={filterDialogOpen}
-			class="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-all hover:bg-primary/10 hover:border-primary/20 hover:text-primary-hover hover:rotate-45 active:scale-90 cursor-pointer"
-			title="Filter Settings"
+			class="discovery-action"
+			type="button"
+			onclick={pickPlanned}
+			disabled={rollingPTW || matchingPTW.length === 0}
+			aria-label="Pick from your planned list"
 		>
-			<Settings size={14} />
+			<Dice5 size={24} class="discovery-icon" />
+			<span class="discovery-copy"
+				><strong>From your planned list</strong><span
+					>{matchingPTW.length} {matchingPTW.length === 1 ? 'title' : 'titles'} to choose from</span
+				></span
+			>
 		</button>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
-		></div>
-
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-primary"
-		>
-			<Dice5 size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div
-				class="glass-icon-wrapper border-primary/10 bg-primary/5 text-primary group-hover:bg-primary/10 group-hover:border-primary/20"
-			>
-				{#if rollingPTW}
-					<LoaderCircle
-						size={24}
-						class="animate-spin text-primary drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Dice5 size={24} class="text-primary drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				{#if rollingPTW}
-					{rolledTitle}
-				{:else}
-					PTW Roulette
-				{/if}
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{#if rollingPTW}
-					Spinning...
-				{:else if ptwEntries.length === 0}
-					Backlog is empty
-				{:else if selectedGenres.length > 0 || selectedFormats.length > 0 || minScore > 0}
-					{matchingPTW.length} match{matchingPTW.length === 1 ? '' : 'es'} ({selectedGenres.length +
-						selectedFormats.length +
-						(minScore > 0 ? 1 : 0)} active)
-				{:else}
-					Random from backlog
-				{/if}
-			</p>
-		</div>
-	</div>
-
-	<!-- Seasonal Surprise Widget -->
-	<div
-		class="group relative overflow-hidden rounded-2xl border transition-all duration-300 sm:p-6 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center min-h-[130px] sm:min-h-[150px] shadow-sm cursor-pointer {loading
-			? 'border-pink-500/40 shadow-[0_0_20px_rgba(244,114,182,0.25)]'
-			: 'border-white/5 hover:border-pink-500/30 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(244,114,182,0.12)]'}"
-	>
 		<button
-			onclick={getRandomSeasonal}
-			disabled={loading}
-			class="absolute inset-0 z-10 w-full h-full bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:bg-white/5"
-			aria-label="Roll Seasonal Surprise"
-		></button>
-
-		<div
-			class="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-transparent to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-60 pointer-events-none"
-		></div>
-
-		<div
-			class="absolute inset-0 flex items-center justify-center opacity-[0.04] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 group-hover:opacity-[0.08] pointer-events-none text-pink-400"
+			class="discovery-settings"
+			type="button"
+			onclick={() => (filterDialogOpen = true)}
+			aria-label="Filter planned picks"
+			aria-expanded={filterDialogOpen}
+			title="Filter planned picks"><Settings size={20} /></button
 		>
-			<Sparkles size={140} strokeWidth={1} class="drop-shadow-[0_0_15px_currentColor]" />
-		</div>
-
-		<div class="relative z-10 flex flex-col items-center justify-center w-full pointer-events-none">
-			<div
-				class="glass-icon-wrapper border-pink-500/10 bg-pink-500/5 text-pink-400 group-hover:bg-pink-500/10 group-hover:border-pink-500/20"
-			>
-				{#if loading}
-					<LoaderCircle
-						size={24}
-						class="animate-spin text-pink-400 drop-shadow-[0_0_8px_currentColor]"
-					/>
-				{:else}
-					<Sparkles size={24} class="text-pink-400 drop-shadow-[0_0_8px_currentColor]" />
-				{/if}
-			</div>
-			<h3 class="text-[13px] sm:text-base font-bold text-text-primary mb-1 tracking-tight">
-				Seasonal Surprise
-			</h3>
-			<p
-				class="text-[11px] sm:text-sm text-text-secondary leading-snug opacity-80 group-hover:opacity-100 transition-opacity max-w-[95%] mx-auto"
-			>
-				{#if loading}
-					Loading...
-				{:else}
-					Random airing anime
-				{/if}
-			</p>
-		</div>
 	</div>
+	<button
+		class="discovery-action seasonal-action"
+		type="button"
+		onclick={getRandomSeasonal}
+		disabled={loading}
+		aria-label="Pick an airing anime"
+		aria-busy={loading}
+	>
+		{#if loading}<LoaderCircle size={24} class="discovery-icon animate-spin" />{:else}<Sparkles
+				size={24}
+				class="discovery-icon"
+			/>{/if}
+		<span class="discovery-copy"
+			><strong>Something this season</strong><span
+				>{loading ? 'Finding your next anime…' : 'Pick an airing anime'}</span
+			></span
+		>
+	</button>
 </div>
 
 <!-- PTW Filters Modal -->
@@ -301,11 +196,11 @@
 	<div class="flex items-center justify-between">
 		<h2 class="text-base font-bold text-text-primary flex items-center gap-2">
 			<ListFilter size={16} class="text-primary" />
-			PTW Roulette Filters
+			Planned picks
 		</h2>
 		<button
 			onclick={() => (filterDialogOpen = false)}
-			class="rounded-full p-1.5 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all active:scale-95 cursor-pointer"
+			class="min-h-11 min-w-11 flex items-center justify-center rounded-full p-1.5 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all active:scale-95 cursor-pointer"
 			aria-label="Close filters"
 		>
 			<X size={16} />
@@ -331,7 +226,7 @@
 									: [...selectedGenres, genre.id];
 							}}
 							aria-pressed={active}
-							class="rounded-full border px-2.5 py-1 text-xs font-medium transition-all cursor-pointer {active
+							class="min-h-11 min-w-11 rounded-full border px-2.5 py-1 text-xs font-medium transition-all cursor-pointer {active
 								? 'border-primary/40 bg-primary/10 text-primary-hover shadow-[0_0_8px_rgba(139,126,248,0.15)]'
 								: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 						>
@@ -360,7 +255,7 @@
 									: [...selectedFormats, format];
 							}}
 							aria-pressed={active}
-							class="rounded-full border px-2.5 py-1 text-xs font-medium uppercase transition-all cursor-pointer {active
+							class="min-h-11 min-w-11 rounded-full border px-2.5 py-1 text-xs font-medium uppercase transition-all cursor-pointer {active
 								? 'border-primary/40 bg-primary/10 text-primary-hover shadow-[0_0_8px_rgba(139,126,248,0.15)]'
 								: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 						>
@@ -417,7 +312,7 @@
 				Reset
 			</button>
 			<button
-				onclick={runRoulette}
+				onclick={pickPlanned}
 				disabled={matchingPTW.length === 0}
 				class="flex-[2] rounded-xl bg-gradient-to-r from-primary to-primary-hover text-white py-2.5 text-xs font-bold transition-all hover:shadow-[0_0_15px_rgba(139,126,248,0.3)] active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center"
 			>
@@ -426,3 +321,87 @@
 		</div>
 	</div>
 </Dialog>
+
+<style>
+	.discovery-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 12px;
+	}
+	.discovery-planned {
+		display: flex;
+		min-width: 0;
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		overflow: hidden;
+		background: var(--color-surface-2);
+	}
+	.discovery-action {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		width: 100%;
+		min-width: 0;
+		min-height: 88px;
+		padding: 16px 20px;
+		text-align: left;
+		cursor: pointer;
+		transition: background-color 140ms;
+	}
+	.discovery-action:hover:not(:disabled),
+	.discovery-settings:hover {
+		background: var(--color-surface-3);
+	}
+	.discovery-action:disabled {
+		cursor: default;
+	}
+	.discovery-actions :global(.discovery-icon) {
+		flex-shrink: 0;
+		color: var(--color-primary-hover);
+	}
+	.discovery-copy {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		min-width: 0;
+	}
+	.discovery-copy strong {
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--color-text-primary);
+	}
+	.discovery-copy > span {
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+	.discovery-settings {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 56px;
+		min-height: 44px;
+		border-left: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		transition: background-color 140ms;
+	}
+	.seasonal-action {
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		background: var(--color-surface-2);
+	}
+	@media (max-width: 639px) {
+		.discovery-actions {
+			grid-template-columns: 1fr;
+			gap: 10px;
+		}
+		.discovery-action {
+			min-height: 80px;
+			padding: 14px 16px;
+			gap: 12px;
+		}
+		.discovery-settings {
+			min-width: 48px;
+		}
+	}
+</style>

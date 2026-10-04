@@ -17,10 +17,11 @@ The original AniDash interface is restored, with the current illustrated welcome
 - **Stable List Ordering**: `+` clicks update counts instantly but move entries to the top of Last Updated only after MAL confirms; starting a Plan to Watch title moves it to Watching automatically. Browse search fires at 3+ characters.
 - **MAL-Dubs Integration**: Instantly identify which anime have English dubs available using the MAL-Dubs dataset with a persistent 7-day TTL cache.
 - **Advanced Recommendations**: Dual-source suggestions from MyAnimeList + AniList (GraphQL `https://graphql.anilist.co`, no-auth). AniList is the single primary enrichment source (no Jikan, no title-search fallback): characters + Japanese VAs, recommendations, reviews, tags, trailer, airing schedule, relations & nextAiring — direct `Media(idMal)` only.
+- **Personal ratings**: Rate anime from 1–10 on the detail page with keyboard-accessible buttons; your scores remain distinct from MAL community scores.
 - **Dynamic Stats & Sorting**: Comprehensive dashboard tracking your watching habits, episode distribution, and rating history with responsive visualizations. Enhanced data navigation with "MAL Rating" sorting for your personal list and seasonal anime.
 - **Smart Data Insights**: Community rating and member statistics (e.g., "8.3 | 250K") displayed on poster overlays using short-scale formatting (K/M) for maximum density.
 - **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
-- **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
+- **Interactive Discovery**: Turn empty states into opportunities with compact planned-list picks and seasonal discovery actions built into Browse.
 - **Enhanced Detail Gallery**: Lazily-loaded AniList enrichment — characters (with favourites & VA), curated recommendations, safe plain-text review excerpts, ranked tags, YouTube trailer, and next-airing countdown — plus a "Quick Stats" row with precise scoring user counts. Trailer IDs are trimmed and validated with `^[a-zA-Z0-9_-]{11}$`; CSP restricts embedded frames to YouTube.
 - **Integrated Airing Schedules**: Native MAL broadcast + AniList `nextAiringEpisode{episode airingAt timeUntilAiring}` countdown displayed on detail pages.
 - **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
@@ -63,15 +64,15 @@ MAL_CLIENT_ID=your_mal_client_id
 MAL_CLIENT_SECRET=your_mal_client_secret
 ```
 
-`MAL_CLIENT_ID` comes from `wrangler.toml`; only the secret goes in `.dev.vars`. Restart `npm run dev` after editing `.dev.vars` — it is read once at startup.
+`MAL_CLIENT_ID` comes from `wrangler.toml`; only the secret goes in `.dev.vars`. Restart `bun run dev` after editing `.dev.vars` — it is read once at startup.
 
 ### 3. Running Locally
 
-Use Node.js 24.15.0 (declared in `.node-version`) or another version allowed by `package.json`.
+Use Bun 1.4.2 for dependency installation and scripts. Keep Node.js 24.15.0 (declared in `.node-version`) available for the SvelteKit/Cloudflare tools; `bun run` respects their Node runtime. Use `bun run test` to run the existing Vitest suite, rather than Bun’s separate test runner.
 
 ```sh
-npm install
-npm run dev
+bun install --frozen-lockfile
+bun run dev
 ```
 
 _The app will run on [http://localhost:5173](http://localhost:5173)._
@@ -92,8 +93,9 @@ AniDash is optimized for Cloudflare Pages.
 1. Connect your repository to **Cloudflare Pages**.
 2. **Build settings**:
    - **Framework preset**: `SvelteKit`
-   - **Build command**: `npm run build`
+   - **Build command**: `bun run build`
    - **Build output directory**: `.svelte-kit/cloudflare`
+   - **Bun version**: set `BUN_VERSION=1.4.2` in the build environment ([Cloudflare build-image documentation](https://developers.cloudflare.com/pages/configuration/build-image/)); install from the committed `bun.lock`
    - **Node.js version**: Cloudflare reads `24.15.0` from `.node-version`
 3. **Environment Variables**:
    `wrangler.toml` provides the public MAL client ID to both the Vite build and the Pages runtime. In the Cloudflare Dashboard, go to **Settings > Variables and Secrets** and add only the secret:

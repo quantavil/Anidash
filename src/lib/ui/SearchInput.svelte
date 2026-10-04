@@ -53,14 +53,14 @@
 		{value}
 		oninput={handleInput}
 		{onkeydown}
-		class="w-full rounded-full border border-white/5 bg-white/5 py-2.5 pl-10 pr-9 text-sm text-text-primary placeholder:text-text-muted outline-none transition-all duration-500 ease-spring focus:bg-white/10 focus:outline-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+		class="w-full min-h-11 rounded-full border border-white/5 bg-white/5 py-2.5 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-muted outline-none transition-all duration-500 ease-spring focus:bg-white/10 focus:outline-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
 	/>
 
 	{#if value}
 		<button
 			onclick={handleClear}
 			aria-label="Clear search"
-			class="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
+			class="absolute right-0.5 top-1/2 -translate-y-1/2 min-h-11 min-w-11 flex items-center justify-center text-text-muted hover:text-text-secondary transition-colors"
 		>
 			<X size={15} />
 		</button>

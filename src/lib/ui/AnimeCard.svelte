@@ -43,11 +43,6 @@
 			<!-- Progress Line -->
 			<ProgressLine watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
 
-			<!-- Status badge overlay -->
-			<div class="absolute left-2 top-2 z-10">
-				<StatusBadge malId={entry.malId} status={entry.status} />
-			</div>
-
 			<!-- Dub overlay -->
 			{#if dubStore.hasDub(entry.malId)}
 				<div class="glass-badge absolute bottom-2 left-2 h-6 w-6 border-primary/20 text-primary">
@@ -92,13 +87,18 @@
 			/>
 
 			<!-- Type + Season -->
-			<div class="flex items-center gap-2 text-xs text-text-muted">
-				{#if entry.mediaType}
-					<span>{formatMediaType(entry.mediaType)}</span>
-				{/if}
-				{#if entry.startSeason?.year && entry.startSeason?.season}
-					<span>· {entry.startSeason.year}</span>
-				{/if}
+			<div class="flex items-center justify-between gap-1 text-xs text-text-muted">
+				<div class="flex flex-wrap items-center gap-2">
+					{#if entry.mediaType}
+						<span>{formatMediaType(entry.mediaType)}</span>
+					{/if}
+					{#if entry.startSeason?.year && entry.startSeason?.season}
+						<span>· {entry.startSeason.year}</span>
+					{/if}
+				</div>
+				<div class="relative z-[2] -mr-3">
+					<StatusBadge malId={entry.malId} status={entry.status} />
+				</div>
 			</div>
 
 			<!-- Progress Controls -->

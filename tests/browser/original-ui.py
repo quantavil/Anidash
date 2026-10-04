@@ -61,6 +61,28 @@ with sync_playwright() as p:
         expect(page.get_by_role('link',name='View Sousou no Frieren details')).to_be_visible()
         expect(page.locator('.journal-entry')).to_have_count(0)
         page.screenshot(path=str(OUT/f'list-{width}.png'),full_page=True)
+    page.goto(BASE+'?tab=all')
+    card_status=page.get_by_role('button',name='Status: Watching',exact=True).first
+    expect(card_status.locator('.status-square')).to_have_text('W')
+    square=card_status.locator('.status-square').bounding_box()
+    target=card_status.bounding_box()
+    assert square['width']==20 and square['height']==20
+    assert target['width']>=44 and target['height']>=44
+    assert card_status.evaluate('(el)=>el.closest(".feed-card-contain").querySelector("img").getBoundingClientRect().bottom<=el.getBoundingClientRect().top'), 'Status still overlays artwork'
+    card_status.click()
+    menu=page.get_by_role('menu',name='Change status')
+    expect(menu).to_be_visible()
+    page.screenshot(path=str(OUT/'status-menu-320.png'))
+    bounds=menu.bounding_box()
+    assert bounds['x']>=0 and bounds['x']+bounds['width']<=320 and bounds['y']>=0 and bounds['y']+bounds['height']<=760, bounds
+    page.keyboard.press('ArrowDown')
+    page.keyboard.press('Enter')
+    expect(page.get_by_role('button',name='Status: PTW',exact=True).first.locator('.status-square')).to_have_text('P')
+    page.get_by_role('button',name='Status: PTW',exact=True).first.click()
+    page.keyboard.press('Home')
+    page.keyboard.press('Enter')
+    expect(page.get_by_role('button',name='Status: Watching',exact=True).first.locator('.status-square')).to_have_text('W')
+    page.goto(BASE)
     page.get_by_role('button',name='Increase episode count',exact=True).first.click()
     expect(page.locator('.watched-num').first).to_have_text('19')
     page.get_by_role('button',name='Decrease episode count',exact=True).first.click()
@@ -98,9 +120,13 @@ with sync_playwright() as p:
     expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
     rating.get_by_role('button',name='Clear rating',exact=True).click()
     expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','false')
+    assert all(button.evaluate('(el)=>getComputedStyle(el).backgroundImage')=='none' for button in rating.locator('.rating-options button').all()), 'Cleared rating still has filled cells'
     rating.get_by_role('button',name='Rate 8 out of 10',exact=True).focus()
     page.keyboard.press('Enter')
     expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
+    for value in range(1,11):
+        background=rating.get_by_role('button',name=f'Rate {value} out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage')
+        assert ('linear-gradient' in background)==(value<=8), f'Incorrect cumulative fill at {value}'
     assert 'linear-gradient' in rating.get_by_role('button',name='Rate 8 out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage'), 'Selected rating has no gradient'
     assert rating.get_by_role('button',name='Rate 1 out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage') != rating.get_by_role('button',name='Rate 10 out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage'), 'Rating cells have no tint progression'
     for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:

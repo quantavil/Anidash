@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
-	import { Play, Check, Bookmark, Pause, XCircle, Trash2 } from 'lucide-svelte';
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import type { AnimeStatus } from '$lib/cache/db';
+	import { Trash2 } from 'lucide-svelte';
 
 	let {
 		malId,
@@ -16,155 +15,210 @@
 		class?: string;
 	} = $props();
 
-	const ALL_STATUSES: AnimeStatus[] = [
-		'watching',
-		'completed',
-		'plan_to_watch',
-		'on_hold',
-		'dropped'
+	const statuses: { value: AnimeStatus; label: string; letter: string; color: string }[] = [
+		{ value: 'watching', label: 'Watching', letter: 'W', color: '#aa98fa' },
+		{ value: 'plan_to_watch', label: 'PTW', letter: 'P', color: '#81b6ef' },
+		{ value: 'completed', label: 'Completed', letter: 'C', color: '#71c9b0' },
+		{ value: 'on_hold', label: 'On Hold', letter: 'H', color: '#e4bf72' },
+		{ value: 'dropped', label: 'Dropped', letter: 'D', color: '#d9859b' }
 	];
-
-	const STATUS_CONFIG = {
-		watching: {
-			label: 'Watching',
-			icon: Play,
-			badgeClass:
-				'bg-primary/25 text-[#bfb5ff] border-primary/50 hover:bg-primary/35 shadow-[0_0_12px_rgba(139,126,248,0.3)]',
-			iconClass: 'text-primary'
-		},
-		completed: {
-			label: 'Completed',
-			icon: Check,
-			badgeClass:
-				'bg-success/25 text-success border-success/50 hover:bg-success/35 shadow-[0_0_12px_rgba(34,197,94,0.3)]',
-			iconClass: 'text-success'
-		},
-		plan_to_watch: {
-			label: 'PTW',
-			icon: Bookmark,
-			badgeClass:
-				'bg-info/25 text-info border-info/50 hover:bg-info/35 shadow-[0_0_12px_rgba(59,130,246,0.3)]',
-			iconClass: 'text-info'
-		},
-		on_hold: {
-			label: 'On Hold',
-			icon: Pause,
-			badgeClass:
-				'bg-warning/25 text-warning border-warning/50 hover:bg-warning/35 shadow-[0_0_12px_rgba(234,179,8,0.3)]',
-			iconClass: 'text-warning'
-		},
-		dropped: {
-			label: 'Dropped',
-			icon: XCircle,
-			badgeClass:
-				'bg-error/25 text-error border-error/50 hover:bg-error/35 shadow-[0_0_12px_rgba(239,68,68,0.3)]',
-			iconClass: 'text-error'
-		}
-	};
-
+	const active = $derived(statuses.find((item) => item.value === status) ?? statuses[0]);
+	const menuId = $props.id();
+	let menu: HTMLDivElement;
+	let trigger: HTMLButtonElement;
 	let open = $state(false);
-	let rootEl: HTMLElement | undefined = $state();
-	let triggerEl: HTMLButtonElement | undefined = $state();
+	let left = $state(0);
+	let top = $state(0);
 
-	const ActiveIcon = $derived(STATUS_CONFIG[status]?.icon ?? Play);
-
-	function handleSelect(newStatus: AnimeStatus) {
-		if (newStatus !== status) {
-			userListStore.setStatus(malId, newStatus);
+	function toggle(event: MouseEvent) {
+		event.stopPropagation();
+		if (open) {
+			menu.hidePopover();
+			return;
 		}
-		open = false;
+		const rect = trigger.getBoundingClientRect();
+		left = Math.max(8, Math.min(rect.right - 176, window.innerWidth - 184));
+		top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 294));
+		menu.showPopover();
+		menu
+			.querySelector<HTMLButtonElement>(`[data-status="${status}"]`)
+			?.focus({ preventScroll: true });
 	}
-
-	function handleRemove() {
-		userListStore.removeFromList(malId);
-		open = false;
+	function select(value: AnimeStatus) {
+		if (value !== status) userListStore.setStatus(malId, value);
+		menu.hidePopover();
+		trigger.focus();
 	}
-
-	function handleToggle() {
-		open = !open;
+	function navigate(event: KeyboardEvent) {
+		const buttons = [...menu.querySelectorAll<HTMLButtonElement>('button')];
+		const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+		let next: number;
+		if (event.key === 'ArrowDown') next = (index + 1) % buttons.length;
+		else if (event.key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length;
+		else if (event.key === 'Home') next = 0;
+		else if (event.key === 'End') next = buttons.length - 1;
+		else return;
+		event.preventDefault();
+		buttons[next]?.focus({ preventScroll: true });
 	}
-
-	// Dismiss on outside click / Esc while open.
 	$effect(() => {
 		if (!open) return;
-		const onPointer = (e: PointerEvent) => {
-			if (rootEl && !rootEl.contains(e.target as Node)) open = false;
-		};
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				open = false;
-				triggerEl?.focus();
-			}
-		};
-		window.addEventListener('pointerdown', onPointer);
-		window.addEventListener('keydown', onKey);
+		const dismiss = () => menu.hidePopover();
+		window.addEventListener('resize', dismiss);
+		window.addEventListener('scroll', dismiss, true);
 		return () => {
-			window.removeEventListener('pointerdown', onPointer);
-			window.removeEventListener('keydown', onKey);
+			window.removeEventListener('resize', dismiss);
+			window.removeEventListener('scroll', dismiss, true);
 		};
 	});
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<div bind:this={rootEl} class="relative inline-block" onclick={(e) => e.stopPropagation()}>
+<div class="status-control" style:--status-color={active.color}>
 	<button
-		bind:this={triggerEl}
-		onclick={handleToggle}
+		bind:this={trigger}
+		type="button"
+		class="status-trigger {className}"
+		class:labelled={showLabel}
+		onclick={toggle}
 		aria-expanded={open}
 		aria-haspopup="menu"
-		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary {showLabel
-			? 'min-h-11 min-w-11 px-3 py-1.5 gap-2 rounded-xl'
-			: 'h-11 w-11 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
-		title="{STATUS_CONFIG[status]?.label} (Click to change status)"
-		aria-label="Status: {STATUS_CONFIG[status]?.label}"
+		aria-controls={menuId}
+		aria-label="Status: {active.label}"
+		title="{active.label} · change status"
 	>
-		<ActiveIcon
-			size={13}
-			fill={status === 'completed' || status === 'dropped' ? 'none' : 'currentColor'}
-			class="transition-transform group-hover:scale-110 shrink-0"
-		/>
-		{#if showLabel}
-			<span class="font-medium">{STATUS_CONFIG[status]?.label}</span>
-		{/if}
+		<span class="status-square" aria-hidden="true">{active.letter}</span>
+		{#if showLabel}<span>{active.label}</span>{/if}
 	</button>
-
-	{#if open}
-		<div
-			role="menu"
-			transition:fade={{ duration: 120 }}
-			class="absolute left-0 top-full z-50 mt-1.5 min-w-[140px] whitespace-nowrap rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl backdrop-blur-2xl"
-		>
-			{#each ALL_STATUSES as s (s)}
-				{@const cfg = STATUS_CONFIG[s]}
-				<button
-					role="menuitem"
-					onclick={() => handleSelect(s)}
-					class="min-h-11 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
-					{s === status ? 'bg-white/15 text-text-primary font-semibold' : 'text-text-secondary'}"
-				>
-					<cfg.icon
-						size={13}
-						fill={s === 'completed' || s === 'dropped' ? 'none' : 'currentColor'}
-						class={cfg.iconClass}
-					/>
-					<span class="flex-1 text-left">{cfg.label}</span>
-					{#if s === status}
-						<Check size={13} class="text-primary ml-1" />
-					{/if}
-				</button>
-			{/each}
-
-			<div class="my-1 h-px bg-white/10"></div>
-
+	<div
+		bind:this={menu}
+		id={menuId}
+		popover="auto"
+		role="menu"
+		tabindex="-1"
+		aria-label="Change status"
+		class="status-menu"
+		style:left={`${left}px`}
+		style:top={`${top}px`}
+		ontoggle={(event) => (open = event.newState === 'open')}
+		onkeydown={navigate}
+	>
+		{#each statuses as item (item.value)}
 			<button
+				type="button"
 				role="menuitem"
-				onclick={handleRemove}
-				class="min-h-11 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
+				aria-label={item.label}
+				data-status={item.value}
+				class:active={status === item.value}
+				style:--status-color={item.color}
+				onclick={(event) => {
+					event.stopPropagation();
+					select(item.value);
+				}}
 			>
-				<Trash2 size={13} />
-				<span class="flex-1 text-left">Remove</span>
+				<span class="status-square" aria-hidden="true">{item.letter}</span>
+				<span>{item.value === 'plan_to_watch' ? 'Planned' : item.label}</span>
 			</button>
-		</div>
-	{/if}
+		{/each}
+		<div class="divider"></div>
+		<button
+			type="button"
+			role="menuitem"
+			class="remove"
+			onclick={(event) => {
+				event.stopPropagation();
+				userListStore.removeFromList(malId);
+				menu.hidePopover();
+			}}><Trash2 size={16} aria-hidden="true" /><span>Remove</span></button
+		>
+	</div>
 </div>
+
+<style>
+	.status-control {
+		display: inline-flex;
+		position: relative;
+		flex-shrink: 0;
+	}
+	.status-trigger {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		min-width: 44px;
+		height: 44px;
+		border: 0;
+		border-radius: 6px;
+		background: transparent;
+		cursor: pointer;
+	}
+	.status-trigger.labelled {
+		width: auto;
+		gap: 8px;
+		padding: 0 8px;
+		font-size: 12px;
+	}
+	.status-trigger:hover,
+	.status-trigger[aria-expanded='true'] {
+		background: var(--color-surface-3);
+	}
+	.status-square {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 20px;
+		height: 20px;
+		border-radius: 3px;
+		font-size: 11px;
+		font-weight: 600;
+		line-height: 1;
+		color: var(--status-color);
+		background: color-mix(in srgb, var(--status-color) 13%, #15131c);
+		border: 1px solid color-mix(in srgb, var(--status-color) 45%, #202027);
+	}
+	.status-menu {
+		position: fixed;
+		inset: auto;
+		margin: 0;
+		padding: 4px;
+		width: 176px;
+		border: 1px solid #3d374c;
+		border-radius: 10px;
+		background: #17171d;
+		color: var(--color-text-secondary);
+		box-shadow: 0 10px 24px #0009;
+	}
+	.status-menu button {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 44px;
+		padding: 0 10px;
+		border: 0;
+		border-radius: 7px;
+		background: transparent;
+		text-align: left;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	.status-menu button:hover,
+	.status-menu button.active {
+		background: #2a2433;
+	}
+	.status-menu button.active {
+		color: var(--color-text-primary);
+	}
+	.status-trigger:focus-visible,
+	.status-menu button:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: -2px;
+	}
+	.divider {
+		height: 1px;
+		background: var(--color-border);
+		margin: 4px 0;
+	}
+	.status-menu button.remove {
+		color: var(--color-error);
+	}
+</style>

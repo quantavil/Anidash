@@ -22,4 +22,4 @@ The UI check verifies the retained welcome, original poster/detail screens at 32
 
 The detail-content check verifies bounded, keyboard-scrollable tags, all loaded tags being reachable, and complete safe plain-text review expansion/collapse without additional enrichment calls.
 
-The inline-layouts check verifies that prequels/sequels and discovery actions share the same row at all four widths, with equal heights, no overlap, and usable settings targets. The original-ui check also asserts the selected rating gradient.
+The inline-layouts check verifies that prequels/sequels and discovery actions share the same row at all four widths, with equal heights, no overlap, and usable settings targets. The original-ui check also asserts cumulative rating gradients, neutral cells above the selected score, tiny status letters outside artwork, and keyboard status selection in an unclipped mobile popover.

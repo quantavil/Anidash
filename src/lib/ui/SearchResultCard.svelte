@@ -76,13 +76,6 @@
 			</div>
 		{/if}
 
-		<!-- Status badge overlay -->
-		{#if inList && listEntry}
-			<div class="absolute left-2 top-2 z-10">
-				<StatusBadge malId={listEntry.malId} status={listEntry.status} />
-			</div>
-		{/if}
-
 		<!-- Dub overlay -->
 		{#if dubStore.hasDub(anime.malId)}
 			<div class="glass-badge absolute bottom-2 left-2 h-6 w-6 border-primary/20 text-primary z-10">
@@ -101,15 +94,23 @@
 			class="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
 		/>
 
-		<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
-			{#if anime.mediaType}
-				<span class="whitespace-nowrap">{formatMediaType(anime.mediaType)}</span>
-			{/if}
-			{#if anime.numEpisodes > 0}
-				<span class="whitespace-nowrap">· {anime.numEpisodes} eps</span>
-			{/if}
-			{#if anime.startSeason}
-				<span class="whitespace-nowrap">· {anime.startSeason}</span>
+		<div class="flex items-center justify-between gap-1">
+			<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
+				{#if anime.mediaType}
+					<span class="whitespace-nowrap">{formatMediaType(anime.mediaType)}</span>
+				{/if}
+				{#if anime.numEpisodes > 0}
+					<span class="whitespace-nowrap">· {anime.numEpisodes} eps</span>
+				{/if}
+				{#if anime.startSeason}
+					<span class="whitespace-nowrap">· {anime.startSeason}</span>
+				{/if}
+			</div>
+
+			{#if listEntry}
+				<div class="relative z-[2] -mr-3">
+					<StatusBadge malId={listEntry.malId} status={listEntry.status} />
+				</div>
 			{/if}
 		</div>
 

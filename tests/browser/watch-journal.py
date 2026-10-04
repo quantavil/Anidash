@@ -44,8 +44,8 @@ with sync_playwright() as p:
     }""", records)
     page.reload()
     page.wait_for_load_state('domcontentloaded')
-    # Regression: editing a score must be available without entering a detail page.
-    rating=page.get_by_role('combobox',name='Your rating for Sousou no Frieren')
+    # Scores are readable on the list; editing belongs in details and completion prompts.
+    rating=page.get_by_label('Your rating for Sousou no Frieren: 9',exact=True)
     expect(rating).to_be_visible(timeout=5000)
     for width,height,label in [(1440,1000,'desktop'),(820,1180,'tablet'),(390,844,'phone'),(320,760,'narrow')]:
         page.set_viewport_size({'width':width,'height':height})
@@ -57,13 +57,17 @@ with sync_playwright() as p:
         page.screenshot(path=str(OUT/f'{label}.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'Overflow at {width}'
         expect(rating).to_be_visible()
+        search=page.get_by_role('textbox',name='Search your list').bounding_box()
+        sort=page.get_by_role('combobox',name='Sort anime list').bounding_box()
+        assert abs(search['y']-sort['y'])<=3,(search,sort)
+        assert sort['width']>=44 and sort['height']>=44,sort
+        expect(page.locator('.list-toolbar button[aria-label="Poster grid"]')).to_have_count(0)
         for button in page.locator('.journal-entry .step').all():
             box=button.bounding_box()
             assert box['width']>=44 and box['height']>=44,box
     page.set_viewport_size({'width':1440,'height':1000})
-    rating.select_option('10')
-    expect(rating).to_have_value('10')
-    expect(page.get_by_role('heading',name='Watching',exact=True)).to_be_visible()
+    expect(page.locator('.journal-entry .rating-control')).to_have_count(0)
+    expect(page.locator('.page-heading')).to_have_count(0)
     page.get_by_role('button',name='Mark episode 19 watched').click()
     expect(page.get_by_role('button',name='Mark episode 20 watched')).to_be_visible()
     page.get_by_role('button',name='Decrease episode count for Sousou no Frieren').click()
@@ -71,10 +75,22 @@ with sync_playwright() as p:
     # Native select must preserve keyboard access and store persistence.
     page.wait_for_timeout(300)
     saved=page.evaluate("""async()=>{const req=indexedDB.open('anidash',2);const db=await new Promise(r=>req.onsuccess=()=>r(req.result));const q=db.transaction('userList').objectStore('userList').get(52991);const value=await new Promise(r=>q.onsuccess=()=>r(q.result));db.close();return value;}""")
-    assert saved['score']==10 and saved['numWatchedEpisodes']==18,saved
+    assert saved['score']==9 and saved['numWatchedEpisodes']==18,saved
     page.set_viewport_size({'width':320,'height':760})
+    page.get_by_role('textbox',name='Search your list').fill('Frieren')
+    expect(page).to_have_url(__import__('re').compile('q=Frieren'))
+    page.get_by_role('combobox',name='Sort anime list').select_option('title')
+    expect(page).to_have_url(__import__('re').compile('sort=title'))
+    page.get_by_role('button',name='Settings and account').click()
     page.get_by_role('button',name='Poster grid').click()
+    page.get_by_role('button',name='Close settings',exact=True).click()
     expect(page).to_have_url(__import__('re').compile('view=grid'))
+    assert 'q=Frieren' in page.url and 'sort=title' in page.url,page.url
+    assert page.evaluate("localStorage.getItem('anidash_list_view')")=='grid'
+    expect(page.locator('.poster-card')).to_have_count(1)
+    page.get_by_role('button',name='Clear search').click()
+    page.get_by_role('combobox',name='Sort anime list').select_option('updated')
+    expect(page.locator('.poster-card')).to_have_count(4)
     for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
         page.set_viewport_size({'width':width,'height':height})
         rows={}
@@ -114,27 +130,62 @@ with sync_playwright() as p:
     for part in long_card.locator('.count .num > *').all():
         box=part.bounding_box()
         assert box['x']>=minus['x']+minus['width'] and box['x']+box['width']<=plus['x'],box
+    page.get_by_role('button',name='Settings and account').click()
     page.get_by_role('button',name='Journal view').click()
-    page.get_by_role('combobox',name='Your rating for Sousou no Frieren').select_option('8')
+    page.get_by_role('button',name='Close settings',exact=True).click()
     page.get_by_role('textbox',name='Search your list').fill('nothing-matches')
     expect(page.get_by_text('No matches',exact=True)).to_be_visible()
     page.get_by_role('button',name='Clear search').click()
     expect(rating).to_be_visible()
-    page.get_by_role('tab',name=__import__('re').compile('Plan')).click()
+    page.get_by_role('tab',name=__import__('re').compile('PTW')).click()
     cowboy=page.get_by_role('combobox',name='Status for Cowboy Bebop').locator('xpath=ancestor::article')
     cowboy.get_by_role('button',name='Mark episode 1 watched').click()
     page.get_by_role('tab',name=__import__('re').compile('Watching')).click()
-    expect(page.get_by_role('combobox',name='Your rating for Cowboy Bebop')).to_be_visible()
+    expect(page.get_by_label('Your rating for Cowboy Bebop: unrated',exact=True)).to_be_visible()
     cowboy=page.get_by_role('combobox',name='Status for Cowboy Bebop').locator('xpath=ancestor::article')
     expect(cowboy.get_by_role('button',name='Mark episode 2 watched')).to_be_visible()
     page.get_by_role('combobox',name='Status for Sousou no Frieren').select_option('on_hold')
-    expect(page.get_by_role('combobox',name='Your rating for Sousou no Frieren')).to_have_count(0)
+    expect(rating).to_have_count(0)
     page.get_by_role('tab',name=__import__('re').compile('On Hold')).click()
-    expect(page.get_by_role('combobox',name='Your rating for Sousou no Frieren')).to_have_value('8')
+    expect(rating).to_be_visible()
     page.get_by_role('button',name='Settings and account').click()
-    expect(page.get_by_role('region',name='Your preferences')).to_be_visible()
+    expect(page.get_by_role('dialog',name='Preferences')).to_be_visible()
+    expect(page.locator('.settings-panel')).to_be_visible()
+    expect(page.get_by_role('dialog',name='Preferences')).to_have_css('transform','none')
+    for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
+        page.set_viewport_size({'width':width,'height':height})
+        page.screenshot(path=str(OUT/f'preferences-{width}.png'))
+        panel=page.locator('.settings-panel').bounding_box()
+        assert panel['x']>=0 and panel['x']+panel['width']<=width,panel
+        for button in page.locator('.settings-panel button').all():
+            box=button.bounding_box();assert box['width']>=44 and box['height']>=44,box
+    page.set_viewport_size({'width':320,'height':760})
     page.keyboard.press('Escape')
-    expect(page.get_by_role('region',name='Your preferences')).to_have_count(0)
+    expect(page.locator('.settings-panel')).not_to_be_visible()
+    page.get_by_role('tab',name=__import__('re').compile('Watching')).click()
+    apothecary=page.get_by_role('combobox',name='Status for Kusuriya no Hitorigoto').locator('xpath=ancestor::article')
+    for episode in range(17,25):
+        apothecary.get_by_role('button',name=f'Mark episode {episode} watched',exact=True).click()
+    expect(page.get_by_role('heading',name='Mark as Completed?',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Mark Completed',exact=True).click()
+    expect(page.get_by_role('dialog',name='Rate completed anime')).to_be_visible()
+    expect(page.get_by_role('heading',name='How was it?')).to_be_visible()
+    page.wait_for_timeout(300)
+    page.screenshot(path=str(OUT/'completion-rating-320.png'))
+    page.get_by_role('button',name='Rate 8 out of 10: Very good',exact=True).click()
+    page.get_by_role('button',name='Done',exact=True).click()
+    page.get_by_role('tab',name=__import__('re').compile('Completed')).click()
+    expect(page.get_by_label('Your rating for Kusuriya no Hitorigoto: 8',exact=True)).to_be_visible()
+    page.get_by_role('combobox',name='Status for Kusuriya no Hitorigoto').select_option('watching')
+    page.get_by_role('tab',name=__import__('re').compile('Watching')).click()
+    page.get_by_role('combobox',name='Status for Cowboy Bebop').select_option('completed')
+    expect(page.get_by_role('dialog',name='Rate completed anime')).to_be_visible()
+    expect(page.get_by_role('heading',name='How was it?')).to_be_visible()
+    page.get_by_role('button',name='Later',exact=True).click()
+    page.get_by_role('tab',name=__import__('re').compile('Completed')).click()
+    expect(page.get_by_label('Your rating for Cowboy Bebop: unrated',exact=True)).to_be_visible()
+    page.get_by_role('combobox',name='Status for Cowboy Bebop').select_option('watching')
+    page.get_by_role('tab',name=__import__('re').compile('Watching')).click()
     # Boundary cases: full progress, unknown totals, missing ratings, and long titles.
     page.evaluate("""async()=>{
       const req=indexedDB.open('anidash',2);const db=await new Promise(r=>req.onsuccess=()=>r(req.result));

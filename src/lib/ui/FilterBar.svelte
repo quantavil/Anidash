@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { debounce } from '$lib/utils/debounce';
 	import type { SortKey } from '$lib/utils/sort';
+	import { ArrowDownWideNarrow } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
 	const options: { key: SortKey; label: string }[] = [
 		{ key: 'updated', label: 'Recently updated' },
@@ -33,7 +34,7 @@
 		onclear={clearSearch}
 	/>
 	<label class="sort-control"
-		><span class="sr-only">Sort anime list</span><select
+		><ArrowDownWideNarrow size={20} /><span class="sr-only">Sort anime list</span><select
 			aria-label="Sort anime list"
 			value={currentSort}
 			onchange={(e) =>
@@ -54,42 +55,43 @@
 <style>
 	.filter-bar {
 		display: flex;
-		gap: 12px;
+		gap: 10px;
 		align-items: center;
 		min-width: 0;
+		width: 100%;
 	}
 	.filter-bar :global(.search-field) {
-		max-width: 440px;
+		flex: 1;
+		min-width: 0;
+	}
+	.filter-bar :global(.search-box) {
+		height: 48px;
 	}
 	.sort-control {
-		flex: none;
-	}
-	select {
-		min-height: 48px;
-		max-width: 100%;
-		padding: 0 30px 0 12px;
+		position: relative;
+		display: grid;
+		place-items: center;
+		flex: 0 0 48px;
+		height: 48px;
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
 		background: var(--color-surface-1);
 		color: var(--color-text-secondary);
-		font-size: 12px;
+	}
+	.sort-control:focus-within {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 3px;
+	}
+	select {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
 		cursor: pointer;
 	}
 	option {
 		background: var(--color-surface-1);
-	}
-	@media (max-width: 640px) {
-		.filter-bar {
-			flex-wrap: wrap;
-			gap: 10px;
-		}
-		.filter-bar :global(.search-field) {
-			flex-basis: 100%;
-			max-width: none;
-		}
-		select {
-			min-height: 46px;
-			padding-left: 10px;
-		}
+		color: var(--color-text-primary);
 	}
 </style>

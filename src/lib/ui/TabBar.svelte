@@ -18,10 +18,22 @@
 		'all'
 	].map((k) => ({
 		key: k as TabKey,
-		label: k === 'all' ? 'All' : formatListStatus(k)
+		label: k === 'all' ? 'All' : k === 'plan_to_watch' ? 'PTW' : formatListStatus(k)
 	}));
 
 	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching') as TabKey);
+
+	let tabList: HTMLDivElement | undefined = $state();
+	$effect(() => {
+		void currentTab;
+		if (!tabList) return;
+		const active = tabList.querySelector<HTMLElement>('[aria-selected="true"]');
+		if (!active) return;
+		const box = active.getBoundingClientRect();
+		const viewport = tabList.getBoundingClientRect();
+		if (box.left < viewport.left) tabList.scrollLeft += box.left - viewport.left;
+		else if (box.right > viewport.right) tabList.scrollLeft += box.right - viewport.right;
+	});
 
 	function selectTab(key: TabKey) {
 		goto(setUrlParam(page.url, 'tab', key === 'watching' ? '' : key), {
@@ -58,6 +70,7 @@
 </script>
 
 <div
+	bind:this={tabList}
 	class="journal-tabs flex overflow-x-auto scrollbar-none"
 	role="tablist"
 	aria-label="Anime list status tabs"
@@ -83,18 +96,23 @@
 <style>
 	.journal-tabs {
 		border-bottom: 1px solid var(--color-border);
-		gap: 22px;
+		gap: 24px;
+		align-items: baseline;
 	}
 	.journal-tab {
 		display: flex;
 		align-items: center;
 		gap: 8px;
 		flex-shrink: 0;
-		min-height: 48px;
-		padding: 0 3px;
+		min-height: 60px;
+		min-width: 44px;
+		line-height: 1.15;
+		padding: 8px 0 12px;
 		border-bottom: 2px solid transparent;
 		color: var(--color-text-secondary);
-		font-size: 13px;
+		font-size: 20px;
+		font-weight: 500;
+		letter-spacing: -0.035em;
 		cursor: pointer;
 	}
 	.journal-tab:hover {
@@ -103,6 +121,8 @@
 	.journal-tab.selected {
 		color: var(--color-text-primary);
 		border-bottom-color: var(--color-primary);
+		font-size: 34px;
+		font-weight: 600;
 	}
 	.tab-count {
 		font-size: 11px;
@@ -116,7 +136,10 @@
 			padding-right: 18px;
 		}
 		.journal-tab {
-			font-size: 12px;
+			font-size: 17px;
+		}
+		.journal-tab.selected {
+			font-size: 28px;
 		}
 	}
 </style>

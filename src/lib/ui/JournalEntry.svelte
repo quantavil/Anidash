@@ -3,11 +3,10 @@
 	import { userListStore } from '$lib/stores/userlist.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { formatMediaType } from '$lib/utils/format';
-	import { Star, ArrowUpRight, Mic } from 'lucide-svelte';
+	import { Star, Mic } from 'lucide-svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 	import EpisodeStepper from './EpisodeStepper.svelte';
-	import RatingSelect from './RatingSelect.svelte';
 	let {
 		entry,
 		featured = false,
@@ -27,10 +26,8 @@
 			aspectRatio={featured ? '2/3' : '3/4'}
 			class="journal-cover-image"
 		/>
-		{#if featured}<span class="cover-caption">In your rotation</span>{/if}
 	</a>
 	<div class="entry-info">
-		{#if featured}<span class="feature-kicker"><span></span> Continue watching</span>{/if}
 		<a class="entry-title" href="/anime/{entry.malId}"
 			><AnimeTitle
 				title={entry.title}
@@ -62,20 +59,20 @@
 					>{entry.mean != null ? entry.mean.toFixed(2) : '—'}</strong
 				><span>MAL</span></span
 			>
-			<RatingSelect malId={entry.malId} title={entry.title} score={entry.score} />
+			<span
+				class="personal-rating"
+				aria-label="Your rating for {entry.title}: {entry.score || 'unrated'}"
+				>Yours <strong>{entry.score > 0 ? `${entry.score}/10` : '—'}</strong></span
+			>
 		</div>
 	</div>
 	<div class="entry-tracking">
-		<span class="tracking-label">{featured ? 'Your next episode' : 'Episode progress'}</span>
 		<EpisodeStepper
 			malId={entry.malId}
 			title={entry.title}
 			watched={entry.numWatchedEpisodes}
 			total={entry.numEpisodes}
 		/>
-		{#if featured}<a class="details-link" href="/anime/{entry.malId}"
-				>Explore this series <ArrowUpRight size={14} /></a
-			>{/if}
 	</div>
 </article>
 
@@ -139,6 +136,15 @@
 		gap: 10px;
 		margin-top: 10px;
 	}
+	.personal-rating {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+	.personal-rating strong {
+		color: var(--color-text-primary);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
 	.community-rating {
 		display: flex;
 		gap: 5px;
@@ -149,15 +155,6 @@
 	.community-rating > span {
 		color: var(--color-text-secondary);
 		font-size: 10px;
-	}
-	.entry-ratings :global(.rating-control) {
-		min-width: 0;
-	}
-	.tracking-label {
-		display: block;
-		font-size: 11px;
-		color: var(--color-text-secondary);
-		margin-bottom: 8px;
 	}
 
 	.entry-status {
@@ -180,7 +177,7 @@
 		background: var(--color-surface-1);
 	}
 	.featured {
-		grid-template-columns: 150px minmax(0, 1fr);
+		grid-template-columns: 120px minmax(0, 1fr);
 		gap: 24px;
 		padding: 20px;
 		margin-bottom: 10px;
@@ -209,20 +206,7 @@
 		font-weight: 600;
 		letter-spacing: -0.035em;
 		line-height: 1.15;
-		margin-top: 14px;
-	}
-	.feature-kicker {
-		color: var(--color-primary);
-		font-size: 11px;
-		display: flex;
-		align-items: center;
-		gap: 7px;
-	}
-	.feature-kicker > span {
-		width: 5px;
-		height: 5px;
-		background: currentColor;
-		border-radius: 50%;
+		margin-top: 0;
 	}
 	.featured .entry-tracking {
 		width: 100%;
@@ -230,27 +214,16 @@
 		grid-column: 2;
 		align-self: end;
 	}
-	.details-link {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		color: var(--color-text-secondary);
-		font-size: 12px;
-		width: fit-content;
-		min-height: 44px;
-		margin-top: 4px;
-	}
-	.details-link:hover {
-		color: var(--color-text-primary);
-	}
-	.cover-caption {
-		position: absolute;
-		bottom: 0;
-		padding: 30px 12px 12px;
-		width: 100%;
-		font-size: 10px;
-		color: #fff;
-		background: linear-gradient(transparent, #0009);
+	@media (min-width: 1101px) {
+		.featured {
+			grid-template-columns: 120px minmax(0, 1fr) 192px;
+			gap: 20px;
+		}
+		.featured .entry-tracking {
+			grid-column: 3;
+			grid-row: 1 / 3;
+			align-self: center;
+		}
 	}
 	@media (max-width: 640px) {
 		.journal-entry {
@@ -273,9 +246,6 @@
 		.entry-ratings {
 			gap: 8px;
 		}
-		.entry-ratings :global(.rating-control) {
-			padding: 0 7px;
-		}
 		.featured {
 			grid-template-columns: 76px minmax(0, 1fr);
 			padding: 16px;
@@ -292,19 +262,14 @@
 		}
 		.featured .entry-title :global(h2) {
 			font-size: 20px;
-			margin-top: 7px;
+			margin-top: 0;
 		}
 		.featured .entry-ratings {
 			grid-column: 1 / -1;
 		}
 		.featured .entry-tracking {
+			max-width: none;
 			grid-column: 1 / -1;
-		}
-		.feature-kicker {
-			font-size: 10px;
-		}
-		.cover-caption {
-			display: none;
 		}
 		.featured .entry-meta {
 			font-size: 11px;

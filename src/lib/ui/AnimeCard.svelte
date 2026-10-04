@@ -69,7 +69,9 @@
 			<div class="flex items-center gap-1.5 text-xs text-warning">
 				<Star size={12} fill="currentColor" /><span
 					>{entry.mean != null ? entry.mean.toFixed(2) : '—'}</span
-				><span class="text-text-secondary">MAL</span>
+				><span class="text-text-secondary">MAL</span><span class="ml-auto text-text-secondary"
+					>Yours {entry.score > 0 ? `${entry.score}/10` : '—'}</span
+				>
 			</div>
 
 			<!-- Type + Season -->

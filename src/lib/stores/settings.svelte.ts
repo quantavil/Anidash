@@ -6,11 +6,18 @@ import { STORAGE_KEYS } from '$lib/constants';
 
 class SettingsStore {
 	preferEnglish = $state(false);
+	listView = $state<'journal' | 'grid'>('journal');
 
 	init() {
 		if (browser) {
+			this.listView = localStorage.getItem('anidash_list_view') === 'grid' ? 'grid' : 'journal';
 			this.preferEnglish = localStorage.getItem(STORAGE_KEYS.PREFER_ENGLISH) === 'true';
 		}
+	}
+
+	setListView(view: 'journal' | 'grid') {
+		this.listView = view;
+		if (browser) localStorage.setItem('anidash_list_view', view);
 	}
 
 	togglePreferEnglish() {

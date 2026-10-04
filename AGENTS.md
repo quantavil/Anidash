@@ -11,9 +11,9 @@ Read this contract before changing code. Keep changes focused, preserve existing
 ## Interface Contract
 
 - **Design system**: shared tokens live in `src/app.css`. Preserve the midnight black/violet palette, gold rating accents, and local Outfit UI and heading font with `font-display: swap`. Maintain readable contrast, visible focus, and reduced-motion behavior.
-- **Views and state**: the default list view is `journal`; `view=grid` selects the poster grid. Preserve tab, search, filter, and sort behavior when switching views. `watching` remains the default status tab.
+- **Views and state**: the initial list view is `journal`; preferences persist the chosen view, while explicit `view=grid` or `view=journal` overrides it. Preserve tab, search, filter, and sort behavior when switching views. `watching` remains the default status tab.
 - **Real collection**: the featured entry, journal rows, planned shelf, and collection counts consume existing list records. They must not trigger extra AniList enrichment calls or introduce demo data into production.
-- **Ratings**: distinguish MAL community ratings from personal scores with explicit labels. Personal scores are 1–10, with 0 representing unrated. Keep native, accessible personal rating controls in the journal and keyboard-operable detail controls. Poster grids show community scores, with status controls on the artwork; Browse/Seasonal statuses share a boxed action row with Add to List.
+- **Ratings**: distinguish MAL community ratings from personal scores with explicit labels. Personal scores are 1–10, with 0 representing unrated. Keep personal rating controls in details and the optional completion prompt. Journal and poster grids show read-only personal and community scores, with status controls on the artwork; Browse/Seasonal statuses share a boxed action row with Add to List.
 - **Episode/status edits**: all journal entries, including the featured one, allow status changes. Use the existing store mutation methods; retain completion guards, unknown episode totals, PTW auto-watch, and queued sync behavior.
 - **Responsive ergonomics**: verify at 320, 390, 820, and 1440px. Controls must retain at least 44px touch targets in both dimensions, including inside narrow poster cards. Long titles must not create horizontal overflow. Keep mobile bottom navigation clear of safe-area insets and content.
 - **Startup and public access**: keep navigation available during auth initialization and use a list skeleton for loading. Public browsing and the inline welcome must remain usable without an automatic login modal. Do not enable SSR or prerendering without auditing browser-only stores and the offline shell.
@@ -91,3 +91,5 @@ Use the newest versions supported by the active SvelteKit toolchain. Cloudflare 
 ## Context7
 
 For library/framework/API questions, use Context7 MCP (`resolve-library-id` → `query-docs`) before answering. Prefer over web search.
+
+List layout: status tabs are the primary visible heading. Keep search and icon-only native sorting inline at all supported widths. Journal/Poster selection lives in preferences and persists locally, while explicit URL view overrides win. Display personal scores read-only on list cards; edit in details or the completion rating prompt. Completion is saved before prompting, rated entries do not prompt, and Later/Escape keeps completion intact.

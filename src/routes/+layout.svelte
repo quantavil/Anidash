@@ -9,6 +9,7 @@
 
 	import FluidNav from '$lib/ui/FluidNav.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
+	import CompletionRatingDialog from '$lib/ui/CompletionRatingDialog.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
@@ -142,3 +143,5 @@
 		bind:open={userListStore.showCompleteDialog}
 		bind:malId={userListStore.completeTargetId}
 	/>{/if}
+
+{#if initialized && authStore.isAuthenticated}<CompletionRatingDialog />{/if}

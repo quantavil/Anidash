@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { setUrlParam } from '$lib/utils/url-state';
+	import Dialog from './Dialog.svelte';
+	import { LayoutGrid } from 'lucide-svelte';
 	import { page } from '$app/state';
 	import { authStore } from '$lib/auth/auth.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
@@ -50,8 +54,19 @@
 				description: 'Your local changes are saved. Try again when connected.'
 			});
 	}
+	const listView = $derived(
+		page.url.pathname === '/'
+			? (page.url.searchParams.get('view') ?? settingsStore.listView)
+			: settingsStore.listView
+	);
+	function setView(view: 'journal' | 'grid') {
+		settingsStore.setListView(view);
+		if (page.url.pathname === '/')
+			goto(setUrlParam(page.url, 'view', view), { keepFocus: true, noScroll: true });
+	}
+	const pathname = $derived(page.url.pathname);
 	$effect(() => {
-		void page.url.pathname;
+		void pathname;
 		settingsOpen = false;
 	});
 </script>
@@ -101,43 +116,61 @@
 				>{/if}
 		</div>
 	</div>
-	{#if settingsOpen}
-		<div class="settings-panel" role="region" aria-label="Your preferences">
-			<h2>Your preferences</h2>
-			<button
-				class="preference"
-				aria-pressed={dubStore.dubMode}
-				onclick={() => dubStore.toggleDubMode()}
-				><Mic size={17} /><span>Dubbed anime only</span><span class="preference-value"
-					>{dubStore.dubMode ? 'On' : 'Off'}</span
-				></button
+</header>
+<Dialog label="Preferences" open={settingsOpen} onclose={() => (settingsOpen = false)}>
+	<div class="settings-panel">
+		<div class="settings-heading">
+			<h2>Preferences</h2>
+			<button aria-label="Close settings" onclick={() => (settingsOpen = false)}
+				><X size={20} /></button
 			>
-			<button
-				class="preference"
-				aria-pressed={settingsStore.preferEnglish}
-				onclick={() => settingsStore.togglePreferEnglish()}
-				><Languages size={17} /><span>English titles</span><span class="preference-value"
-					>{settingsStore.preferEnglish ? 'On' : 'Off'}</span
-				></button
-			>
-			{#if authStore.isAuthenticated}<p class="account-name">Connected as {authStore.user?.name}</p>
+		</div>
+		<section class="view-preference" aria-label="List display">
+			<h3>List view</h3>
+			<div class="view-options">
 				<button
-					class="preference logout"
+					class:chosen={listView === 'journal'}
+					aria-pressed={listView === 'journal'}
+					aria-label="Journal view"
+					onclick={() => setView('journal')}><List size={22} /><span>Journal</span></button
+				>
+				<button
+					class:chosen={listView === 'grid'}
+					aria-pressed={listView === 'grid'}
+					aria-label="Poster grid"
+					onclick={() => setView('grid')}><LayoutGrid size={22} /><span>Posters</span></button
+				>
+			</div>
+		</section>
+		<button
+			class="preference"
+			aria-pressed={dubStore.dubMode}
+			onclick={() => dubStore.toggleDubMode()}
+			><Mic size={18} /><span>Dubbed anime only</span><span
+				class="toggle"
+				class:on={dubStore.dubMode}
+			></span></button
+		>
+		<button
+			class="preference"
+			aria-pressed={settingsStore.preferEnglish}
+			onclick={() => settingsStore.togglePreferEnglish()}
+			><Languages size={18} /><span>English titles</span><span
+				class="toggle"
+				class:on={settingsStore.preferEnglish}
+			></span></button
+		>
+		{#if authStore.isAuthenticated}<div class="account-row">
+				<span>{authStore.user?.name}</span><button
+					class="logout"
 					onclick={() => {
 						settingsOpen = false;
 						authStore.logout();
-					}}><LogOut size={17} /><span>Disconnect account</span></button
-				>{/if}
-		</div>
-	{/if}
-</header>
-{#if settingsOpen}
-	<button
-		class="settings-dismiss"
-		aria-label="Close settings"
-		onclick={() => (settingsOpen = false)}
-	></button>
-{/if}
+					}}><LogOut size={17} />Disconnect</button
+				>
+			</div>{/if}
+	</div>
+</Dialog>
 <nav class="mobile-nav" aria-label="Mobile navigation">
 	{#each items as item (item.href)}<a
 			href={item.href}
@@ -277,52 +310,118 @@
 	.connect-button:hover {
 		background: var(--color-primary-hover);
 	}
-	.settings-panel {
-		position: absolute;
-		right: 0;
-		top: 78px;
-		width: min(300px, calc(100vw - 32px));
-		padding: 18px;
-		border-radius: 16px;
-		border: 1px solid var(--color-border);
-		background: var(--color-surface-1);
-		box-shadow: 0 16px 50px #0009;
-		z-index: 50;
+	:global(.anidash-dialog:has(.settings-panel)) {
+		width: min(380px, calc(100vw - 32px));
+		padding: 0;
+		margin: 100px max(24px, calc((100vw - 1060px) / 2)) auto auto;
 	}
-	.settings-panel h2 {
-		font-size: 18px;
+	.settings-panel {
+		padding: 22px;
+		background: var(--color-surface-1);
+	}
+	.settings-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 20px;
+	}
+	.settings-heading h2 {
+		font-size: 23px;
 		font-weight: 600;
-		margin-bottom: 12px;
+		letter-spacing: -0.035em;
+	}
+	.settings-heading button {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		background: var(--color-surface-2);
+		cursor: pointer;
+	}
+	.view-preference {
+		padding-bottom: 20px;
+		border-bottom: 1px solid var(--color-border);
+		margin-bottom: 8px;
+	}
+	.view-preference h3 {
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		margin-bottom: 10px;
+	}
+	.view-options {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+	}
+	.view-options button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		min-height: 64px;
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+		background: var(--color-surface-2);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		font-size: 14px;
+	}
+	.view-options button.chosen {
+		color: var(--color-primary);
+		border-color: var(--color-primary);
+		background: var(--color-primary-dim);
 	}
 	.preference {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 12px;
 		width: 100%;
-		min-height: 48px;
+		min-height: 56px;
 		text-align: left;
 		cursor: pointer;
+		font-size: 14px;
+	}
+	.toggle {
+		margin-left: auto;
+		width: 34px;
+		height: 20px;
+		padding: 3px;
+		background: var(--color-surface-3);
+		border-radius: 20px;
+	}
+	.toggle::after {
+		content: '';
+		display: block;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--color-text-secondary);
+	}
+	.toggle.on {
+		background: var(--color-primary);
+	}
+	.toggle.on::after {
+		transform: translateX(14px);
+		background: var(--color-on-primary);
+	}
+	.account-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid var(--color-border);
 		font-size: 13px;
 	}
-	.preference-value {
-		margin-left: auto;
-		color: var(--color-primary);
-	}
-	.account-name {
-		padding-top: 16px;
-		margin-top: 8px;
-		border-top: 1px solid var(--color-border);
-		font-size: 12px;
-		color: var(--color-text-secondary);
-	}
 	.logout {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
 		color: var(--color-error);
-	}
-	.settings-dismiss {
-		position: fixed;
-		inset: 0;
-		z-index: 35;
-		cursor: default;
+		cursor: pointer;
 	}
 	.mobile-nav {
 		display: none;
@@ -403,9 +502,15 @@
 			color: var(--color-primary);
 			background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 		}
+		:global(.anidash-dialog:has(.settings-panel)) {
+			margin: auto 0 0;
+			width: 100%;
+			max-width: none;
+			border-radius: 20px 20px 0 0;
+			max-height: 90dvh;
+		}
 		.settings-panel {
-			top: 70px;
-			right: 12px;
+			padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
 		}
 	}
 </style>

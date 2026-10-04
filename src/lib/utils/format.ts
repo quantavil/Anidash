@@ -67,7 +67,7 @@ export function formatListStatus(status: string): string {
 type StatusVariant = 'badge' | 'dot';
 export const STATUS_COLORS: Record<string, Record<StatusVariant, string>> = {
 	watching: {
-		badge: 'bg-primary/20 text-primary border-primary/40',
+		badge: 'bg-primary/20 text-[#bfb5ff] border-primary/40',
 		dot: 'bg-primary'
 	},
 	completed: {

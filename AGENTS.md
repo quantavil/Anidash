@@ -4,22 +4,11 @@
 
 Svelte 5 (Runes) + SvelteKit 2 + adapter-cloudflare + Tailwind v4 + IndexedDB + Vitest + Zod + Cloudflare Pages. MAL API v2 is source-of-truth for auth, list sync, search/seasonal/ranking. AniList GraphQL `https://graphql.anilist.co` is **sole enrichment** (no Jikan).
 
-## Working in this repository
+## Interface
 
-Read this contract before changing code. Keep changes focused, preserve existing user work, and verify behavior before claiming completion. Never commit `.env`, `.dev.vars`, tokens, or client secrets. The current product is a real watch journal, not a mockup; do not ship fixture collections or invented ratings.
+The original AniDash interface is restored from `c8baa61`: black/violet surfaces, floating navigation, poster/list layouts, and original detail controls. Keep the current illustrated welcome screen (`StoryWindow.svelte`) with its inline login and public Browse link. Do not restore the retired journal redesign. Verify responsive screens at 320, 390, 820, and 1440px using isolated browser storage.
 
-## Interface Contract
-
-- **Design system**: shared tokens live in `src/app.css`. Preserve the midnight black/violet palette, gold rating accents, and local Outfit UI and heading font with `font-display: swap`. Maintain readable contrast, visible focus, and reduced-motion behavior.
-- **Views and state**: the initial list view is `journal`; preferences persist the chosen view, while explicit `view=grid` or `view=journal` overrides it. Preserve tab, search, filter, and sort behavior when switching views. `watching` remains the default status tab.
-- **Real collection**: the featured entry, journal rows, planned shelf, and collection counts consume existing list records. They must not trigger extra AniList enrichment calls or introduce demo data into production.
-- **Ratings**: distinguish MAL community ratings from personal scores with explicit labels. Personal scores are 1–10, with 0 representing unrated. Keep personal rating controls in details and the optional completion prompt. Journal and poster grids show read-only personal and community scores, with status controls on the artwork; Browse/Seasonal statuses share a boxed action row with Add to List.
-- **Episode/status edits**: all journal entries, including the featured one, allow status changes. Use the existing store mutation methods; retain completion guards, unknown episode totals, PTW auto-watch, and queued sync behavior.
-- **Responsive ergonomics**: verify at 320, 390, 820, and 1440px. Controls must retain at least 44px touch targets in both dimensions, including inside narrow poster cards. Long titles must not create horizontal overflow. Keep mobile bottom navigation clear of safe-area insets and content.
-- **Startup and public access**: keep navigation available during auth initialization and use a list skeleton for loading. Public browsing and the inline welcome must remain usable without an automatic login modal. Do not enable SSR or prerendering without auditing browser-only stores and the offline shell.
-- **Performance**: prefer appropriately sized artwork, lazy loading below the fold, and targeted motion. Do not add runtime dependencies or broad visual effects without a concrete need. Report measured performance results accurately; do not invent PageSpeed improvements.
-
-## Non-Negotiable Data and Security Constraints
+## Non-Negotiable Constraints
 
 - **No fallback**: AniList detail is `Media(idMal: Int type:ANIME)` direct. If `null` → empty, never `Page{media(search)}` title fallback. No Jikan, no backward compat, no dead aliases. AniList answers an unknown MAL id with **HTTP 404 + `data:{Media:null}`** — `gqlFetch` treats that as `ok(null)`, not an error.
 - **Single enrichment budget**: detail charas/recs/tags/trailer/airing count as one AniList fetch. Use `anilistLimiter` 700ms (90/min → 30/min degraded). Never fire parallel AniList calls for same `malId`.
@@ -39,19 +28,7 @@ Read this contract before changing code. Keep changes focused, preserve existing
 - **PTW auto-watch**: `incrementEpisode`/`setEpisodeCount` on `plan_to_watch` moves to `watching` with a combined `{status, num_watched_episodes}` payload.
 - **Browse search**: online search fires only at 3+ chars (`MIN_QUERY_LEN = 3` in `browse/+page.svelte`).
 
-## UI File Map
-
-- `src/routes/+layout.svelte` — startup, shared navigation, preferences, and offline feedback.
-- `src/routes/+page.svelte` — public welcome, journal/grid selection, list filtering and ordering, real list state.
-- `src/lib/ui/AnimeJournal.svelte`, `JournalEntry.svelte`, `CollectionShelf.svelte` — featured entry, journal rows, and planned collection shelf.
-- `src/lib/ui/RatingSelect.svelte`, `ScoreInput.svelte` — compact personal score selection and detail-page scoring.
-- `src/lib/ui/EpisodeStepper.svelte`, `EpisodeBar.svelte` — integrated journal stepper and single-element segmented progress. The stepper also serves grid/detail layouts.
-- `src/lib/ui/StoryWindow.svelte` — original decorative SVG welcome artwork; no external assets or fabricated collection data.
-- `src/lib/ui/AnimeCard.svelte`, `TabBar.svelte`, `FilterBar.svelte`, `SearchInput.svelte` — poster view, status tabs, sorting and search.
-- `src/app.css`, `src/lib/ui/Logo.svelte`, `static/favicon.svg`, `static/manifest.json` — shared visual tokens and app identity.
-- `tests/browser/watch-journal.py`, `anime-detail.py`, `offline-shell.py` — isolated production-browser regressions; setup in `tests/browser/README.md`.
-
-## Data and Server File Map
+## File Map
 
 - `src/lib/api/anilist.ts` — `gqlFetch` (429→`rate_limit`, 404+null→`ok(null)`), `MEDIA_DETAIL_QUERY` (only fields the page renders), `fetchAnilistMediaByMalId` (network), `loadAnilistMedia` (cache + in-flight de-dupe), `_detailQuery` export for tests.
 - `src/lib/api/schemas/anilist.schema.ts` — `AnilistMediaSchema`, `AnilistTagSchema` (no `isGeneral`).
@@ -71,16 +48,11 @@ Read this contract before changing code. Keep changes focused, preserve existing
 
 ```sh
 VITE_MAL_CLIENT_ID=dummy npm run check   # 0 errors
-VITE_MAL_CLIENT_ID=dummy npm test        # all tests pass
+VITE_MAL_CLIENT_ID=dummy npm test        # all pass (14 files)
 VITE_MAL_CLIENT_ID=dummy npm run build   # Cloudflare production build
-npm run lint                           # formatting + ESLint
 # live GraphQL smoke (no isGeneral):
 # python3 -c "import json,urllib.request; ... Media(idMal:53149) -> 18 chars"
 ```
-
-For UI, service-worker, or navigation changes, run the production Chromium checks documented in `tests/browser/README.md`. They use isolated test storage; never seed a real user browser or account with fixtures. Inspect responsive screenshots and verify rating persistence, episode/status changes, and offline reloads. A successful build alone does not verify offline navigation.
-
-Keep docs aligned with behavior. `README.md` explains the product, local configuration, verification, and deployment; this file defines engineering constraints. Never claim a deployment succeeded merely because a push triggered it.
 
 Commit style: `type(scope): subject` (e.g. `fix(anilist): reject invalid trailer IDs`). Pushes to `main` trigger the Cloudflare Pages deployment.
 
@@ -91,5 +63,3 @@ Use the newest versions supported by the active SvelteKit toolchain. Cloudflare 
 ## Context7
 
 For library/framework/API questions, use Context7 MCP (`resolve-library-id` → `query-docs`) before answering. Prefer over web search.
-
-List layout: status tabs are the primary visible heading. Keep search and icon-only native sorting inline at all supported widths. Journal/Poster selection lives in preferences and persists locally, while explicit URL view overrides win. Display personal scores read-only on list cards; edit in details or the completion rating prompt. Completion is saved before prompting, rated entries do not prompt, and Later/Escape keeps completion intact.

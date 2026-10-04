@@ -47,32 +47,6 @@ describe('userlist.svelte.ts state', () => {
 		expect(updateAnimeStatus).toHaveBeenCalledWith(1, { status: 'watching' });
 	});
 
-	it('prompts once when an unrated entry changes to completed', async () => {
-		await userListStore.addToList(902, 'watching', 'Unrated', 'Unrated', null);
-		userListStore.setStatus(902, 'completed');
-		expect(userListStore.getEntry(902)?.status).toBe('completed');
-		expect(userListStore.ratingTargetId).toBe(902);
-		userListStore.dismissRatingPrompt();
-		userListStore.setStatus(902, 'completed');
-		expect(userListStore.ratingTargetId).toBeNull();
-	});
-
-	it('clears a pending rating prompt when the account is cleared', async () => {
-		await userListStore.addToList(904, 'watching', 'Logout', 'Logout', null);
-		userListStore.setStatus(904, 'completed');
-		expect(userListStore.ratingTargetId).toBe(904);
-		userListStore.clear();
-		expect(userListStore.ratingTargetId).toBeNull();
-	});
-
-	it('does not prompt when completing a rated entry', async () => {
-		await userListStore.addToList(903, 'watching', 'Rated', 'Rated', null);
-		userListStore.dismissRatingPrompt();
-		userListStore.setScore(903, 8);
-		userListStore.setStatus(903, 'completed');
-		expect(userListStore.ratingTargetId).toBeNull();
-	});
-
 	it('should optimistically update an entry status locally', async () => {
 		await userListStore.addToList(2, 'plan_to_watch', 'Test 2', 'Test 2', null);
 		userListStore.setStatus(2, 'watching');

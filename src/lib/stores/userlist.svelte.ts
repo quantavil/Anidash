@@ -44,7 +44,6 @@ function createUserListStore() {
 	// Global complete confirmation dialog state
 	let showCompleteDialog = $state(false);
 	let completeTargetId = $state<number | null>(null);
-	let ratingTargetId = $state<number | null>(null);
 
 	// ─── Derived ───
 
@@ -222,8 +221,6 @@ function createUserListStore() {
 
 	function setStatus(malId: number, newStatus: AnimeStatus): void {
 		const entry = entries[malId];
-		const shouldPrompt =
-			entry && entry.status !== 'completed' && newStatus === 'completed' && entry.score === 0;
 		if (entry && newStatus === 'completed' && entry.numEpisodes > 0) {
 			optimisticUpdate(
 				malId,
@@ -239,7 +236,6 @@ function createUserListStore() {
 		} else {
 			optimisticUpdate(malId, { status: newStatus }, { status: newStatus });
 		}
-		if (shouldPrompt) ratingTargetId = malId;
 	}
 
 	// ─── Score Change ───
@@ -551,7 +547,6 @@ function createUserListStore() {
 	}
 
 	function clear(): void {
-		ratingTargetId = null;
 		entries = {};
 		initialized = false;
 	}
@@ -589,12 +584,6 @@ function createUserListStore() {
 		},
 		get initialized() {
 			return initialized;
-		},
-		get ratingTargetId() {
-			return ratingTargetId;
-		},
-		dismissRatingPrompt() {
-			ratingTargetId = null;
 		},
 		get showCompleteDialog() {
 			return showCompleteDialog;

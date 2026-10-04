@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { UserListRecord } from '$lib/cache/db';
-	import { formatMediaType } from '$lib/utils/format';
+	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
 	import { Star, Mic } from 'lucide-svelte';
 	import StatusBadge from './StatusBadge.svelte';
 	import ProgressLine from './ProgressLine.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import EpisodeStepper from './EpisodeStepper.svelte';
+	import EpisodeCounter from './EpisodeCounter.svelte';
 
 	let {
 		entry,
@@ -17,35 +17,36 @@
 		index?: number;
 	} = $props();
 
-	const imageUrl = $derived(entry.mainPicture?.medium ?? entry.mainPicture?.large ?? null);
+	const imageUrl = $derived(entry.mainPicture?.large ?? entry.mainPicture?.medium ?? null);
 </script>
 
-<div class="poster-card group relative flex flex-col feed-card-contain">
-	<div class="poster-inner relative flex flex-col h-full">
+<div
+	class="group relative flex flex-col rounded-2xl border border-white/10 bg-white/5 p-0.5 transition-all duration-200 hover:bg-white/10 hover:border-white/20 active:scale-[0.98] feed-card-contain"
+>
+	<div
+		class="relative flex flex-col h-full overflow-hidden rounded-[14px] bg-surface-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+	>
 		<a
 			href="/anime/{entry.malId}"
 			class="absolute inset-0 z-[1]"
 			aria-label="View {entry.title} details"
 		></a>
 		<!-- Cover Image -->
-		<div class="poster-art relative aspect-[2/3] w-full">
+		<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-2 border-b border-white/5">
 			<ImageWithFallback
 				src={imageUrl}
 				alt={entry.title}
 				{index}
-				class="rounded-xl h-full w-full transition-transform duration-200 ease-spring group-hover:scale-[1.02]"
+				class="h-full w-full transition-transform duration-700 ease-spring group-hover:scale-105"
 			/>
 
-			<div class="poster-status absolute left-2 top-2 z-[3]">
-				<StatusBadge
-					malId={entry.malId}
-					status={entry.status}
-					showLabel
-					class="!bg-surface-0/95 !border-white/20 !shadow-none !transform-none"
-				/>
-			</div>
 			<!-- Progress Line -->
 			<ProgressLine watched={entry.numWatchedEpisodes} total={entry.numEpisodes} />
+
+			<!-- Status badge overlay -->
+			<div class="absolute left-2 top-2 z-10">
+				<StatusBadge malId={entry.malId} status={entry.status} />
+			</div>
 
 			<!-- Dub overlay -->
 			{#if dubStore.hasDub(entry.malId)}
@@ -53,29 +54,45 @@
 					<Mic size={12} fill="currentColor" />
 				</div>
 			{/if}
+
+			<!-- Score overlay -->
+			{#if entry.mean}
+				<div
+					class="glass-badge absolute right-2 top-2 px-2 py-0.5 text-[10px] font-bold tracking-tight"
+				>
+					<Star size={10} class="mr-1 text-warning" fill="currentColor" />
+					<span class="text-text-primary">{entry.mean.toFixed(1)}</span>
+					{#if entry.numListUsers > 0}
+						<span class="mx-0.5 opacity-40">|</span>
+						<span class="text-text-secondary">{formatNumberShort(entry.numListUsers)}</span>
+					{/if}
+				</div>
+			{/if}
+
+			<!-- User score overlay -->
+			{#if entry.score > 0}
+				<div
+					class="glass-badge absolute bottom-2 right-2 px-2 py-0.5 text-xs font-bold border-primary/30 bg-primary/20"
+				>
+					<Star size={10} class="mr-1 text-warning" fill="currentColor" />
+					{entry.score}
+				</div>
+			{/if}
 		</div>
 
 		<!-- Info -->
-		<div class="card-body">
+		<div class="flex flex-1 flex-col gap-2 p-3">
 			<!-- Title -->
 			<AnimeTitle
 				title={entry.title}
 				titleEnglish={entry.titleEnglish ?? null}
 				tag="h3"
 				interactive={false}
-				class="poster-title line-clamp-2 text-[15px] font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
+				class="line-clamp-2 text-sm font-medium leading-tight text-text-primary transition-colors duration-300 group-hover:text-primary"
 			/>
 
-			<div class="flex items-center gap-1.5 text-xs text-warning">
-				<Star size={12} fill="currentColor" /><span
-					>{entry.mean != null ? entry.mean.toFixed(2) : '—'}</span
-				><span class="text-text-secondary">MAL</span><span class="ml-auto text-text-secondary"
-					>Yours {entry.score > 0 ? `${entry.score}/10` : '—'}</span
-				>
-			</div>
-
 			<!-- Type + Season -->
-			<div class="card-metadata">
+			<div class="flex items-center gap-2 text-xs text-text-muted">
 				{#if entry.mediaType}
 					<span>{formatMediaType(entry.mediaType)}</span>
 				{/if}
@@ -85,24 +102,18 @@
 			</div>
 
 			<!-- Progress Controls -->
-			<div class="card-action" onclick={(e) => e.stopPropagation()} role="presentation">
-				<EpisodeStepper
+			<div
+				class="relative z-[2] mt-auto pt-2 flex items-center justify-between"
+				onclick={(e) => e.stopPropagation()}
+				role="presentation"
+			>
+				<EpisodeCounter
 					malId={entry.malId}
 					watched={entry.numWatchedEpisodes}
 					total={entry.numEpisodes}
-					title={entry.title}
-					size="card"
+					compact={true}
 				/>
 			</div>
 		</div>
 	</div>
 </div>
-
-<style>
-	.poster-card {
-		min-width: 0;
-	}
-	.poster-card:has(:global([aria-expanded='true'])) {
-		z-index: 20;
-	}
-</style>

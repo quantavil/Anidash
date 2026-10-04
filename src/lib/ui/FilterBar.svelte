@@ -2,96 +2,146 @@
 	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { debounce } from '$lib/utils/debounce';
-	import type { SortKey } from '$lib/utils/sort';
-	import { ArrowDownWideNarrow } from 'lucide-svelte';
+	import { ArrowUpDown } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
-	const options: { key: SortKey; label: string }[] = [
-		{ key: 'updated', label: 'Recently updated' },
-		{ key: 'title', label: 'Title A–Z' },
-		{ key: 'score', label: 'Your rating' },
-		{ key: 'mean', label: 'MAL rating' },
-		{ key: 'progress', label: 'Episode progress' }
+
+	import type { SortKey } from '$lib/utils/sort';
+
+	const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+		{ key: 'updated', label: 'Last Updated' },
+		{ key: 'title', label: 'Title' },
+		{ key: 'score', label: 'My Score' },
+		{ key: 'mean', label: 'Rating' },
+		{ key: 'progress', label: 'Progress' }
 	];
-	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated'));
+
+	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
-	const search = debounce((value: string) => {
+
+	import { debounce } from '$lib/utils/debounce';
+
+	let showSortMenu = $state(false);
+	let focusedIndex = $state(-1);
+
+	function setSort(key: SortKey) {
+		goto(setUrlParam(page.url, 'sort', key === 'updated' ? '' : key), {
+			keepFocus: true,
+			noScroll: true
+		});
+		showSortMenu = false;
+		focusedIndex = -1;
+	}
+
+	function handleSortKeydown(e: KeyboardEvent) {
+		if (!showSortMenu) {
+			if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				showSortMenu = true;
+				focusedIndex = 0;
+			}
+			return;
+		}
+		switch (e.key) {
+			case 'Escape':
+				e.preventDefault();
+				showSortMenu = false;
+				focusedIndex = -1;
+				break;
+			case 'ArrowDown':
+				e.preventDefault();
+				focusedIndex = (focusedIndex + 1) % SORT_OPTIONS.length;
+				break;
+			case 'ArrowUp':
+				e.preventDefault();
+				focusedIndex = (focusedIndex - 1 + SORT_OPTIONS.length) % SORT_OPTIONS.length;
+				break;
+			case 'Enter':
+			case ' ':
+				e.preventDefault();
+				if (focusedIndex >= 0) setSort(SORT_OPTIONS[focusedIndex].key);
+				break;
+		}
+	}
+
+	const debouncedSearch = debounce((value: string) => {
 		goto(setUrlParam(page.url, 'q', value), { keepFocus: true, noScroll: true });
 	}, 250);
-	$effect(() => () => search.cancel());
+
+	function handleSearch(e: Event) {
+		const value = (e.target as HTMLInputElement).value;
+		debouncedSearch(value);
+	}
+
+	$effect(() => {
+		return () => {
+			debouncedSearch.cancel();
+		};
+	});
+
 	function clearSearch() {
-		search.cancel();
 		goto(setUrlParam(page.url, 'q', ''), { keepFocus: true, noScroll: true });
 	}
+
+	const sortLabel = $derived(
+		SORT_OPTIONS.find((o) => o.key === currentSort)?.label ?? 'Last Updated'
+	);
 </script>
 
-<div class="filter-bar">
-	<SearchInput
-		value={currentQuery}
-		placeholder="Find in your list…"
-		label="Search your list"
-		oninput={(e) => search((e.target as HTMLInputElement).value)}
-		onclear={clearSearch}
-	/>
-	<label class="sort-control"
-		><ArrowDownWideNarrow size={20} /><span class="sr-only">Sort anime list</span><select
-			aria-label="Sort anime list"
-			value={currentSort}
-			onchange={(e) =>
-				goto(
-					setUrlParam(
-						page.url,
-						'sort',
-						e.currentTarget.value === 'updated' ? '' : e.currentTarget.value
-					),
-					{ keepFocus: true, noScroll: true }
-				)}
-			>{#each options as option (option.key)}<option value={option.key}>{option.label}</option
-				>{/each}</select
-		></label
-	>
-</div>
+<div class="flex w-full flex-wrap items-center justify-between gap-3">
+	<!-- Search -->
+	<div class="flex-1 min-w-[200px]">
+		<SearchInput
+			value={currentQuery}
+			placeholder="Search your list…"
+			oninput={handleSearch}
+			onclear={clearSearch}
+		/>
+	</div>
 
-<style>
-	.filter-bar {
-		display: flex;
-		gap: 10px;
-		align-items: center;
-		min-width: 0;
-		width: 100%;
-	}
-	.filter-bar :global(.search-field) {
-		flex: 1;
-		min-width: 0;
-	}
-	.filter-bar :global(.search-box) {
-		height: 48px;
-	}
-	.sort-control {
-		position: relative;
-		display: grid;
-		place-items: center;
-		flex: 0 0 48px;
-		height: 48px;
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		background: var(--color-surface-1);
-		color: var(--color-text-secondary);
-	}
-	.sort-control:focus-within {
-		outline: 2px solid var(--color-primary);
-		outline-offset: 3px;
-	}
-	select {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		opacity: 0;
-		cursor: pointer;
-	}
-	option {
-		background: var(--color-surface-1);
-		color: var(--color-text-primary);
-	}
-</style>
+	<!-- Controls -->
+	<div class="flex items-center gap-2">
+		<!-- Sort -->
+		<div class="relative">
+			<button
+				onclick={() => (showSortMenu = !showSortMenu)}
+				onkeydown={handleSortKeydown}
+				aria-haspopup="true"
+				aria-expanded={showSortMenu}
+				aria-label="Sort anime list: currently {sortLabel}"
+				class="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+			>
+				<ArrowUpDown size={14} />
+				{sortLabel}
+			</button>
+
+			{#if showSortMenu}
+				<!-- Click-away overlay -->
+				<div
+					class="fixed inset-0 z-40"
+					onclick={() => {
+						showSortMenu = false;
+						focusedIndex = -1;
+					}}
+					role="presentation"
+				></div>
+				<div class="absolute right-0 top-full mt-2 glass-dropdown border-border!" role="menu">
+					{#each SORT_OPTIONS as option, idx (option.key)}
+						<button
+							onclick={() => setSort(option.key)}
+							role="menuitem"
+							tabindex="-1"
+							class="glass-dropdown-item w-full
+              {currentSort === option.key
+								? '!bg-primary/10 !text-primary'
+								: idx === focusedIndex
+									? '!bg-white/10 !text-text-primary'
+									: 'text-text-secondary'}"
+						>
+							{option.label}
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</div>
+</div>

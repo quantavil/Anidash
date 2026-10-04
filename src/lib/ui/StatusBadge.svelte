@@ -8,15 +8,11 @@
 		malId,
 		status,
 		showLabel = false,
-		quiet = false,
-		fullWidth = false,
 		class: className = ''
 	}: {
 		malId: number;
 		status: AnimeStatus;
 		showLabel?: boolean;
-		quiet?: boolean;
-		fullWidth?: boolean;
 		class?: string;
 	} = $props();
 
@@ -32,31 +28,36 @@
 		watching: {
 			label: 'Watching',
 			icon: Play,
-			badgeClass: 'bg-primary/25 text-primary border-primary/50 hover:bg-primary/35',
+			badgeClass:
+				'bg-primary/25 text-[#bfb5ff] border-primary/50 hover:bg-primary/35 shadow-[0_0_12px_rgba(139,126,248,0.3)]',
 			iconClass: 'text-primary'
 		},
 		completed: {
 			label: 'Completed',
 			icon: Check,
-			badgeClass: 'bg-success/25 text-success border-success/50 hover:bg-success/35',
+			badgeClass:
+				'bg-success/25 text-success border-success/50 hover:bg-success/35 shadow-[0_0_12px_rgba(34,197,94,0.3)]',
 			iconClass: 'text-success'
 		},
 		plan_to_watch: {
 			label: 'PTW',
 			icon: Bookmark,
-			badgeClass: 'bg-info/25 text-info border-info/50 hover:bg-info/35',
+			badgeClass:
+				'bg-info/25 text-info border-info/50 hover:bg-info/35 shadow-[0_0_12px_rgba(59,130,246,0.3)]',
 			iconClass: 'text-info'
 		},
 		on_hold: {
 			label: 'On Hold',
 			icon: Pause,
-			badgeClass: 'bg-warning/25 text-warning border-warning/50 hover:bg-warning/35',
+			badgeClass:
+				'bg-warning/25 text-warning border-warning/50 hover:bg-warning/35 shadow-[0_0_12px_rgba(234,179,8,0.3)]',
 			iconClass: 'text-warning'
 		},
 		dropped: {
 			label: 'Dropped',
 			icon: XCircle,
-			badgeClass: 'bg-error/25 text-error border-error/50 hover:bg-error/35',
+			badgeClass:
+				'bg-error/25 text-error border-error/50 hover:bg-error/35 shadow-[0_0_12px_rgba(239,68,68,0.3)]',
 			iconClass: 'text-error'
 		}
 	};
@@ -106,32 +107,23 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<div
-	bind:this={rootEl}
-	class:stretch={fullWidth}
-	class="relative inline-block"
-	onclick={(e) => e.stopPropagation()}
->
+<div bind:this={rootEl} class="relative inline-block" onclick={(e) => e.stopPropagation()}>
 	<button
-		class:quiet
 		bind:this={triggerEl}
 		onclick={handleToggle}
 		aria-expanded={open}
 		aria-haspopup="menu"
-		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 {showLabel
-			? 'min-h-11 px-3 py-1.5 gap-2 rounded-lg text-xs'
-			: 'h-11 w-11 rounded-lg'} {STATUS_CONFIG[status]?.badgeClass} {className}"
+		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 focus:outline-none {showLabel
+			? 'px-3 py-1.5 gap-2 rounded-xl'
+			: 'h-7 w-7 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
 		title="{STATUS_CONFIG[status]?.label} (Click to change status)"
 		aria-label="Status: {STATUS_CONFIG[status]?.label}"
 	>
-		{#if quiet}<span class="status-dot {STATUS_CONFIG[status]?.iconClass}" aria-hidden="true"
-			></span>{:else}
-			<ActiveIcon
-				size={13}
-				fill={status === 'completed' || status === 'dropped' ? 'none' : 'currentColor'}
-				class="transition-transform group-hover:scale-110 shrink-0"
-			/>
-		{/if}
+		<ActiveIcon
+			size={13}
+			fill={status === 'completed' || status === 'dropped' ? 'none' : 'currentColor'}
+			class="transition-transform group-hover:scale-110 shrink-0"
+		/>
 		{#if showLabel}
 			<span class="font-medium">{STATUS_CONFIG[status]?.label}</span>
 		{/if}
@@ -141,14 +133,14 @@
 		<div
 			role="menu"
 			transition:fade={{ duration: 120 }}
-			class="absolute left-0 top-full z-50 mt-1.5 min-w-[140px] whitespace-nowrap rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl"
+			class="absolute left-0 top-full z-50 mt-1.5 min-w-[140px] whitespace-nowrap rounded-xl border border-white/10 bg-surface-1/95 p-1.5 shadow-2xl backdrop-blur-2xl"
 		>
 			{#each ALL_STATUSES as s (s)}
 				{@const cfg = STATUS_CONFIG[s]}
 				<button
 					role="menuitem"
 					onclick={() => handleSelect(s)}
-					class="flex w-full min-h-11 items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
+					class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
 					{s === status ? 'bg-white/15 text-text-primary font-semibold' : 'text-text-secondary'}"
 				>
 					<cfg.icon
@@ -168,7 +160,7 @@
 			<button
 				role="menuitem"
 				onclick={handleRemove}
-				class="flex w-full min-h-11 items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
+				class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
 			>
 				<Trash2 size={13} />
 				<span class="flex-1 text-left">Remove</span>
@@ -176,47 +168,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	.stretch {
-		display: block;
-		width: 100%;
-	}
-	.stretch > button {
-		width: 100%;
-		min-height: 44px;
-		transform: none;
-		box-shadow: none;
-	}
-	.quiet {
-		justify-content: flex-start;
-		gap: 7px;
-		min-height: 44px;
-		min-width: 44px;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		box-shadow: none;
-		color: var(--color-text-secondary);
-		font-size: 12px;
-		transform: none;
-	}
-	.quiet:hover {
-		color: var(--color-text-primary);
-		background: transparent;
-		transform: none;
-	}
-	.quiet:active {
-		transform: none;
-	}
-	.quiet .status-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: currentColor;
-		flex: none;
-	}
-	.quiet > span:last-child {
-		font-weight: 400;
-	}
-</style>

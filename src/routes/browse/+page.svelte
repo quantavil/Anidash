@@ -363,7 +363,7 @@
 
 <div class="py-6">
 	<!-- Header -->
-	<h1 class="route-title">Browse</h1>
+	<h1 class="text-2xl font-bold text-text-primary">Browse Anime</h1>
 	<p class="mt-1 text-sm text-text-secondary">Search and discover anime to add to your list</p>
 
 	<!-- Search Bar -->
@@ -389,7 +389,7 @@
 					aria-label="Sort results"
 					value={filterSort}
 					onchange={(e) => setFilter('sort', (e.target as HTMLSelectElement).value)}
-					class="min-h-11 w-full appearance-none rounded-full border border-white/5 bg-white/5 px-4 py-2.5 pr-9 text-sm text-text-secondary outline-none transition-all focus:bg-white/10 cursor-pointer"
+					class="w-full appearance-none rounded-full border border-white/5 bg-white/5 px-4 py-2.5 pr-9 text-sm text-text-secondary outline-none transition-all focus:bg-white/10 cursor-pointer"
 				>
 					{#each SORTS as s (s.value)}
 						<option value={s.value} class="bg-surface-2">{s.label}</option>
@@ -404,29 +404,32 @@
 	</div>
 
 	<!-- Always-visible filter chips -->
-	<div class="mt-4 grid gap-3" role="group" aria-label="Filters">
+	<div class="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
 		<!-- Type chips -->
-		<div class="flex items-center gap-2 overflow-x-auto scrollbar-none">
-			{#each TYPES as t (t.value)}
-				{@const active = filterType === t.value}
-				<button
-					onclick={() => setFilter('type', active ? '' : t.value)}
-					aria-pressed={active}
-					class="shrink-0 min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
-						? 'border-primary/50 bg-primary/15 text-primary'
-						: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
-				>
-					{t.label}
-				</button>
-			{/each}
-		</div>
+		{#each TYPES as t (t.value)}
+			{@const active = filterType === t.value}
+			<button
+				onclick={() => setFilter('type', active ? '' : t.value)}
+				aria-pressed={active}
+				class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
+					? 'border-primary/50 bg-primary/15 text-primary'
+					: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
+			>
+				{t.label}
+			</button>
+		{/each}
+
+		<span class="h-5 w-px bg-white/10" aria-hidden="true"></span>
 
 		<!-- Genre chips (horizontally scrollable) -->
-		<div class="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none">
+		<div
+			class="flex max-w-full items-center gap-2 overflow-x-auto scrollbar-none"
+			style="max-width: min(100%, 34rem)"
+		>
 			<button
 				onclick={() => setFilter('genre', '')}
 				aria-pressed={!filterGenre}
-				class="shrink-0 min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {!filterGenre
+				class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {!filterGenre
 					? 'border-primary/50 bg-primary/15 text-primary'
 					: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
 			>
@@ -437,7 +440,7 @@
 				<button
 					onclick={() => setFilter('genre', active ? '' : String(g.id))}
 					aria-pressed={active}
-					class="shrink-0 min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
+					class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer {active
 						? 'border-primary/50 bg-primary/15 text-primary'
 						: 'border-white/5 bg-white/5 text-text-muted hover:border-white/15 hover:text-text-secondary'}"
 				>
@@ -464,13 +467,15 @@
 				{#if isLandingView}
 					<div class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
 						<div
-							class="min-h-[72px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[76px]"
+							class="min-h-[130px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[150px]"
 						></div>
 						<div
-							class="min-h-[72px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[76px]"
+							class="min-h-[130px] animate-pulse rounded-2xl border border-white/5 bg-surface-1/60 sm:min-h-[150px]"
 						></div>
 					</div>
-					<h2 class="mb-4 text-sm font-medium text-text-secondary">Popular anime</h2>
+					<h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">
+						Popular Anime
+					</h2>
 				{/if}
 				<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 					<AnimeCardSkeleton count={10} />
@@ -481,7 +486,9 @@
 				<div transition:fade={{ duration: 150 }}>
 					<RecommenderWidgets />
 				</div>
-				<h2 class="mb-4 mt-8 text-sm font-medium text-text-secondary">Popular anime</h2>
+				<h2 class="mb-4 mt-8 text-sm font-semibold uppercase tracking-wider text-text-muted">
+					Popular Anime
+				</h2>
 			{/if}
 			<div
 				class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
@@ -503,7 +510,7 @@
 					{:else}
 						<button
 							onclick={() => fetchOnline(currentPage + 1, true, currentSearchId)}
-							class="min-h-11 rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+							class="rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
 						>
 							Show More
 						</button>
@@ -521,7 +528,7 @@
 				<p class="text-sm text-text-secondary">Couldn't load anime right now</p>
 				<button
 					onclick={runSearch}
-					class="mt-4 min-h-11 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+					class="mt-4 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
 				>
 					Retry
 				</button>
@@ -542,7 +549,7 @@
 				</p>
 				<button
 					onclick={clearAllFilters}
-					class="mt-4 min-h-11 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+					class="mt-4 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
 				>
 					Clear All Filters
 				</button>

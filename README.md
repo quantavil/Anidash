@@ -1,94 +1,110 @@
-# AniDash
+# AniDash ✨
 
-A personal anime watch journal connected to MyAnimeList. Track episodes, keep your own ratings, and find your next series in a responsive interface built around your actual collection. Current release: **0.1.3**.
+![AniDash Preview](static/screenshots/preview.png)
 
-## The watch journal
+AniDash is a premium, high-end personal anime tracker with a focus on **Ethereal Glass** aesthetics and high-performance list management. Powered by **Svelte 5 (Runes)**, **Tailwind CSS v4**, and the **MyAnimeList API**. Current release: **0.1.3**.
 
-- **Journal and poster views.** The default journal pairs a compact featured watching entry with compact progress rows and a Plan to Watch shelf. Choose Journal or Posters in preferences while keeping your filters and sort order. The choice is saved on this device.
-- **Ratings you can read and edit.** MAL community ratings and your personal scores have separate labels. Read both scores on list cards; edit personal scores in anime details or the optional completion prompt. Poster cards show status badges on artwork and episode controls. Browse and Seasonal use aligned boxed actions.
-- **Comfortable on every screen.** Midnight black surfaces, violet actions, proportional Outfit headings, and gold ratings refine the original AniDash interface. Locally hosted Outfit, visible keyboard focus, and large touch controls support desktop, tablet, and phone use.
-- **Local edits and queued sync.** Changes update immediately in IndexedDB and queue for MAL. Starting a planned title moves it to Watching. Last Updated order changes after MAL acknowledges the edit.
-- **Discovery and details.** Search MAL, explore popular and seasonal anime, identify English dubs, and view characters, recommendations, review excerpts, tags, trailers, and airing information where available.
-- **Personal statistics and preferences.** Explore score and format distributions, and choose English or Romaji titles.
+The original AniDash interface is restored, with the current illustrated welcome screen retained. Public visitors can explore anime before connecting MyAnimeList.
 
-The service worker keeps the app shell available after an online visit. Previously cached list data remains usable offline and edits can wait for reconnection. New searches and uncached details require a connection; cross-origin artwork is not precached by the service worker.
+## ✨ Features
 
-## Data and architecture
+- **Ethereal Glass UI**: A custom-crafted design system using frosted glassmorphism, fluid animations, and high-contrast OLED black themes.
+- **Offline-First Resilience**: Full IndexedDB caching for your entire watch list. Browse, check stats, and view anime details even without an internet connection.
+- **Fused Filtering Logic**: Optimized `+page.svelte` by consolidating chained filter calls into a single `O(N)` pass, reducing intermediate array allocations and GC pressure during user interaction.
+- **Offline Sync Queue**: Implemented a discrete `syncQueue` IndexedDB store (DB_VERSION 2) to natively sequester offline or failed user mutations. Ensures offline mutations are maintained optimistically and re-attempted sequentially upon resolving `navigator.onLine` or triggering `flushPersistentQueue`.
+- **Zero-Dependency Visuals**: Implemented score and media format distribution charts using pure CSS/Svelte logic, maintaining high performance and small bundle size while providing premium analytics.
+- **Bi-Directional Sync**: Modern MAL API v2 integration with proper PKCE OAuth, real-time status updates, and permanent list deletion support.
+- **Stable List Ordering**: `+` clicks update counts instantly but move entries to the top of Last Updated only after MAL confirms; starting a Plan to Watch title moves it to Watching automatically. Browse search fires at 3+ characters.
+- **MAL-Dubs Integration**: Instantly identify which anime have English dubs available using the MAL-Dubs dataset with a persistent 7-day TTL cache.
+- **Advanced Recommendations**: Dual-source suggestions from MyAnimeList + AniList (GraphQL `https://graphql.anilist.co`, no-auth). AniList is the single primary enrichment source (no Jikan, no title-search fallback): characters + Japanese VAs, recommendations, reviews, tags, trailer, airing schedule, relations & nextAiring — direct `Media(idMal)` only.
+- **Dynamic Stats & Sorting**: Comprehensive dashboard tracking your watching habits, episode distribution, and rating history with responsive visualizations. Enhanced data navigation with "MAL Rating" sorting for your personal list and seasonal anime.
+- **Smart Data Insights**: Community rating and member statistics (e.g., "8.3 | 250K") displayed on poster overlays using short-scale formatting (K/M) for maximum density.
+- **Bilingual Title Support**: Global settings toggle to seamlessly switch between English and Romaji (Japanese) anime titles, complete with smooth flip animations and persistent local preferences.
+- **Interactive Discovery**: Turn empty states into opportunities with glassmorphic "Plan to Watch Roulette" and "Seasonal Surprise" widgets built directly into the Browse page.
+- **Enhanced Detail Gallery**: Lazily-loaded AniList enrichment — characters (with favourites & VA), curated recommendations, safe plain-text review excerpts, ranked tags, YouTube trailer, and next-airing countdown — plus a "Quick Stats" row with precise scoring user counts. Trailer IDs are trimmed and validated with `^[a-zA-Z0-9_-]{11}$`; CSP restricts embedded frames to YouTube.
+- **Integrated Airing Schedules**: Native MAL broadcast + AniList `nextAiringEpisode{episode airingAt timeUntilAiring}` countdown displayed on detail pages.
+- **Visual Analytics Dashboard**: Deep dive into your watch history with score distribution histograms and media format charts built natively for maximum performance.
+- **Detailed Search Context**: Search and browse results now explicitly show your list status (Watching, Completed, etc.) and real-time watch progress (e.g. 12/24) directly on the posters.
+- **Type-Safe OAuth**: End-to-end Zod schema validation ensures authentication logic is resilient to unexpected API changes.
+- **Environment-Aware Logging**: Centralized logging utility silences debug warnings in production builds for a cleaner end-user experience.
 
-AniDash uses Svelte 5 runes, SvelteKit 2, Tailwind CSS v4, IndexedDB, Zod, and the Cloudflare adapter. The frontend runs as a client-rendered app with same-origin server routes for MAL authentication and API access.
+## 🏗️ Architecture
 
-**MyAnimeList API v2** supplies authentication, list sync, search, rankings, seasonal results, and core anime details. **AniList GraphQL** is the sole detail enrichment source: one validated, rate-limited `Media(idMal)` request per anime, with in-flight deduplication and a seven-day cache. Missing matches stay empty; there is no title-search fallback or Jikan integration.
+AniDash is a unified SvelteKit application optimized for **Cloudflare Pages**.
 
-Popular and seasonal results use separate 24-hour stale-while-revalidate caches. The MAL-Dubs dataset has a 24-hour cache. Review excerpts and synopses render as plain text; trailer embeds accept validated YouTube IDs only.
+1. **Frontend**: SvelteKit SPA using Svelte 5's fine-grained reactivity (Runes).
+2. **Backend**: Serverless Edge Functions (`src/routes/api/[...path]/+server.ts`) that handle secure MAL token exchange and CORS proxying for `https://api.myanimelist.net`. AniList enrichment bypasses the proxy and hits `https://graphql.anilist.co` directly from the browser (no auth, Zod-validated, `anilistLimiter` 700ms / 90→30 req/min, cached 7 days per anime).
+3. **Database**: Client-side IndexedDB (meta: `anilist:fetch:` 7d TTL + `browse:popular:v1` 24h SWR, `seasonal:YYYY:season`; anime details stale-while-revalidate).
+4. **Enrichment**: AniList GraphQL is the **only** detail enrichment source. `Media(idMal type:ANIME)` direct lookup — if `null`, show empty (no `Page{media(search)}` fallback, no Jikan). Query: `tags{name rank isAdult}` (no `isGeneral`), `characters(voiceActors:JAPANESE)`, `recommendations`, `reviews`, `trailer`, `nextAiringEpisode`. CSP `connect-src` + `preconnect` allow `graphql.anilist.co`; `frame-src` allows only `www.youtube.com` for validated trailers. AniList review markup is normalized into plain text and never rendered with `{@html}`.
 
-## Run locally
+---
 
-Use the Node version in [.node-version](.node-version), currently **24.15.0**.
+## 🛠 Setup & Development
 
-```sh
-npm ci
-```
+### 1. Get MAL API Credentials
 
-Create a web application in [MyAnimeList API settings](https://myanimelist.net/apiconfig). Register `http://localhost:5173/auth/callback` and your production callback URL. AniDash sends the current origin plus `/auth/callback`, so localhost, `127.0.0.1`, and preview domains each need their exact callback registered if used for login.
+1. Go to [MyAnimeList API Settings](https://myanimelist.net/apiconfig).
+2. Create a new ID.
+   - **App Type**: `web`
+   - **Redirect URI**: one per line, each with its scheme — `http://localhost:5173/auth/callback` for local dev, plus your production URL (see Deployment). The app sends `${window.location.origin}/auth/callback`, so every origin you log in from (including Cloudflare preview deployments) must be registered exactly.
 
-Set both public client IDs in `wrangler.toml` to the same value:
+### 2. Environment Variables
 
-```toml
-[vars]
-VITE_MAL_CLIENT_ID = "your_mal_client_id"
-MAL_CLIENT_ID = "your_mal_client_id"
-```
+Create a `.env` file in the root for the frontend:
 
-For the local Vite frontend, create `.env`:
-
-```dotenv
+```env
 VITE_MAL_CLIENT_ID=your_mal_client_id
 ```
 
-Create `.dev.vars` for the local Cloudflare server secret:
+For local development of server-side routes, create a `.dev.vars` file in the root (used by Wrangler):
 
-```dotenv
+```env
+MAL_CLIENT_ID=your_mal_client_id
 MAL_CLIENT_SECRET=your_mal_client_secret
 ```
 
-Both local files are gitignored. Server credentials come from `platform.env` through the Cloudflare platform proxy. Restart the dev server after changing `.dev.vars`.
+`MAL_CLIENT_ID` comes from `wrangler.toml`; only the secret goes in `.dev.vars`. Restart `npm run dev` after editing `.dev.vars` — it is read once at startup.
+
+### 3. Running Locally
+
+Use Node.js 24.15.0 (declared in `.node-version`) or another version allowed by `package.json`.
 
 ```sh
+npm install
 npm run dev
 ```
 
-Open [localhost:5173](http://localhost:5173).
+_The app will run on [http://localhost:5173](http://localhost:5173)._
 
-## Verification
+---
 
-```sh
-VITE_MAL_CLIENT_ID=dummy npm run check
-VITE_MAL_CLIENT_ID=dummy npm test
-VITE_MAL_CLIENT_ID=dummy npm run build
-npm run lint
-```
+## 🚀 Deployment (Cloudflare Pages)
 
-The dummy client ID supports build and test verification; use your registered ID for actual login. Vitest covers API, authentication, cache, sync, and utility behavior. [Browser checks](tests/browser/README.md) exercise ratings, episode edits, status changes, responsive layouts at 320/390/820/1440px, and offline navigation to `/`, `/browse`, and `/stats` in isolated Chromium contexts.
+AniDash is optimized for Cloudflare Pages.
 
-See [AGENTS.md](AGENTS.md) for the engineering contract and [the refinement notes](docs/original-refinement.md) for the current visual direction. Deployed PageSpeed improvements have not yet been measured.
+### 1. Preparation
 
-## Deploy to Cloudflare Pages
+1. Ensure your MAL API Client settings include your production URL in the **Redirect URIs**:
+   `https://your-app.pages.dev/auth/callback`
 
-Connect the repository with these settings:
+### 2. Cloudflare Pages Setup
 
-| Setting          | Value                    |
-| ---------------- | ------------------------ |
-| Framework preset | SvelteKit                |
-| Build command    | `npm run build`          |
-| Output directory | `.svelte-kit/cloudflare` |
-| Node version     | From `.node-version`     |
+1. Connect your repository to **Cloudflare Pages**.
+2. **Build settings**:
+   - **Framework preset**: `SvelteKit`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `.svelte-kit/cloudflare`
+   - **Node.js version**: Cloudflare reads `24.15.0` from `.node-version`
+3. **Environment Variables**:
+   `wrangler.toml` provides the public MAL client ID to both the Vite build and the Pages runtime. In the Cloudflare Dashboard, go to **Settings > Variables and Secrets** and add only the secret:
 
-`wrangler.toml` supplies the matching public client IDs and Cloudflare compatibility settings. Add `MAL_CLIENT_SECRET` as a **Secret** in Cloudflare for each environment that needs login. Never commit it or expose it through a `VITE_` variable. Register each deployment's callback URL in MAL before using login there.
+   | Variable            | Type   | Description                                 |
+   | ------------------- | ------ | ------------------------------------------- |
+   | `MAL_CLIENT_SECRET` | Secret | Your MAL Client Secret (Keep this private). |
 
-Pushes to `main` trigger the connected Cloudflare Pages deployment.
+4. **Compatibility Date**:
+   Ensure the compatibility date is set to at least `2024-04-01` in the dashboard or `wrangler.toml`.
 
 ## License
 
-[GNU General Public License v3.0 or later](LICENSE).
-
-List status tabs form the page heading. Search and icon-only sorting share a row. Preferences contain the saved Journal/Poster view choice; URL view overrides preserve shared links. Personal and MAL scores remain visible, with personal rating edits in anime details and a dismissible prompt after completing an unrated entry.
+This project is licensed under the [GNU General Public License v3.0](LICENSE).

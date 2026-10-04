@@ -6,14 +6,12 @@
 		/** Alert-style dialogs cannot be dismissed via Esc / backdrop click. */
 		dismissible = true,
 		wide = false,
-		label,
 		onclose,
 		children
 	}: {
 		open?: boolean;
 		dismissible?: boolean;
 		wide?: boolean;
-		label?: string;
 		onclose?: () => void;
 		children?: Snippet;
 	} = $props();
@@ -56,7 +54,6 @@
 	bind:this={dialogEl}
 	class="anidash-dialog {wide ? 'anidash-dialog-wide' : ''}"
 	aria-modal="true"
-	aria-label={label}
 	oncancel={handleCancel}
 	onclose={handleClose}
 	onclick={handleClick}

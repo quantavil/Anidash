@@ -8,11 +8,8 @@
 	import { matchesFuzzy } from '$lib/utils/search';
 	import { formatListStatus } from '$lib/utils/format';
 
-	import { settingsStore } from '$lib/stores/settings.svelte';
 	import { ArrowUpRight } from 'lucide-svelte';
 	import StoryWindow from '$lib/ui/StoryWindow.svelte';
-	import AnimeJournal from '$lib/ui/AnimeJournal.svelte';
-	import CollectionShelf from '$lib/ui/CollectionShelf.svelte';
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
 	import AnimeGrid from '$lib/ui/AnimeGrid.svelte';
@@ -24,10 +21,6 @@
 	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
 
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
-
-	const gridView = $derived(
-		(page.url.searchParams.get('view') ?? settingsStore.listView) === 'grid'
-	);
 
 	// ─── Derived Data & Stable Sort State ───
 	// Keep card ordering stable while user interacts with episode counts/scores on the page,
@@ -106,59 +99,40 @@
 {:else if !userListStore.initialized}
 	<ListPageSkeleton />
 {:else}
-	<div class="list-page">
-		<h1 class="sr-only">Your anime list</h1>
-		<TabBar counts={userListStore.statusCounts} />
-		<div class="list-toolbar"><FilterBar /></div>
-		<div class="journal-layout" class:full-width={gridView}>
-			<div class="list-content">
-				{#if gridView}<AnimeGrid
-						entries={filteredEntries}
-						resetKey="{currentTab}-{currentSort}-{currentQuery}"
-						loading={false}
-						empty={emptyState}
-					/>{:else}<AnimeJournal
-						entries={filteredEntries}
-						feature={currentTab === 'watching' && !currentQuery}
-						resetKey="{currentTab}-{currentSort}-{currentQuery}"
-						empty={emptyState}
-					/>{/if}
-			</div>
-			{#if !gridView}<CollectionShelf />{/if}
+	<div class="py-6">
+		<!-- Header -->
+		<div class="mb-5">
+			<h1 class="text-2xl font-bold text-text-primary">My Anime List</h1>
 		</div>
+
+		<!-- Tabs -->
+		<div class="mb-4">
+			<TabBar counts={userListStore.statusCounts} />
+		</div>
+
+		<!-- Filters -->
+		<div class="mb-5">
+			<FilterBar />
+		</div>
+
+		<!-- Grid / List -->
+		<AnimeGrid
+			entries={filteredEntries}
+			resetKey="{currentTab}-{currentSort}-{currentQuery}"
+			loading={false}
+			empty={emptyState}
+		/>
+
+		<!-- Stats footer -->
+		{#if filteredEntries.length > 0}
+			<div class="mt-6 border-t border-border pt-4 text-center text-xs text-text-muted">
+				Showing {filteredEntries.length} of {userListStore.totalCount} entries
+			</div>
+		{/if}
 	</div>
 {/if}
 
 <style>
-	.list-page {
-		padding: 40px 0 24px;
-	}
-	h1 {
-		font-family: var(--font-display);
-		font-size: clamp(32px, 3.8vw, 46px);
-		font-weight: 600;
-		line-height: 1.05;
-		letter-spacing: -0.045em;
-	}
-	.list-toolbar {
-		display: flex;
-		padding: 18px 0 24px;
-	}
-	.list-toolbar :global(.filter-bar) {
-		flex: 1;
-	}
-	.journal-layout {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 260px;
-		gap: 28px;
-		align-items: start;
-	}
-	.journal-layout.full-width {
-		grid-template-columns: minmax(0, 1fr);
-	}
-	.list-content {
-		min-width: 0;
-	}
 	.welcome-page {
 		display: grid;
 		grid-template-columns: 1.2fr 1fr;
@@ -203,23 +177,35 @@
 		justify-self: center;
 	}
 
+	.welcome-copy h1 {
+		font-family: var(--font-sans);
+		font-weight: 600;
+		line-height: 1.05;
+		letter-spacing: -0.045em;
+	}
+	.primary-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		min-height: 48px;
+		padding: 12px 20px;
+		border-radius: 12px;
+		background: var(--color-primary);
+		color: #17122e;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.primary-button:hover {
+		background: var(--color-primary-hover);
+	}
 	@media (max-width: 1100px) {
-		.journal-layout {
-			grid-template-columns: minmax(0, 1fr);
-		}
 		.welcome-page {
 			gap: 32px;
 			padding: 50px 0;
 		}
 	}
 	@media (max-width: 640px) {
-		.list-page {
-			padding-top: 28px;
-		}
-		.list-toolbar {
-			padding: 14px 0 20px;
-		}
-
 		.welcome-page {
 			grid-template-columns: 1fr;
 			padding: 42px 0;

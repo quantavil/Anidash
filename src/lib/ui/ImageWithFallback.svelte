@@ -7,7 +7,6 @@
 		aspectRatio = '3/4',
 		fallbackIcon = 'film',
 		index,
-		priority = false,
 		class: className = ''
 	}: {
 		src: string | null | undefined;
@@ -15,7 +14,6 @@
 		aspectRatio?: string;
 		fallbackIcon?: 'film' | 'user';
 		index?: number;
-		priority?: boolean;
 		class?: string;
 	} = $props();
 
@@ -43,8 +41,7 @@
 			bind:this={imgEl}
 			{src}
 			{alt}
-			loading={priority || (index !== undefined && index < 5) ? 'eager' : 'lazy'}
-			fetchpriority={priority ? 'high' : 'auto'}
+			loading={index !== undefined && index < 5 ? 'eager' : 'lazy'}
 			decoding="async"
 			onload={() => (loaded = true)}
 			onerror={() => (error = true)}

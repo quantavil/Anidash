@@ -13,13 +13,13 @@ with sync_playwright() as p:
     assert page.evaluate('!!navigator.serviceWorker.controller'),'No controlling service worker'
     for route in ['/browse','/stats']:
         page.goto(base+route)
-        expect(page.get_by_role('link',name='AniDash home')).to_be_visible()
+        expect(page.locator('header > a[href="/"]:visible')).to_be_visible()
     context.unroute(base+'/api/**')
     context.set_offline(True)
     for route in ['/','/browse','/stats']:
         page.goto(base+route)
         page.reload()
-        expect(page.get_by_role('link',name='AniDash home')).to_be_visible()
+        expect(page.locator('header > a[href="/"]:visible')).to_be_visible()
         expect(page.locator('main')).to_be_visible()
         assert 'Internal Error' not in page.locator('body').inner_text()
         print('PASS offline navigation and reload',route)

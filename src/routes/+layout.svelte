@@ -7,13 +7,12 @@
 	import { onMount } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 
+	import ListPageSkeleton from '$lib/ui/skeletons/ListPageSkeleton.svelte';
 	import FluidNav from '$lib/ui/FluidNav.svelte';
 	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
-	import CompletionRatingDialog from '$lib/ui/CompletionRatingDialog.svelte';
 	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
-	import ListPageSkeleton from '$lib/ui/skeletons/ListPageSkeleton.svelte';
 	import { logger } from '$lib/utils/logger';
 
 	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
@@ -119,29 +118,30 @@
 	theme="dark"
 	position="top-right"
 	toastOptions={{
-		style: 'background: #111116; border: 1px solid #282834; color: #f4f3fa;',
+		style: 'background: #18181b; border: 1px solid #27272a; color: #f4f4f5;',
 		duration: 3000
 	}}
 />
 
-<a class="skip-link" href="#main-content">Skip to content</a>
-<div class="app-shell">
+<!-- ─── Main Layout ─── -->
+<div class="flex min-h-screen flex-col bg-surface-0">
 	<FluidNav />
-	<div class="app-content">
-		{#if authStore.isAuthenticated}<OfflineBanner />{/if}
-		<main id="main-content" tabindex="-1">
-			{#if !initialized || authStore.isLoading}<div
-					aria-label="Loading your journal"
-					aria-busy="true"
-				>
-					<ListPageSkeleton />
-				</div>{:else}{@render children()}{/if}
+
+	<!-- Main content area -->
+	<div class="flex flex-1 flex-col min-w-0 pt-16 md:pt-24 pb-20 md:pb-0 max-w-7xl mx-auto w-full">
+		<!-- Offline banner -->
+		{#if authStore.isAuthenticated}
+			<OfflineBanner />
+		{/if}
+
+		<!-- Page content -->
+		<main class="flex-1 px-4 lg:px-8">
+			{#if !initialized || authStore.isLoading}<ListPageSkeleton />{:else}{@render children()}{/if}
 		</main>
 	</div>
 </div>
-{#if initialized && authStore.isAuthenticated}<CompleteAnimeDialog
-		bind:open={userListStore.showCompleteDialog}
-		bind:malId={userListStore.completeTargetId}
-	/>{/if}
 
-{#if initialized && authStore.isAuthenticated}<CompletionRatingDialog />{/if}
+<CompleteAnimeDialog
+	bind:open={userListStore.showCompleteDialog}
+	bind:malId={userListStore.completeTargetId}
+/>

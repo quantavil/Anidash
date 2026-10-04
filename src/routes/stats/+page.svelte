@@ -160,7 +160,7 @@
 <div class="py-6 pb-24 lg:pb-6">
 	<!-- Greeting -->
 	<div class="mb-6">
-		<h1 class="route-title">
+		<h1 class="text-2xl font-bold text-text-primary">
 			Welcome back{authStore.user?.name ? `, ${authStore.user.name}` : ''}
 		</h1>
 		<p class="mt-1 text-sm text-text-secondary">
@@ -189,7 +189,9 @@
 	{#if stats.total > 0}
 		<div class="mb-8 grid gap-4 lg:grid-cols-2">
 			<!-- Score Distribution -->
-			<section class="rounded-2xl border border-white/5 bg-surface-1 p-5 shadow-xl">
+			<section
+				class="rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
+			>
 				<h2 class="mb-4 text-sm font-semibold text-text-primary">Score Distribution</h2>
 				<div class="flex h-32 items-stretch gap-1.5 sm:gap-2 pt-2">
 					{#each analytics.scoreDist as count, i (i)}
@@ -215,7 +217,9 @@
 			</section>
 
 			<!-- Genre Distribution -->
-			<section class="flex flex-col rounded-2xl border border-white/5 bg-surface-1 p-5 shadow-xl">
+			<section
+				class="flex flex-col rounded-2xl border border-white/5 bg-surface-1/40 p-5 shadow-xl backdrop-blur-md"
+			>
 				<h2 class="mb-4 text-sm font-semibold text-text-primary">Genre Distribution</h2>
 				<div class="flex flex-1 items-center justify-center gap-6 pb-2">
 					<!-- Donut Chart -->

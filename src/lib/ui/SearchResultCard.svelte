@@ -98,18 +98,18 @@
 			titleEnglish={anime.titleEnglish}
 			tag="h3"
 			interactive={false}
-			class="line-clamp-2 text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
+			class="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
 		/>
 
-		<div class="flex items-center gap-2 text-xs text-text-muted">
+		<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
 			{#if anime.mediaType}
-				<span>{formatMediaType(anime.mediaType)}</span>
+				<span class="whitespace-nowrap">{formatMediaType(anime.mediaType)}</span>
 			{/if}
 			{#if anime.numEpisodes > 0}
-				<span>· {anime.numEpisodes} eps</span>
+				<span class="whitespace-nowrap">· {anime.numEpisodes} eps</span>
 			{/if}
 			{#if anime.startSeason}
-				<span>· {anime.startSeason}</span>
+				<span class="whitespace-nowrap">· {anime.startSeason}</span>
 			{/if}
 		</div>
 
@@ -128,7 +128,7 @@
 				onclick={handleAdd}
 				disabled={adding}
 				aria-label="Add {anime.title} to Plan to Watch"
-				class="relative z-[2] mt-2 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+				class="relative z-[2] mt-2 min-h-11 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
 			>
 				{#if adding}
 					<div

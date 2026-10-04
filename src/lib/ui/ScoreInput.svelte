@@ -31,6 +31,7 @@
 				type="button"
 				aria-label="Rate {value} out of 10"
 				aria-pressed={score === value}
+				style:--rating-tint={`${4 + value * 1.4}%`}
 				title={descriptions[value]}
 				onclick={() => userListStore.setScore(malId, score === value ? 0 : value)}>{value}</button
 			>
@@ -82,7 +83,11 @@
 		min-height: 48px;
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
-		background: var(--color-surface-3);
+		background: linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--color-primary) var(--rating-tint), var(--color-surface-3)),
+			var(--color-surface-2)
+		);
 		color: var(--color-text-secondary);
 		font-size: 14px;
 		font-variant-numeric: tabular-nums;
@@ -97,8 +102,9 @@
 		color: var(--color-text-primary);
 	}
 	.rating-options button[aria-pressed='true'] {
-		background: var(--color-primary-dim);
-		border-color: var(--color-primary);
+		background: linear-gradient(135deg, #6654ba 0%, #3d326f 65%, #2d254e 100%);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+		border-color: var(--color-primary-hover);
 		color: var(--color-text-primary);
 		font-weight: 700;
 	}

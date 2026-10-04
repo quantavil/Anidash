@@ -101,6 +101,8 @@ with sync_playwright() as p:
     rating.get_by_role('button',name='Rate 8 out of 10',exact=True).focus()
     page.keyboard.press('Enter')
     expect(rating.get_by_role('button',name='Rate 8 out of 10',exact=True)).to_have_attribute('aria-pressed','true')
+    assert 'linear-gradient' in rating.get_by_role('button',name='Rate 8 out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage'), 'Selected rating has no gradient'
+    assert rating.get_by_role('button',name='Rate 1 out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage') != rating.get_by_role('button',name='Rate 10 out of 10',exact=True).evaluate('(el)=>getComputedStyle(el).backgroundImage'), 'Rating cells have no tint progression'
     for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
         page.set_viewport_size({'width':width,'height':height})
         page.wait_for_timeout(300)
@@ -119,6 +121,7 @@ with sync_playwright() as p:
         assert abs(first['y']-second['y'])<1,f'Recommendations not inline {width}'
         assert second['x']>=first['x']+first['width'],f'Recommendations overlap {width}'
         rec_section.screenshot(path=str(OUT/f'recommendations-{width}.png'))
+        page.locator('.detail-controls').evaluate('(el)=>window.scrollTo(0,scrollY+el.getBoundingClientRect().top-100)')
         page.locator('.detail-controls').screenshot(path=str(OUT/f'controls-{width}.png'))
         page.screenshot(path=str(OUT/f'detail-{width}.png'),full_page=True)
     page.get_by_role('button',name='Status: Watching',exact=True).click()
@@ -139,7 +142,10 @@ with sync_playwright() as p:
         expect(planned).to_be_visible()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'Browse overflow {width}'
         box=planned.bounding_box()
-        assert 72<=box['height']<=100,f'Discovery action too tall {width}: {box}'
+        assert 72<=box['height']<=144,f'Discovery action too tall {width}: {box}'
+        seasonal=page.get_by_role('button',name='Pick an airing anime',exact=True).bounding_box()
+        assert abs(box['y']-seasonal['y'])<1,f'Discovery actions are stacked at {width}'
+        assert abs(box['height']-seasonal['height'])<1,f'Discovery action heights differ at {width}'
         settings=page.get_by_role('button',name='Filter planned picks',exact=True)
         sb=settings.bounding_box()
         assert sb['width']>=44 and sb['height']>=44

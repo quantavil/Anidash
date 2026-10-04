@@ -70,20 +70,6 @@
 
 	// ─── Derived Grid Data ───
 
-	const relatedGrouped = $derived(
-		anime?.relatedAnime && anime.relatedAnime.length > 0
-			? anime.relatedAnime.reduce(
-					(acc, r) => {
-						const type = r.relationType.replace(/_/g, ' ');
-						if (!acc[type]) acc[type] = [];
-						acc[type].push(r);
-						return acc;
-					},
-					{} as Record<string, typeof anime.relatedAnime>
-				)
-			: null
-	);
-
 	const displayedCharacters = $derived(expandedCharacters ? characters : characters.slice(0, 12));
 
 	// ─── Load Anime Detail ───
@@ -509,50 +495,35 @@
 				{/if}
 			{/if}
 
-			<!-- Section 2: Related Anime -->
-			{#if relatedGrouped}
-				<div class="space-y-4">
-					<h3 class="text-base font-bold uppercase tracking-wider text-text-primary">
-						Related Anime
-					</h3>
-					<div class="space-y-4">
-						{#each Object.entries(relatedGrouped) as [type, items] (type)}
-							<div>
-								<h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-text-muted">
-									{type}
-								</h4>
-								<div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-									{#each items as item (item.id)}
-										<a
-											href="/anime/{item.id}"
-											class="group flex flex-col gap-1.5 rounded-xl border border-white/5 bg-surface-1/40 p-2 transition-all duration-300 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
-										>
-											<div class="relative aspect-[3/4] overflow-hidden rounded-lg">
-												<ImageWithFallback
-													src={item.mainPicture?.medium}
-													alt={item.title}
-													class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-												/>
-											</div>
-											<div class="min-w-0">
-												<p
-													class="truncate text-xs font-semibold text-text-primary group-hover:text-primary transition-colors"
-												>
-													{item.title}
-												</p>
-												{#if item.mediaType}
-													<p class="text-[10px] text-text-muted">
-														{formatMediaType(item.mediaType)}
-													</p>
-												{/if}
-											</div>
-										</a>
-									{/each}
+			{#if anime.relatedAnime?.length}
+				<section aria-label="Related Anime">
+					<div class="recommendation-heading"><h3>Related Anime</h3></div>
+					<div class="recommendation-grid related-grid">
+						{#each anime.relatedAnime as item (item.id)}
+							<a
+								href="/anime/{item.id}"
+								class="recommendation-card"
+								title={item.title}
+								aria-label={item.title}
+							>
+								<div class="recommendation-cover">
+									<ImageWithFallback
+										src={item.mainPicture?.large ?? item.mainPicture?.medium}
+										alt=""
+										class="h-full w-full"
+									/>
 								</div>
-							</div>
+								<div class="recommendation-copy">
+									<span class="relation-type">{item.relationType.replace(/_/g, ' ')}</span>
+									<h4>{item.title}</h4>
+									{#if item.mediaType}<span class="text-xs text-text-secondary"
+											>{formatMediaType(item.mediaType)}</span
+										>{/if}
+								</div>
+							</a>
 						{/each}
 					</div>
-				</div>
+				</section>
 			{/if}
 
 			<!-- AniList recommendations share the existing detail enrichment request. -->
@@ -564,9 +535,17 @@
 					</div>
 					{#if recsLoading}
 						<div class="recommendation-grid" aria-busy="true" aria-label="Loading recommendations">
-							{#each Array(6) as _, i (i)}<div
-									class="recommendation-placeholder animate-pulse"
-								></div>{/each}
+							{#each Array(6) as _, i (i)}
+								<div class="recommendation-card animate-pulse" aria-hidden="true">
+									<div class="recommendation-cover"></div>
+									<div class="recommendation-copy">
+										<div class="recommendation-placeholder-title"></div>
+										<div class="recommendation-meta">
+											<div class="h-3 w-16 rounded bg-surface-3"></div>
+										</div>
+									</div>
+								</div>
+							{/each}
 						</div>
 					{:else if recsError}
 						<div class="recommendation-error">
@@ -835,12 +814,19 @@
 	.recommendation-external {
 		margin-left: auto;
 	}
-	.recommendation-placeholder {
-		aspect-ratio: 3 / 5;
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		background: var(--color-surface-2);
+	.recommendation-placeholder-title {
+		height: 2.8em;
+		font-size: 13px;
+		border-radius: 4px;
+		background: var(--color-surface-3);
 	}
+	.relation-type {
+		color: var(--color-primary-hover);
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: capitalize;
+	}
+
 	.recommendation-error {
 		padding: 16px;
 		border: 1px solid var(--color-border);
@@ -908,6 +894,11 @@
 	@media (max-width: 380px) {
 		.detail-controls {
 			padding: 12px 8px;
+		}
+	}
+	@media (min-width: 1100px) {
+		.related-grid {
+			grid-template-columns: repeat(5, minmax(0, 1fr));
 		}
 	}
 </style>

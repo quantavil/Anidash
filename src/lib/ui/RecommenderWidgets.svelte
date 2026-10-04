@@ -157,8 +157,15 @@
 		>
 			<Dice5 size={24} class="discovery-icon" />
 			<span class="discovery-copy"
-				><strong>From your planned list</strong><span
-					>{matchingPTW.length} {matchingPTW.length === 1 ? 'title' : 'titles'} to choose from</span
+				><strong
+					><span class="discovery-label-full">From your planned list</span><span
+						class="discovery-label-short">Planned pick</span
+					></strong
+				><span
+					>{matchingPTW.length}
+					{matchingPTW.length === 1 ? 'title' : 'titles'}<span class="discovery-label-full">
+						to choose from</span
+					></span
 				></span
 			>
 		</button>
@@ -171,24 +178,28 @@
 			title="Filter planned picks"><Settings size={20} /></button
 		>
 	</div>
-	<button
-		class="discovery-action seasonal-action"
-		type="button"
-		onclick={getRandomSeasonal}
-		disabled={loading}
-		aria-label="Pick an airing anime"
-		aria-busy={loading}
-	>
-		{#if loading}<LoaderCircle size={24} class="discovery-icon animate-spin" />{:else}<Sparkles
-				size={24}
-				class="discovery-icon"
-			/>{/if}
-		<span class="discovery-copy"
-			><strong>Something this season</strong><span
-				>{loading ? 'Finding your next anime…' : 'Pick an airing anime'}</span
-			></span
+	<div class="discovery-seasonal">
+		<button
+			class="discovery-action seasonal-action"
+			type="button"
+			onclick={getRandomSeasonal}
+			disabled={loading}
+			aria-label="Pick an airing anime"
+			aria-busy={loading}
 		>
-	</button>
+			{#if loading}<LoaderCircle size={24} class="discovery-icon animate-spin" />{:else}<Sparkles
+					size={24}
+					class="discovery-icon"
+				/>{/if}
+			<span class="discovery-copy"
+				><strong
+					><span class="discovery-label-full">Something this season</span><span
+						class="discovery-label-short">Seasonal pick</span
+					></strong
+				><span>{loading ? 'Finding anime…' : 'Airing now'}</span></span
+			>
+		</button>
+	</div>
 </div>
 
 <!-- PTW Filters Modal -->
@@ -328,7 +339,8 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 12px;
 	}
-	.discovery-planned {
+	.discovery-planned,
+	.discovery-seasonal {
 		display: flex;
 		min-width: 0;
 		border: 1px solid var(--color-border);
@@ -385,23 +397,45 @@
 		cursor: pointer;
 		transition: background-color 140ms;
 	}
-	.seasonal-action {
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		background: var(--color-surface-2);
+
+	.discovery-label-short {
+		display: none;
 	}
 	@media (max-width: 639px) {
 		.discovery-actions {
-			grid-template-columns: 1fr;
 			gap: 10px;
 		}
+		.discovery-planned {
+			position: relative;
+		}
 		.discovery-action {
-			min-height: 80px;
-			padding: 14px 16px;
-			gap: 12px;
+			min-height: 124px;
+			flex-direction: column;
+			align-items: flex-start;
+			justify-content: center;
+			gap: 14px;
+			padding: 14px 12px;
+		}
+		.discovery-copy strong {
+			font-size: 14px;
+		}
+		.discovery-copy > span {
+			font-size: 12px;
+		}
+		.discovery-label-full {
+			display: none;
+		}
+		.discovery-label-short {
+			display: inline;
 		}
 		.discovery-settings {
-			min-width: 48px;
+			position: absolute;
+			right: 3px;
+			top: 3px;
+			min-width: 44px;
+			min-height: 44px;
+			border: 0;
+			border-radius: 8px;
 		}
 	}
 </style>

@@ -113,9 +113,9 @@
 		onclick={handleToggle}
 		aria-expanded={open}
 		aria-haspopup="menu"
-		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 focus:outline-none {showLabel
-			? 'px-3 py-1.5 gap-2 rounded-xl'
-			: 'h-7 w-7 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
+		class="group flex items-center justify-center border shadow-md transition-all duration-200 ease-spring hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary {showLabel
+			? 'min-h-11 min-w-11 px-3 py-1.5 gap-2 rounded-xl'
+			: 'h-11 w-11 rounded-full'} {STATUS_CONFIG[status]?.badgeClass} {className}"
 		title="{STATUS_CONFIG[status]?.label} (Click to change status)"
 		aria-label="Status: {STATUS_CONFIG[status]?.label}"
 	>
@@ -140,7 +140,7 @@
 				<button
 					role="menuitem"
 					onclick={() => handleSelect(s)}
-					class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
+					class="min-h-11 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors hover:bg-white/10 cursor-pointer
 					{s === status ? 'bg-white/15 text-text-primary font-semibold' : 'text-text-secondary'}"
 				>
 					<cfg.icon
@@ -160,7 +160,7 @@
 			<button
 				role="menuitem"
 				onclick={handleRemove}
-				class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
+				class="min-h-11 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error transition-colors hover:bg-error/20 cursor-pointer"
 			>
 				<Trash2 size={13} />
 				<span class="flex-1 text-left">Remove</span>

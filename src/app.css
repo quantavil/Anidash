@@ -11,34 +11,34 @@
 :root {
 	--mobile-header-height: 3.25rem;
 	--radius-m: 10px;
-	--color-on-primary: #25140f;
+	--color-on-primary: #17122e;
 }
 
 /* ── AniDash High-End Theme ── */
 @theme {
 	/* Brand accents */
-	--color-primary: #f08b73;
-	--color-primary-hover: #ffac96;
-	--color-primary-dim: #50312f;
+	--color-primary: #a395ff;
+	--color-primary-hover: #bcb2ff;
+	--color-primary-dim: #302653;
 
-	/* Deep ink surfaces, warm ivory type. */
-	--color-surface-0: #101117;
-	--color-surface-1: #191b24;
-	--color-surface-2: #222530;
-	--color-surface-3: #2d303d;
+	/* Original midnight surfaces, violet actions, gold scores. */
+	--color-surface-0: #08080c;
+	--color-surface-1: #111116;
+	--color-surface-2: #1a1a23;
+	--color-surface-3: #282834;
 	--color-border: rgba(236, 229, 220, 0.12);
 
-	--color-text-primary: #f1eee5;
-	--color-text-secondary: #b9b5be;
-	--color-text-muted: #96919f;
+	--color-text-primary: #f4f3fa;
+	--color-text-secondary: #b6b4c5;
+	--color-text-muted: #9592a7;
 
-	--color-success: #8fc7a1;
-	--color-warning: #e6c578;
-	--color-error: #ee9186;
-	--color-info: #9cbccf;
+	--color-success: #69c5b1;
+	--color-warning: #f1c875;
+	--color-error: #f199a6;
+	--color-info: #89b9f4;
 
 	--font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-	--font-display: Georgia, 'Times New Roman', serif;
+	--font-display: 'Outfit', system-ui, sans-serif;
 
 	/* Physics easing curves */
 	--ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
@@ -94,7 +94,7 @@ body {
 	border: 1px solid rgba(236, 229, 220, 0.12);
 	border-radius: 1rem;
 	padding: 1.5rem;
-	background: linear-gradient(to bottom, color-mix(in srgb, #191b24 95%, transparent), #222530);
+	background: linear-gradient(to bottom, color-mix(in srgb, #111116 95%, transparent), #1a1a23);
 	color: var(--color-text-primary);
 	box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
 	overflow-y: auto;
@@ -230,7 +230,7 @@ a,
 	background: var(--color-surface-0);
 }
 .app-content {
-	max-width: 1440px;
+	max-width: 1320px;
 	margin: 0 auto;
 	padding: 0 32px;
 }
@@ -248,7 +248,7 @@ main:focus {
 	padding: 12px 18px;
 	border-radius: 8px;
 	background: var(--color-primary);
-	color: #25140f;
+	color: #17122e;
 	transform: translateY(-150%);
 }
 .skip-link:focus {
@@ -261,13 +261,13 @@ main:focus {
 	gap: 12px;
 	min-height: 48px;
 	padding: 12px 22px;
-	border: 1px solid #ffbba044;
+	border: 1px solid #c4baff44;
 	border-radius: 8px;
-	background: linear-gradient(180deg, #f29a83, var(--color-primary));
+	background: linear-gradient(180deg, #b0a4ff, var(--color-primary));
 	box-shadow:
 		inset 0 1px 0 #ffffff30,
 		0 4px 10px #0003;
-	color: #25140f;
+	color: #17122e;
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
@@ -293,7 +293,7 @@ select {
 main > div > h1,
 main > div > div > h1 {
 	font-family: var(--font-display);
-	font-weight: 400;
+	font-weight: 600;
 	letter-spacing: -0.03em;
 }
 .glass-card {
@@ -307,7 +307,7 @@ main > div > div > h1 {
 		padding: 0 24px;
 	}
 }
-@media (max-width: 640px) {
+@media (max-width: 767px) {
 	.app-content {
 		padding: 0 18px calc(88px + env(safe-area-inset-bottom));
 	}
@@ -315,18 +315,18 @@ main > div > div > h1 {
 
 .route-title {
 	font-family: var(--font-display);
-	font-size: clamp(36px, 4vw, 54px);
-	font-weight: 400;
+	font-size: clamp(30px, 3.4vw, 44px);
+	font-weight: 600;
 	line-height: 1.15;
 	letter-spacing: -0.035em;
 	text-wrap: balance;
 }
 .bg-primary {
-	color: #25140f;
+	color: #17122e;
 }
 @media (max-width: 640px) {
 	.route-title {
-		font-size: 36px;
+		font-size: 32px;
 	}
 }
 
@@ -338,4 +338,17 @@ main > div > div > h1 {
 .feed-card-contain:has([aria-expanded='true']) {
 	content-visibility: visible;
 	z-index: 10;
+}
+
+/* Compact visual links still retain comfortable pointer and touch areas. */
+.ext-main,
+.ext-link,
+.ext-trigger,
+.ext-mirror {
+	min-height: 44px;
+	min-width: 44px;
+}
+.ext-main,
+.ext-link {
+	color: var(--color-text-secondary);
 }

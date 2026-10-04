@@ -10,7 +10,7 @@ Read this contract before changing code. Keep changes focused, preserve existing
 
 ## Interface Contract
 
-- **Design system**: shared tokens live in `src/app.css`. Preserve the deep ink/ivory palette, coral actions, gold rating accents, local Outfit UI font with `font-display: swap`, and Georgia editorial headings. Maintain readable contrast, visible focus, and reduced-motion behavior.
+- **Design system**: shared tokens live in `src/app.css`. Preserve the midnight black/violet palette, gold rating accents, and local Outfit UI and heading font with `font-display: swap`. Maintain readable contrast, visible focus, and reduced-motion behavior.
 - **Views and state**: the default list view is `journal`; `view=grid` selects the poster grid. Preserve tab, search, filter, and sort behavior when switching views. `watching` remains the default status tab.
 - **Real collection**: the featured entry, journal rows, planned shelf, and collection counts consume existing list records. They must not trigger extra AniList enrichment calls or introduce demo data into production.
 - **Ratings**: distinguish MAL community ratings from personal scores with explicit labels. Personal scores are 1–10, with 0 representing unrated. Keep native, accessible controls in compact list/grid layouts and keyboard-operable detail controls.
@@ -45,11 +45,11 @@ Read this contract before changing code. Keep changes focused, preserve existing
 - `src/routes/+page.svelte` — public welcome, journal/grid selection, list filtering and ordering, real list state.
 - `src/lib/ui/AnimeJournal.svelte`, `JournalEntry.svelte`, `CollectionShelf.svelte` — featured entry, journal rows, and planned collection shelf.
 - `src/lib/ui/RatingSelect.svelte`, `ScoreInput.svelte` — compact personal score selection and detail-page scoring.
-- `src/lib/ui/EpisodeStepper.svelte`, `EpisodeBar.svelte` — integrated journal stepper and single-element segmented progress. `EpisodeProgress.svelte` and `EpisodeCounter.svelte` serve existing grid/detail layouts.
+- `src/lib/ui/EpisodeStepper.svelte`, `EpisodeBar.svelte` — integrated journal stepper and single-element segmented progress. The stepper also serves grid/detail layouts.
 - `src/lib/ui/StoryWindow.svelte` — original decorative SVG welcome artwork; no external assets or fabricated collection data.
 - `src/lib/ui/AnimeCard.svelte`, `TabBar.svelte`, `FilterBar.svelte`, `SearchInput.svelte` — poster view, status tabs, sorting and search.
 - `src/app.css`, `src/lib/ui/Logo.svelte`, `static/favicon.svg`, `static/manifest.json` — shared visual tokens and app identity.
-- `tests/browser/watch-journal.py`, `offline-shell.py` — isolated production-browser regressions; setup in `tests/browser/README.md`.
+- `tests/browser/watch-journal.py`, `anime-detail.py`, `offline-shell.py` — isolated production-browser regressions; setup in `tests/browser/README.md`.
 
 ## Data and Server File Map
 

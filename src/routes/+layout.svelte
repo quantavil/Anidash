@@ -118,7 +118,7 @@
 	theme="dark"
 	position="top-right"
 	toastOptions={{
-		style: 'background: #242720; border: 1px solid #3b3f35; color: #f1eee5;',
+		style: 'background: #111116; border: 1px solid #282834; color: #f4f3fa;',
 		duration: 3000
 	}}
 />

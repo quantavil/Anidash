@@ -65,13 +65,14 @@
 <header class="app-header">
 	<div class="header-inner">
 		<a class="wordmark" href="/" aria-label="AniDash home"
-			><Logo size={25} /><span>AniDash<span class="wordmark-dot">.</span></span></a
+			><span class="brand-symbol"><Logo size={23} /></span><span>AniDash</span></a
 		>
 		<nav class="desktop-nav" aria-label="Main navigation">
 			{#each items as item (item.href)}<a
 					href={item.href}
 					class:active={page.url.pathname === item.href}
-					aria-current={page.url.pathname === item.href ? 'page' : undefined}>{item.label}</a
+					aria-current={page.url.pathname === item.href ? 'page' : undefined}
+					><item.icon size={17} strokeWidth={1.7} />{item.label}</a
 				>{/each}
 		</nav>
 		<div class="header-actions">
@@ -148,74 +149,98 @@
 
 <style>
 	.app-header {
-		position: relative;
+		position: sticky;
+		top: 14px;
 		z-index: 40;
-		border-bottom: 1px solid var(--color-border);
-		background: var(--color-surface-0);
+		margin: 14px auto 0;
+		width: min(1060px, calc(100% - 48px));
 	}
 	.header-inner {
-		height: 80px;
-		padding: 0 32px;
-		max-width: 1440px;
-		margin: auto;
+		min-height: 68px;
+		padding: 8px 14px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 24px;
+		gap: 20px;
+		border: 1px solid var(--color-border);
+		border-radius: 40px;
+		background: var(--color-surface-0);
+		box-shadow:
+			0 8px 32px #0005,
+			inset 0 1px 0 #ffffff05;
 	}
 	.wordmark {
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		font-family: var(--font-display);
-		font-size: 25px;
-		letter-spacing: -0.035em;
 		flex-shrink: 0;
+		font-size: 21px;
+		font-weight: 650;
+		letter-spacing: -0.04em;
+		min-height: 44px;
+		padding-right: 20px;
+		border-right: 1px solid var(--color-border);
 	}
-	.wordmark-dot {
-		color: var(--color-primary);
+	.brand-symbol {
+		display: grid;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 50%;
 	}
 	.desktop-nav {
 		display: flex;
-		align-self: stretch;
-		gap: 32px;
+		align-items: center;
+		gap: 5px;
 	}
 	.desktop-nav a {
 		display: flex;
 		align-items: center;
-		font-size: 13px;
+		justify-content: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 0 14px;
+		border-radius: 24px;
+		font-size: 14px;
+		white-space: nowrap;
 		color: var(--color-text-secondary);
-		position: relative;
+		transition:
+			background 0.15s,
+			color 0.15s;
 	}
-	.desktop-nav a:hover,
-	.desktop-nav a.active {
+	.desktop-nav a:hover {
 		color: var(--color-text-primary);
+		background: var(--color-surface-1);
 	}
-	.desktop-nav a.active::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: -1px;
-		height: 2px;
-		background: var(--color-primary);
+	.desktop-nav a.active {
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 	}
 	.header-actions {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 8px;
 	}
 	.sync-button {
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		min-width: 44px;
 		min-height: 44px;
+		justify-content: center;
+		font-size: 11px;
 		color: var(--color-text-secondary);
 		cursor: pointer;
-		font-size: 11px;
+		border-radius: 50%;
 	}
 	.sync-button:hover:not(:disabled) {
+		background: var(--color-surface-2);
 		color: var(--color-text-primary);
+	}
+	.sync-button > span:not(.sync-dot) {
+		display: none;
 	}
 	.sync-dot {
 		width: 5px;
@@ -233,37 +258,40 @@
 		height: 44px;
 		border: 1px solid var(--color-border);
 		border-radius: 50%;
-		cursor: pointer;
 		background: var(--color-surface-1);
+		cursor: pointer;
 	}
 	.settings-trigger:hover {
 		border-color: var(--color-primary);
 	}
 	.connect-button {
 		min-height: 44px;
-		padding: 0 14px;
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		font-size: 12px;
+		padding: 0 20px;
+		border-radius: 24px;
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		font-size: 13px;
+		font-weight: 600;
 		cursor: pointer;
+	}
+	.connect-button:hover {
+		background: var(--color-primary-hover);
 	}
 	.settings-panel {
 		position: absolute;
-		right: max(16px, calc((100vw - 1376px) / 2));
-		top: 70px;
+		right: 0;
+		top: 78px;
 		width: min(300px, calc(100vw - 32px));
 		padding: 18px;
-		border-radius: 12px;
+		border-radius: 16px;
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-1);
-		box-shadow:
-			0 12px 50px #0008,
-			inset 0 1px 0 #ffffff0a;
+		box-shadow: 0 16px 50px #0009;
 		z-index: 50;
 	}
 	.settings-panel h2 {
-		font-family: var(--font-display);
-		font-size: 21px;
+		font-size: 18px;
+		font-weight: 600;
 		margin-bottom: 12px;
 	}
 	.preference {
@@ -299,26 +327,45 @@
 	.mobile-nav {
 		display: none;
 	}
-	@media (max-width: 900px) {
-		.header-inner {
-			padding: 0 24px;
-			gap: 20px;
-		}
-		.desktop-nav {
-			gap: 22px;
-		}
-		.sync-button > span:not(.sync-dot) {
+	@media (max-width: 1000px) {
+		.desktop-nav :global(svg) {
 			display: none;
 		}
-	}
-	@media (max-width: 640px) {
+		.desktop-nav a {
+			padding: 0 10px;
+			gap: 6px;
+			font-size: 13px;
+		}
 		.header-inner {
-			height: 64px;
-			padding: 0 18px;
-			gap: 12px;
+			gap: 10px;
 		}
 		.wordmark {
-			font-size: 23px;
+			padding-right: 12px;
+		}
+	}
+	@media (max-width: 767px) {
+		.app-header {
+			top: 0;
+			margin: 0;
+			width: 100%;
+		}
+		.header-inner {
+			min-height: 64px;
+			padding: 8px 16px;
+			border-radius: 0;
+			border: 0;
+			border-bottom: 1px solid var(--color-border);
+			box-shadow: none;
+		}
+		.wordmark {
+			border: 0;
+			padding: 0;
+			font-size: 21px;
+			gap: 8px;
+		}
+		.brand-symbol {
+			width: 34px;
+			height: 34px;
 		}
 		.desktop-nav {
 			display: none;
@@ -326,9 +373,8 @@
 		.header-actions {
 			gap: 6px;
 		}
-		.settings-trigger {
-			width: 44px;
-			height: 44px;
+		.connect-button {
+			padding: 0 14px;
 		}
 		.mobile-nav {
 			position: fixed;
@@ -338,26 +384,28 @@
 			z-index: 40;
 			display: grid;
 			grid-template-columns: repeat(4, 1fr);
-			padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-			background: var(--color-surface-1);
+			padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+			background: var(--color-surface-0);
 			border-top: 1px solid var(--color-border);
-			box-shadow: 0 -6px 20px #0002;
 		}
 		.mobile-nav a {
-			min-height: 48px;
+			min-height: 52px;
 			display: flex;
 			flex-direction: column;
 			gap: 5px;
 			align-items: center;
 			justify-content: center;
 			color: var(--color-text-secondary);
-			font-size: 10px;
+			font-size: 11px;
+			border-radius: 12px;
 		}
 		.mobile-nav a.active {
 			color: var(--color-primary);
+			background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 		}
 		.settings-panel {
-			top: 58px;
+			top: 70px;
+			right: 12px;
 		}
 	}
 </style>

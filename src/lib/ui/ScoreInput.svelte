@@ -72,7 +72,7 @@
 	}
 	.score-options {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+		grid-template-columns: repeat(5, minmax(44px, 1fr));
 		gap: 6px;
 	}
 	.score-options button {

@@ -113,10 +113,20 @@
 		white-space: nowrap;
 	}
 	.card .count {
-		padding: 0 2px;
+		padding: 4px 2px;
+		gap: 3px;
+	}
+	.card .count .num {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0 2px;
+		white-space: normal;
+		line-height: 1.1;
 	}
 	.card .of {
-		margin-left: 1px;
+		margin-left: 0;
+		white-space: nowrap;
 	}
 	.count strong {
 		font-size: 14px;

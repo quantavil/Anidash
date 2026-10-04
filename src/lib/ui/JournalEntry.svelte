@@ -24,7 +24,7 @@
 			alt={entry.title}
 			{index}
 			priority={featured}
-			aspectRatio="3/4"
+			aspectRatio={featured ? '2/3' : '3/4'}
 			class="journal-cover-image"
 		/>
 		{#if featured}<span class="cover-caption">In your rotation</span>{/if}
@@ -180,14 +180,14 @@
 		background: var(--color-surface-1);
 	}
 	.featured {
-		grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+		grid-template-columns: 150px minmax(0, 1fr);
 		gap: 24px;
-		padding: 24px;
+		padding: 20px;
 		margin-bottom: 10px;
 		border: 1px solid #ffffff13;
 		border-radius: 16px;
 		background:
-			radial-gradient(ellipse at 90% 0%, #f08b730a, transparent 65%),
+			radial-gradient(ellipse at 90% 0%, #a395ff08, transparent 65%),
 			linear-gradient(140deg, var(--color-surface-2), var(--color-surface-1));
 		box-shadow:
 			inset 0 1px 0 #ffffff0c,
@@ -195,17 +195,18 @@
 	}
 	.featured .entry-cover {
 		grid-row: 1 / 3;
-		height: 100%;
+		align-self: start;
+		height: auto;
 	}
 	.featured .entry-cover :global(.journal-cover-image) {
-		height: 100%;
-		min-height: 280px;
-		max-height: 330px;
+		height: auto;
+		min-height: 0;
+		max-height: none;
 	}
 	.featured .entry-title :global(h2) {
 		font-family: var(--font-display);
-		font-size: clamp(25px, 2.7vw, 36px);
-		font-weight: 400;
+		font-size: clamp(22px, 2.3vw, 28px);
+		font-weight: 600;
 		letter-spacing: -0.035em;
 		line-height: 1.15;
 		margin-top: 14px;
@@ -225,7 +226,7 @@
 	}
 	.featured .entry-tracking {
 		width: 100%;
-		max-width: 440px;
+		max-width: 300px;
 		grid-column: 2;
 		align-self: end;
 	}
@@ -276,7 +277,7 @@
 			padding: 0 7px;
 		}
 		.featured {
-			grid-template-columns: 88px minmax(0, 1fr);
+			grid-template-columns: 76px minmax(0, 1fr);
 			padding: 16px;
 			gap: 14px;
 			margin-bottom: 6px;
@@ -290,7 +291,7 @@
 			height: auto;
 		}
 		.featured .entry-title :global(h2) {
-			font-size: 23px;
+			font-size: 20px;
 			margin-top: 7px;
 		}
 		.featured .entry-ratings {

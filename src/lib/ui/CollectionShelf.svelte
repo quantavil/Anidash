@@ -15,8 +15,8 @@
 
 <aside class="collection-shelf" aria-label="Your collection">
 	<section class="planned-shelf">
-		<div class="shelf-heading"><Bookmark size={15} /><span>Up next, perhaps</span></div>
-		<h2>Something to look<br class="desktop-break" /> forward to.</h2>
+		<div class="shelf-heading"><Bookmark size={15} /><span>Saved for later</span></div>
+		<h2>Your next story</h2>
 		{#if planned.length > 0}
 			<div class="shelf-posters">
 				{#each planned as entry (entry.malId)}<a href="/anime/{entry.malId}" class="shelf-poster"
@@ -77,8 +77,8 @@
 	}
 	h2 {
 		font-family: var(--font-display);
-		font-size: 28px;
-		font-weight: 400;
+		font-size: 22px;
+		font-weight: 550;
 		letter-spacing: -0.025em;
 		line-height: 1.2;
 		margin: 14px 0 24px;
@@ -146,7 +146,7 @@
 	.collection-numbers strong {
 		font-family: var(--font-display);
 		font-size: 32px;
-		font-weight: 400;
+		font-weight: 550;
 	}
 	.collection-numbers span {
 		font-size: 11px;
@@ -170,9 +170,6 @@
 		.shelf-posters {
 			max-width: 320px;
 		}
-		.desktop-break {
-			display: none;
-		}
 	}
 	@media (max-width: 640px) {
 		.collection-shelf {
@@ -182,10 +179,7 @@
 			padding: 20px;
 		}
 		h2 {
-			font-size: 26px;
-		}
-		.desktop-break {
-			display: none;
+			font-size: 22px;
 		}
 		.shelf-posters {
 			gap: 16px;

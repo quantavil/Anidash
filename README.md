@@ -4,9 +4,9 @@ A personal anime watch journal connected to MyAnimeList. Track episodes, keep yo
 
 ## The watch journal
 
-- **Journal and poster views.** The default journal pairs a featured watching entry with compact progress rows and a Plan to Watch shelf. Switch to the poster grid while keeping your filters and sort order.
+- **Journal and poster views.** The default journal pairs a compact featured watching entry with compact progress rows and a Plan to Watch shelf. Switch to the poster grid while keeping your filters and sort order.
 - **Ratings you can read and edit.** MAL community ratings and your personal scores have separate labels. Update your score, status, or episode count directly from the list.
-- **Comfortable on every screen.** Deep ink surfaces, ivory editorial headings, coral actions, and gold ratings give the interface depth. Locally hosted Outfit, visible keyboard focus, and large touch controls support desktop, tablet, and phone use.
+- **Comfortable on every screen.** Midnight black surfaces, violet actions, proportional Outfit headings, and gold ratings refine the original AniDash interface. Locally hosted Outfit, visible keyboard focus, and large touch controls support desktop, tablet, and phone use.
 - **Local edits and queued sync.** Changes update immediately in IndexedDB and queue for MAL. Starting a planned title moves it to Watching. Last Updated order changes after MAL acknowledges the edit.
 - **Discovery and details.** Search MAL, explore popular and seasonal anime, identify English dubs, and view characters, recommendations, review excerpts, tags, trailers, and airing information where available.
 - **Personal statistics and preferences.** Explore score and format distributions, and choose English or Romaji titles.
@@ -70,7 +70,7 @@ npm run lint
 
 The dummy client ID supports build and test verification; use your registered ID for actual login. Vitest covers API, authentication, cache, sync, and utility behavior. [Browser checks](tests/browser/README.md) exercise ratings, episode edits, status changes, responsive layouts at 320/390/820/1440px, and offline navigation to `/`, `/browse`, and `/stats` in isolated Chromium contexts.
 
-See [AGENTS.md](AGENTS.md) for the engineering contract and [the design specification](docs/superpowers/specs/2026-10-04-watch-journal-design.md) for the watch journal direction. Deployed PageSpeed improvements have not yet been measured.
+See [AGENTS.md](AGENTS.md) for the engineering contract and [the refinement notes](docs/original-refinement.md) for the current visual direction. Deployed PageSpeed improvements have not yet been measured.
 
 ## Deploy to Cloudflare Pages
 

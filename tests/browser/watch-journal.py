@@ -22,6 +22,7 @@ with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     context = browser.new_context(viewport={'width':1440,'height':1000})
     context.route(BASE + '/api/**', lambda route: route.fulfill(status=503,json={'error':'Isolated browser verification'}))
+    context.route('https://graphql.anilist.co/**', lambda route: route.fulfill(status=404,json={'data':{'Media':None}}))
     context.route('**/raw.githubusercontent.com/**', lambda route: route.fulfill(json={'dubbed':[]}))
     page = context.new_page()
     errors=[]
@@ -74,13 +75,28 @@ with sync_playwright() as p:
     page.set_viewport_size({'width':320,'height':760})
     page.get_by_role('button',name='Poster grid').click()
     expect(page).to_have_url(__import__('re').compile('view=grid'))
-    for button in page.locator('.pill-base.compact .pill-btn').all():
+    for button in page.locator('.poster-card .step').all():
         box=button.bounding_box()
         assert box['width']>=44 and box['height']>=44,box
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Grid overflow'
     page.get_by_role('combobox',name='Your rating for Sousou no Frieren').select_option('8')
     expect(page.get_by_role('combobox',name='Your rating for Sousou no Frieren')).to_have_value('8')
     page.screenshot(path=str(OUT/'grid-phone.png'),full_page=True)
+    # Long episode counts must stay between the touch buttons, not under them.
+    page.evaluate("""async()=>{
+      const req=indexedDB.open('anidash',2);const db=await new Promise(r=>req.onsuccess=()=>r(req.result));
+      const tx=db.transaction('userList','readwrite');const store=tx.objectStore('userList');
+      const q=store.get(57334);q.onsuccess=()=>store.put({...q.result,numEpisodes:1200,numWatchedEpisodes:1050});
+      await new Promise(r=>tx.oncomplete=r);db.close();
+    }""")
+    page.reload()
+    long_card=page.get_by_role('combobox',name='Your rating for Dandadan').locator('xpath=ancestor::div[contains(@class,"poster-card")]')
+    expect(long_card.locator('.count strong')).to_have_text('1050')
+    plus=long_card.locator('.plus').bounding_box()
+    minus=long_card.locator('.minus').bounding_box()
+    for part in long_card.locator('.count .num > *').all():
+        box=part.bounding_box()
+        assert box['x']>=minus['x']+minus['width'] and box['x']+box['width']<=plus['x'],box
     page.get_by_role('button',name='Journal view').click()
     page.get_by_role('textbox',name='Search your list').fill('nothing-matches')
     expect(page.get_by_text('No matches',exact=True)).to_be_visible()
@@ -126,7 +142,7 @@ with sync_playwright() as p:
     for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
         page.set_viewport_size({'width':width,'height':height})
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'Browse overflow at {width}'
-        for control in page.locator('[aria-haspopup="menu"]').all():
+        for control in page.locator('main [aria-haspopup="menu"]:visible, main [aria-pressed]:visible').all():
             box=control.bounding_box()
             assert box['width']>=44 and box['height']>=44,box
         page.screenshot(path=str(OUT/f'browse-{width}.png'),full_page=True)
@@ -143,6 +159,18 @@ with sync_playwright() as p:
     page.get_by_role('button',name='Roll Seasonal Surprise').click()
     page.wait_for_url(__import__('re').compile('/anime/'))
     assert len(seasonal_requests)==1 and 'limit=500' in seasonal_requests[0],seasonal_requests
+    # Seasonal navigation and statistics share the refined responsive shell.
+    for route in ['seasonal','stats']:
+        page.goto(BASE+'/'+route)
+        expect(page.get_by_role('heading',level=1)).to_be_visible()
+        if route=='seasonal': expect(page.get_by_text('6 anime this season',exact=True)).to_be_visible()
+        for width,height in [(1440,1000),(820,1180),(390,844),(320,760)]:
+            page.set_viewport_size({'width':width,'height':height})
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'{route} overflow at {width}'
+            for control in page.locator('main button:visible').all():
+                box=control.bounding_box()
+                assert box['width']>=44 and box['height']>=44,box
+            page.screenshot(path=str(OUT/f'{route}-{width}.png'),full_page=True)
     assert not errors,errors
     print(json.dumps({'result':'PASS','viewports':[1440,820,390,320],'screenshots':str(OUT),'errors':errors}))
     browser.close()

@@ -11,7 +11,7 @@
 		>
 			<stop stop-color="#20243c" /><stop offset=".6" stop-color="#41314a" /><stop
 				offset="1"
-				stop-color="#bd746b"
+				stop-color="#7360b4"
 			/>
 		</linearGradient>
 		<linearGradient
@@ -22,7 +22,7 @@
 			y2="260"
 			gradientUnits="userSpaceOnUse"
 		>
-			<stop stop-color="#f5e7c8" /><stop offset="1" stop-color="#e8b797" />
+			<stop stop-color="#f5e7c8" /><stop offset="1" stop-color="#c8b4f0" />
 		</linearGradient>
 		<linearGradient
 			id="story-river"
@@ -32,14 +32,14 @@
 			y2="530"
 			gradientUnits="userSpaceOnUse"
 		>
-			<stop stop-color="#df9c8c" /><stop offset="1" stop-color="#383649" />
+			<stop stop-color="#baa3f4" /><stop offset="1" stop-color="#383649" />
 		</linearGradient>
 		<clipPath id="story-arch"><path d="M130 505V245a170 170 0 0 1 340 0v260Z" /></clipPath>
 	</defs>
 	<!-- Fine construction lines give the illustration the feel of a collected print. -->
 	<path d="M300 30v35M300 525v60M68 300h30M503 300h29" stroke="#777081" stroke-opacity=".45" />
 	<circle cx="300" cy="300" r="248" stroke="#777081" stroke-opacity=".18" stroke-dasharray="2 9" />
-	<path d="M116 505V245a184 184 0 0 1 368 0v260" stroke="#dcb989" stroke-opacity=".4" />
+	<path d="M116 505V245a184 184 0 0 1 368 0v260" stroke="#b4a1ec" stroke-opacity=".4" />
 	<g clip-path="url(#story-arch)">
 		<path d="M130 75h340v430H130Z" fill="url(#story-sky)" />
 		<circle cx="307" cy="216" r="66" fill="url(#story-moon)" />
@@ -66,17 +66,17 @@
 			/></g
 		>
 		<!-- A small viewer on the horizon: human scale, without borrowed characters. -->
-		<circle cx="369" cy="432" r="5" fill="#f0b59b" /><path
+		<circle cx="369" cy="432" r="5" fill="#d8c4f2" /><path
 			d="m368 438-6 17h14l-4-17Z"
-			fill="#f08b73"
+			fill="#a395ff"
 		/><path d="m365 455-2 15m8-15 2 15" stroke="#f1ded0" stroke-width="3" />
 	</g>
-	<path d="M130 505V245a170 170 0 0 1 340 0v260Z" stroke="#e4c6a5" stroke-opacity=".65" />
+	<path d="M130 505V245a170 170 0 0 1 340 0v260Z" stroke="#baa5ec" stroke-opacity=".65" />
 	<!-- Offset film frames carry the composition past the edge of the window. -->
 	<g transform="translate(53 323) rotate(-12)">
 		<rect width="110" height="146" rx="9" fill="#242634" stroke="#736778" />
-		<rect x="10" y="10" width="90" height="106" rx="4" fill="#7a4c55" />
-		<circle cx="69" cy="42" r="18" fill="#edb791" /><path
+		<rect x="10" y="10" width="90" height="106" rx="4" fill="#514577" />
+		<circle cx="69" cy="42" r="18" fill="#c0acef" /><path
 			d="m10 93 34-33 28 32 28-19v43H10Z"
 			fill="#3c2e43"
 		/>
@@ -84,7 +84,7 @@
 			cx="89"
 			cy="130"
 			r="3"
-			fill="#f08b73"
+			fill="#a395ff"
 		/>
 	</g>
 	<g transform="translate(434 381) rotate(10)">
@@ -103,7 +103,7 @@
 		/>
 	</g>
 	<path d="m492 157 4 11 11 4-11 4-4 11-4-11-11-4 11-4Z" fill="#e6c578" />
-	<path d="m84 249 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#f08b73" />
+	<path d="m84 249 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#a395ff" />
 	<path d="M202 545h196" stroke="#777081" stroke-opacity=".5" />
 	<text
 		x="300"
@@ -111,8 +111,8 @@
 		text-anchor="middle"
 		fill="#b9b5be"
 		font-size="11"
-		letter-spacing="3"
-		font-family="Outfit, sans-serif">A WORLD BETWEEN EPISODES</text
+		letter-spacing="1"
+		font-family="Outfit, sans-serif">One episode at a time</text
 	>
 </svg>
 

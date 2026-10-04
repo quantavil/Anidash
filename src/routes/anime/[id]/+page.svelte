@@ -26,7 +26,7 @@
 
 	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
-	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
+	import EpisodeStepper from '$lib/ui/EpisodeStepper.svelte';
 	import ScoreInput from '$lib/ui/ScoreInput.svelte';
 	import GenreBadge from '$lib/ui/GenreBadge.svelte';
 	import AddToListModal from '$lib/ui/AddToListModal.svelte';
@@ -217,18 +217,16 @@
 		</button>
 	</div>
 {:else if anime}
-	<div class="mx-auto max-w-5xl px-4 py-6 overflow-x-hidden">
+	<div class="detail-page">
 		<!-- ─── Header ─── -->
-		<div class="flex flex-col gap-6 sm:flex-row">
+		<div class="detail-header">
 			<!-- Cover -->
-			<div
-				class="shrink-0 w-full sm:w-[200px] relative rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5 max-h-[320px] sm:max-h-none"
-			>
+			<div class="detail-cover">
 				<ImageWithFallback
 					src={anime.mainPicture?.large ?? anime.mainPicture?.medium}
 					alt={anime.title}
 					priority
-					class="w-full sm:w-[200px] h-full object-cover"
+					class="detail-poster"
 				/>
 				{#if listEntry}
 					<ProgressLine watched={listEntry.numWatchedEpisodes} total={listEntry.numEpisodes} />
@@ -244,190 +242,138 @@
 			</div>
 
 			<!-- Info -->
-			<div class="flex-1">
-				<div
-					class="flex items-center gap-2 text-2xl font-bold leading-tight text-text-primary sm:text-3xl"
-				>
-					<AnimeTitle
-						title={anime.title}
-						titleEnglish={anime.titleEnglish ?? null}
-						tag="span"
-						class=""
-					/>
-				</div>
+			<div class="detail-info">
+				<div class="detail-summary">
+					<h1 class="detail-title">
+						<AnimeTitle
+							title={anime.title}
+							titleEnglish={anime.titleEnglish ?? null}
+							tag="span"
+							class=""
+						/>
+					</h1>
 
-				<!-- Quick stats row -->
-				<div
-					class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
-				>
-					{#if anime.mean}
-						<div
-							class="flex items-center gap-1 shrink-0"
-							title={anime.numScoringUsers
-								? anime.numScoringUsers.toLocaleString() + ' users scored this'
-								: ''}
-						>
-							<Star size={16} class="text-warning" fill="currentColor" />
-							<span class="font-semibold text-text-primary">{anime.mean.toFixed(1)}</span>
-						</div>
-					{/if}
-					{#if anime.numListUsers}
-						<div class="flex items-center gap-1 shrink-0">
-							<Users size={14} class="text-text-muted" />
-							<span class="font-semibold text-text-primary"
-								>{formatNumberShort(anime.numListUsers)}</span
+					<!-- Quick stats row -->
+					<div
+						class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+					>
+						{#if anime.mean}
+							<div
+								class="flex items-center gap-1 shrink-0"
+								title={anime.numScoringUsers
+									? anime.numScoringUsers.toLocaleString() + ' users scored this'
+									: ''}
 							>
-						</div>
-					{/if}
-					{#if anime.mediaType}
-						<div class="flex items-center gap-1 shrink-0">
-							<Tv size={14} class="text-text-muted" />
-							{formatMediaType(anime.mediaType)}
-						</div>
-					{/if}
-					{#if anime.numEpisodes > 0}
-						<div class="flex items-center gap-1 shrink-0">
-							<Film size={14} class="text-text-muted" />
-							{anime.numEpisodes} eps
-						</div>
-					{/if}
-					{#if anime.animeStatus}
-						<div
-							class="flex items-center gap-1 shrink-0 {STATUS_COLORS[anime.animeStatus] ??
-								'text-text-muted'}"
-						>
-							<span>{formatAiringStatus(anime.animeStatus)}</span>
-						</div>
-					{/if}
-					{#if anime.startSeason}
-						<div class="flex items-center gap-1 shrink-0 text-text-muted">
-							<Calendar size={12} />
-							{formatSeason(anime.startSeason.year, anime.startSeason.season)}
-						</div>
-					{/if}
-				</div>
-
-				<!-- Studios & Broadcast row -->
-				<div
-					class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
-				>
-					{#if anime.studios.length > 0}
-						<div class="flex items-center gap-1 min-w-0">
-							<Users size={12} class="shrink-0" />
-							<span class="truncate">{anime.studios.map((s) => s.name).join(', ')}</span>
-						</div>
-					{/if}
-					{#if anime.broadcast?.day_of_the_week}
-						<div class="flex items-center gap-1 shrink-0">
-							<Clock size={12} />
-							{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
-							<span
-								>{formatLocalBroadcast(
-									anime.broadcast.day_of_the_week,
-									anime.broadcast.start_time
-								)}</span
+								<Star size={16} class="text-warning" fill="currentColor" />
+								<span class="font-semibold text-text-primary">{anime.mean.toFixed(2)}</span><span
+									class="text-xs text-text-secondary">MAL community</span
+								>
+							</div>
+						{/if}
+						{#if anime.numListUsers}
+							<div class="flex items-center gap-1 shrink-0">
+								<Users size={14} class="text-text-muted" />
+								<span class="font-semibold text-text-primary"
+									>{formatNumberShort(anime.numListUsers)}</span
+								>
+							</div>
+						{/if}
+						{#if anime.mediaType}
+							<div class="flex items-center gap-1 shrink-0">
+								<Tv size={14} class="text-text-muted" />
+								{formatMediaType(anime.mediaType)}
+							</div>
+						{/if}
+						{#if anime.numEpisodes > 0}
+							<div class="flex items-center gap-1 shrink-0">
+								<Film size={14} class="text-text-muted" />
+								{anime.numEpisodes} eps
+							</div>
+						{/if}
+						{#if anime.animeStatus}
+							<div
+								class="flex items-center gap-1 shrink-0 {STATUS_COLORS[anime.animeStatus] ??
+									'text-text-muted'}"
 							>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Genres -->
-				{#if anime.genres.length > 0}
-					<div class="mt-3 flex flex-wrap gap-1.5">
-						{#each anime.genres as genre (genre.id)}
-							<GenreBadge name={genre.name} />
-						{/each}
-					</div>
-				{/if}
-
-				<!-- ─── User List Controls ─── -->
-				<div
-					class="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface-1/60 to-surface-2/40 p-5 shadow-2xl relative z-20"
-				>
-					<!-- Glowing accent effect in background -->
-					<div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-						<div
-							class="absolute -right-20 -top-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
-						></div>
+								<span>{formatAiringStatus(anime.animeStatus)}</span>
+							</div>
+						{/if}
+						{#if anime.startSeason}
+							<div class="flex items-center gap-1 shrink-0 text-text-muted">
+								<Calendar size={12} />
+								{formatSeason(anime.startSeason.year, anime.startSeason.season)}
+							</div>
+						{/if}
 					</div>
 
+					<!-- Studios & Broadcast row -->
+					<div
+						class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted max-w-full overflow-hidden [&>div+div]:before:content-['•'] [&>div+div]:before:text-white/20 [&>div+div]:before:mr-3"
+					>
+						{#if anime.studios.length > 0}
+							<div class="flex items-center gap-1 min-w-0">
+								<Users size={12} class="shrink-0" />
+								<span class="truncate">{anime.studios.map((s) => s.name).join(', ')}</span>
+							</div>
+						{/if}
+						{#if anime.broadcast?.day_of_the_week}
+							<div class="flex items-center gap-1 shrink-0">
+								<Clock size={12} />
+								{anime.animeStatus === 'finished_airing' ? 'Aired' : 'Airs'}
+								<span
+									>{formatLocalBroadcast(
+										anime.broadcast.day_of_the_week,
+										anime.broadcast.start_time
+									)}</span
+								>
+							</div>
+						{/if}
+					</div>
+
+					<!-- Genres -->
+					{#if anime.genres.length > 0}
+						<div class="mt-3 flex flex-wrap gap-1.5">
+							{#each anime.genres as genre (genre.id)}
+								<GenreBadge name={genre.name} />
+							{/each}
+						</div>
+					{/if}
+				</div>
+				<section class="detail-controls" aria-label="Your tracking">
 					{#if inList && listEntry}
-						<!-- Responsive layout: side-by-side on large screens, stacked on mobile -->
-						<div class="flex flex-col lg:flex-row lg:items-center gap-6 relative z-10">
-							<!-- Left Side: Status & Progress -->
-							<div class="flex-1 flex flex-col gap-4">
-								<div class="grid grid-cols-2 gap-4 items-center">
-									<!-- Status -->
-									<div class="flex flex-col">
-										<span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-											Status
-										</span>
-										<div class="mt-1.5 flex">
-											<StatusBadge
-												{malId}
-												status={listEntry.status}
-												showLabel={true}
-												class="h-10 sm:h-8 px-4 sm:px-3 text-xs sm:text-[11px] !rounded-lg flex items-center justify-center shadow-lg"
-											/>
-										</div>
-									</div>
-
-									<!-- Progress Counter -->
-									<div class="flex flex-col items-end">
-										<span
-											class="text-[10px] font-bold uppercase tracking-wider text-text-muted text-right"
-										>
-											Episodes Watched
-										</span>
-										<div class="mt-1 flex justify-end">
-											<EpisodeCounter
-												{malId}
-												watched={listEntry.numWatchedEpisodes}
-												total={listEntry.numEpisodes}
-											/>
-										</div>
-									</div>
+						<div class="tracking-controls">
+							<div class="tracking-top">
+								<div>
+									<span class="control-label">Your status</span><StatusBadge
+										{malId}
+										status={listEntry.status}
+										showLabel
+									/>
 								</div>
-
-								<!-- Custom Progress Bar -->
-								{#if listEntry.numEpisodes > 0}
-									{@const pct = Math.min(
-										(listEntry.numWatchedEpisodes / listEntry.numEpisodes) * 100,
-										100
-									)}
-									<div
-										class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5"
-									>
-										<div
-											class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all duration-500 ease-spring"
-											style="width: {pct}%"
-										></div>
-									</div>
-								{/if}
+								<span class="tracking-total"
+									>{listEntry.numEpisodes > 0
+										? `${listEntry.numEpisodes} episodes`
+										: 'Episode total unknown'}</span
+								>
 							</div>
-
-							<!-- Divider (vertical on desktop, horizontal on mobile) -->
-							<div class="hidden lg:block w-px bg-white/10 self-stretch my-1"></div>
-							<div class="block lg:hidden h-px bg-white/5 w-full"></div>
-
-							<!-- Right Side: Rating / Score section -->
-							<div class="lg:w-[280px] shrink-0">
-								<ScoreInput {malId} score={listEntry.score} />
-							</div>
+							<span class="control-label">Episodes watched</span>
+							<EpisodeStepper
+								{malId}
+								title={anime.title}
+								watched={listEntry.numWatchedEpisodes}
+								total={listEntry.numEpisodes}
+							/>
 						</div>
+						<div class="detail-score"><ScoreInput {malId} score={listEntry.score} /></div>
 					{:else}
-						<button
-							onclick={() => (showAddModal = true)}
-							class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+						<button onclick={() => (showAddModal = true)} class="primary-button detail-add"
+							><Plus size={18} />Add to My List</button
 						>
-							<Plus size={16} />
-							Add to My List
-						</button>
 					{/if}
-				</div>
+				</section>
 
 				<!-- External Links -->
-				<div class="mt-4 flex flex-wrap items-center gap-2">
+				<div class="detail-links">
 					<a
 						href="https://myanimelist.net/anime/{malId}"
 						target="_blank"
@@ -455,7 +401,7 @@
 							Synopsis
 						</h3>
 						<p
-							class="text-sm leading-relaxed text-text-secondary transition-all duration-300 {expandedSynopsis
+							class="synopsis-copy text-sm leading-relaxed text-text-secondary transition-all duration-300 {expandedSynopsis
 								? ''
 								: 'line-clamp-4'}"
 						>
@@ -464,7 +410,7 @@
 						{#if anime.synopsis.length > 280}
 							<button
 								onclick={() => (expandedSynopsis = !expandedSynopsis)}
-								class="mt-3 text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 active:scale-95 transition-transform"
+								class="mt-3 min-h-11 text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-1"
 							>
 								{expandedSynopsis ? 'Show Less ↑' : 'Read More ↓'}
 							</button>
@@ -817,3 +763,168 @@
 
 <!-- Character Detail Modal -->
 <CharacterDetailModal bind:open={showCharacterModal} entry={selectedCharacter} />
+
+<style>
+	.detail-page {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 40px 0 48px;
+		min-width: 0;
+	}
+	.detail-header {
+		display: grid;
+		grid-template-columns: 230px minmax(0, 1fr);
+		gap: 32px;
+		align-items: start;
+	}
+	.detail-cover {
+		position: relative;
+		aspect-ratio: 2/3;
+		border-radius: 14px;
+		overflow: hidden;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface-1);
+		box-shadow: 0 12px 32px #0007;
+	}
+	.detail-cover :global(.detail-poster) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.detail-info {
+		min-width: 0;
+	}
+	.detail-title {
+		font-size: clamp(28px, 3vw, 40px);
+		line-height: 1.12;
+		font-weight: 650;
+		letter-spacing: -0.035em;
+		overflow-wrap: anywhere;
+		text-wrap: pretty;
+	}
+	.detail-controls {
+		display: grid;
+		grid-template-columns: minmax(190px, 1fr) minmax(250px, 1fr);
+		gap: 24px;
+		margin-top: 24px;
+		padding: 20px;
+		border: 1px solid var(--color-border);
+		border-radius: 16px;
+		background: linear-gradient(130deg, var(--color-surface-1), var(--color-surface-2));
+		box-shadow: inset 0 1px 0 #ffffff06;
+	}
+	.tracking-controls {
+		min-width: 0;
+	}
+	.tracking-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+	.control-label {
+		display: block;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		margin-bottom: 8px;
+	}
+	.tracking-total {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		text-align: right;
+	}
+	.detail-score {
+		padding-left: 24px;
+		border-left: 1px solid var(--color-border);
+		min-width: 0;
+	}
+	.detail-add {
+		grid-column: 1/-1;
+		width: 100%;
+	}
+	.detail-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 16px;
+	}
+	.synopsis-copy {
+		max-width: 80ch;
+		font-size: 15px;
+		line-height: 1.8;
+	}
+	.detail-page :global(h3) {
+		font-size: 16px;
+		font-weight: 550;
+		letter-spacing: 0;
+		text-transform: none;
+		color: var(--color-text-primary);
+	}
+	@media (max-width: 1000px) {
+		.detail-header {
+			grid-template-columns: 180px minmax(0, 1fr);
+			gap: 24px;
+		}
+		.detail-controls {
+			grid-template-columns: 1fr;
+			gap: 18px;
+		}
+		.detail-score {
+			padding: 18px 0 0;
+			border-left: 0;
+			border-top: 1px solid var(--color-border);
+		}
+	}
+	@media (max-width: 767px) {
+		.detail-page {
+			padding-top: 28px;
+		}
+		.detail-header {
+			grid-template-columns: 112px minmax(0, 1fr);
+			gap: 20px 16px;
+		}
+		.detail-info {
+			display: contents;
+		}
+		.detail-title {
+			font-size: 25px;
+		}
+		.detail-controls,
+		.detail-links {
+			grid-column: 1/-1;
+			margin-top: 0;
+		}
+		.detail-controls {
+			padding: 18px;
+		}
+		.detail-summary {
+			min-width: 0;
+		}
+		.detail-summary :global(.shrink-0) {
+			flex-shrink: 1;
+			overflow-wrap: anywhere;
+		}
+		.detail-summary :global(.text-sm) {
+			font-size: 12px;
+		}
+		.detail-summary :global(.text-xs) {
+			font-size: 11px;
+		}
+		.detail-cover {
+			border-radius: 10px;
+		}
+	}
+	@media (max-width: 360px) {
+		.detail-header {
+			grid-template-columns: 88px minmax(0, 1fr);
+			gap: 18px 12px;
+		}
+		.detail-title {
+			font-size: 22px;
+		}
+		.detail-controls {
+			padding: 14px;
+		}
+	}
+</style>

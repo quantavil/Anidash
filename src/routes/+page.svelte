@@ -101,12 +101,9 @@
 {#if !authStore.isAuthenticated}
 	<section class="welcome-page">
 		<div class="welcome-copy">
-			<span class="welcome-note">A little space for the stories you love</span>
-			<h1>Your next episode.<br />Your own pace.</h1>
-			<p>
-				A home for your anime collection. Keep track of the stories you’re watching, rate your
-				favourites, and find what comes next.
-			</p>
+			<span class="welcome-note">Your anime, all together</span>
+			<h1>Great stories.<br />A place to keep them.</h1>
+			<p>Keep track of what you’re watching, rate your favourites, and find what comes next.</p>
 			<button class="primary-button" onclick={() => authStore.login()}
 				>Connect with MyAnimeList <ArrowUpRight size={17} /></button
 			><a class="welcome-browse" href="/browse">Explore anime first <ArrowUpRight size={15} /></a
@@ -120,8 +117,7 @@
 	<div class="list-page">
 		<div class="page-heading">
 			<div>
-				<span class="page-note">Your watch journal</span>
-				<h1>{pageTitle}<span class="heading-period" aria-hidden="true">.</span></h1>
+				<h1>{pageTitle}</h1>
 			</div>
 			<p class="collection-context">
 				<strong>{filteredEntries.length} titles</strong><span
@@ -186,22 +182,13 @@
 		gap: 24px;
 		margin-bottom: 28px;
 	}
-	.page-note {
-		display: block;
-		color: var(--color-text-secondary);
-		font-size: 12px;
-		margin-bottom: 8px;
-	}
 	h1 {
 		font-family: var(--font-display);
-		font-size: clamp(42px, 5vw, 66px);
-		font-weight: 400;
+		font-size: clamp(32px, 3.8vw, 46px);
+		font-weight: 600;
 		line-height: 1.05;
 		letter-spacing: -0.045em;
 		text-wrap: balance;
-	}
-	.heading-period {
-		color: var(--color-primary);
 	}
 	.collection-context {
 		display: flex;
@@ -252,8 +239,8 @@
 	}
 	.journal-layout {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 310px;
-		gap: 32px;
+		grid-template-columns: minmax(0, 1fr) 260px;
+		gap: 28px;
 		align-items: start;
 	}
 	.journal-layout.full-width {
@@ -277,14 +264,14 @@
 		align-items: center;
 		gap: 40px;
 		min-height: calc(100dvh - 100px);
-		padding: 40px 24px;
+		padding: 40px 0;
 	}
 	.welcome-note {
 		color: var(--color-primary);
 		font-size: 13px;
 	}
 	.welcome-copy h1 {
-		font-size: clamp(48px, 6.5vw, 88px);
+		font-size: clamp(42px, 5vw, 68px);
 		margin: 22px 0;
 	}
 	.welcome-copy p {
@@ -311,7 +298,7 @@
 	}
 	.welcome-art {
 		width: 100%;
-		max-width: 560px;
+		max-width: 470px;
 		justify-self: center;
 	}
 
@@ -373,13 +360,13 @@
 			gap: 40px;
 		}
 		.welcome-copy h1 {
-			font-size: 52px;
+			font-size: clamp(38px, 10vw, 48px);
 		}
 		.welcome-copy p {
 			font-size: 15px;
 		}
 		.welcome-art {
-			max-width: 380px;
+			max-width: 340px;
 		}
 	}
 </style>

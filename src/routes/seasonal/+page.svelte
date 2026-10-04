@@ -129,7 +129,7 @@
 
 <div class="py-6">
 	<!-- Header -->
-	<div class="flex items-end justify-between gap-4">
+	<div class="flex flex-wrap items-end justify-between gap-4">
 		<div>
 			<h1 class="route-title">
 				{capitalize(seasonKey)}
@@ -145,7 +145,7 @@
 			<button
 				aria-label="Previous season: {capitalize(prev.season)} {prev.year}"
 				onclick={() => goToSeason(prev.year, prev.season)}
-				class="flex items-center gap-1 min-h-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
+				class="flex items-center gap-1 min-h-11 min-w-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
 			>
 				<ChevronLeft size={16} />
 				<span class="hidden sm:inline">{capitalize(prev.season)} {prev.year}</span>
@@ -154,7 +154,7 @@
 			{#if seasonYear !== current.year || seasonKey !== current.season}
 				<button
 					onclick={() => goToSeason(current.year, current.season)}
-					class="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+					class="min-h-11 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
 				>
 					Current
 				</button>
@@ -163,7 +163,7 @@
 			<button
 				aria-label="Next season: {capitalize(next.season)} {next.year}"
 				onclick={() => goToSeason(next.year, next.season)}
-				class="flex items-center gap-1 min-h-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
+				class="flex items-center gap-1 min-h-11 min-w-11 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
 			>
 				<span class="hidden sm:inline">{capitalize(next.season)} {next.year}</span>
 				<ChevronRight size={16} />
@@ -173,11 +173,12 @@
 
 	<!-- Type Filter and Sort -->
 	<div class="mt-5 flex flex-wrap items-center justify-between gap-4">
-		<div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+		<div class="flex max-w-full gap-2 overflow-x-auto pb-1 scrollbar-none">
 			{#each TYPES as t, _idx (_idx)}
 				<button
 					onclick={() => (filterType = t.value)}
-					class="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
+					aria-pressed={filterType === t.value}
+					class="min-h-11 min-w-11 shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
 			  {filterType === t.value
 						? 'bg-primary/15 text-primary'
 						: 'bg-surface-1 text-text-muted hover:bg-surface-2 hover:text-text-secondary'}"
@@ -190,7 +191,8 @@
 		<div class="flex items-center gap-2">
 			<button
 				onclick={() => (sortByRating = !sortByRating)}
-				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating
+				aria-pressed={sortByRating}
+				class="min-h-11 flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating
 					? 'text-primary border-primary/30'
 					: 'text-text-secondary'}"
 			>
@@ -217,7 +219,7 @@
 				<div class="mt-8 flex justify-center">
 					<button
 						onclick={() => (sliceLimit += 20)}
-						class="rounded-xl border border-white/10 bg-surface-1 px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface-2 transition-all active:scale-95 shadow-md"
+						class="min-h-11 rounded-xl border border-white/10 bg-surface-1 px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface-2 transition-all active:scale-95 shadow-md"
 					>
 						Load More
 					</button>

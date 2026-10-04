@@ -6,12 +6,12 @@
 	xmlns="http://www.w3.org/2000/svg"
 	width={size}
 	height={size}
-	viewBox="0 0 24 28"
+	viewBox="0 0 24 24"
 	fill="none"
 	class={clazz}
 	aria-hidden="true"
-	><path d="M4 2h16v24l-8-5-8 5V2Z" fill="var(--color-primary)" /><path
-		d="m9 8 7 4-7 4V8Z"
+	><path d="m12 3 9 18h-5l-4-9-4 9H3L12 3Z" fill="var(--color-primary)" /><path
+		d="m10 16 2-4 2 4h-4Z"
 		fill="var(--color-surface-0)"
 	/></svg
 >

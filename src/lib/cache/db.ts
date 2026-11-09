@@ -2,11 +2,11 @@
 // Single source of truth for all IDB access patterns.
 
 import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
-import { logger } from '$lib/utils/logger';
+import { logger } from '#lib/utils/logger.js';
 
 // ─── Types ───
 
-export interface BaseAnimeRecord {
+interface BaseAnimeRecord {
 	malId: number;
 	title: string;
 	titleEnglish: string | null;
@@ -22,7 +22,7 @@ export interface BaseAnimeRecord {
 	numScoringUsers: number;
 }
 
-export interface LeanAnimeRecord extends BaseAnimeRecord {
+interface LeanAnimeRecord extends BaseAnimeRecord {
 	type: 'lean';
 	cachedAt: number; // epoch ms
 }
@@ -37,7 +37,7 @@ export interface DetailedAnimeRecord extends BaseAnimeRecord {
 
 export type AnimeRecord = LeanAnimeRecord | DetailedAnimeRecord;
 
-export interface RelatedAnimeRecord {
+interface RelatedAnimeRecord {
 	id: number;
 	title: string;
 	mainPicture: { medium: string | null; large: string | null } | null;

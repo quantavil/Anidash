@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { EXTERNAL_SITES } from '$lib/utils/external-sites';
-	import { mirrorsStore } from '$lib/stores/mirrors.svelte';
+	import { EXTERNAL_SITES } from '#lib/utils/external-sites.js';
+	import { mirrorsStore } from '#lib/stores/mirrors.svelte.js';
 	import { ChevronDown } from 'lucide-svelte';
 
 	let { animeTitle }: { animeTitle: string } = $props();

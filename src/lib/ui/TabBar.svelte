@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
+	import { getUrlParam, setUrlParam } from '#lib/utils/url-state.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { formatListStatus } from '$lib/utils/format';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { formatListStatus } from '#lib/utils/format.js';
 
 	type TabKey = 'all' | 'watching' | 'completed' | 'on_hold' | 'dropped' | 'plan_to_watch';
 
@@ -34,8 +34,7 @@
 
 	function selectTab(key: TabKey) {
 		goto(setUrlParam(page.url, 'tab', key === 'watching' ? '' : key), {
-			keepFocus: true,
-			noScroll: true
+			reset: false
 		});
 	}
 

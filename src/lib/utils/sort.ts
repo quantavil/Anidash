@@ -1,11 +1,18 @@
 // ─── Sort helpers (My List, Browse, Seasonal) ───
 
-import type { UserListRecord } from '$lib/cache/db';
+import type { UserListRecord } from '#lib/cache/db.js';
 import type { DisplayAnime } from './types';
 import { facetOfDisplay, facetOfRecord } from './filters';
 
 export type SortKey =
-	'updated' | 'title' | 'score' | 'progress' | 'mean' | 'start' | 'episodes' | 'popularity';
+	| 'updated'
+	| 'title'
+	| 'score'
+	| 'progress'
+	| 'mean'
+	| 'start'
+	| 'episodes'
+	| 'popularity';
 export type SortDir = 'asc' | 'desc';
 
 /** Natural direction per key: titles read A→Z, everything else biggest/newest first. */

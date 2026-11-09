@@ -1,11 +1,11 @@
 // ─── Sync Store (Svelte 5 Runes) ───
 // Manages full sync state: in-progress, last synced, errors.
 
-import { bulkPut } from '$lib/cache/userlist.cache';
-import { getUserAnimeList } from '$lib/api/mal';
-import { getLastSync, setLastSync, purgeStaleAnilistCache } from '$lib/cache/meta.cache';
-import { purgeStaleAnime } from '$lib/cache/anime.cache';
-import type { AppError } from '$lib/api/result';
+import { bulkPut } from '#lib/cache/userlist.cache.js';
+import { getUserAnimeList } from '#lib/api/mal.js';
+import { getLastSync, setLastSync, purgeStaleAnilistCache } from '#lib/cache/meta.cache.js';
+import { purgeStaleAnime } from '#lib/cache/anime.cache.js';
+import type { AppError } from '#lib/api/result.js';
 
 function createSyncStore() {
 	let isSyncing = $state(false);

@@ -6,8 +6,8 @@ import { z, type ZodType } from 'zod';
 import { anilistLimiter } from './rate-limit';
 import { AnilistMediaSchema, type AnilistMedia } from './schemas/anilist.schema';
 import { ok, err, type Result, zodIssuesToSummaries } from './result';
-import { getAnilistCache, setAnilistCache } from '$lib/cache/meta.cache';
-import { logger } from '$lib/utils/logger';
+import { getAnilistCache, setAnilistCache } from '#lib/cache/meta.cache.js';
+import { logger } from '#lib/utils/logger.js';
 
 const ANILIST_GQL = 'https://graphql.anilist.co';
 const DEFAULT_RETRY_AFTER_MS = 60_000;

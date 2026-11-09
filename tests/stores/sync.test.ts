@@ -1,28 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { syncStore } from '$lib/stores/sync.svelte';
-import { bulkPut } from '$lib/cache/userlist.cache';
-import { getUserAnimeList } from '$lib/api/mal';
-import { setLastSync } from '$lib/cache/meta.cache';
-import { purgeStaleAnime } from '$lib/cache/anime.cache';
-import type { UserListRecord } from '$lib/cache/db';
-import type { AppError } from '$lib/api/result';
+import { syncStore } from '#lib/stores/sync.svelte.js';
+import { bulkPut } from '#lib/cache/userlist.cache.js';
+import { getUserAnimeList } from '#lib/api/mal.js';
+import { setLastSync } from '#lib/cache/meta.cache.js';
+import { purgeStaleAnime } from '#lib/cache/anime.cache.js';
+import type { UserListRecord } from '#lib/cache/db.js';
+import type { AppError } from '#lib/api/result.js';
 
 // Mock dependencies
-vi.mock('$lib/cache/userlist.cache', () => ({
+vi.mock('#lib/cache/userlist.cache.js', () => ({
 	bulkPut: vi.fn().mockResolvedValue({ ok: true })
 }));
 
-vi.mock('$lib/api/mal', () => ({
+vi.mock('#lib/api/mal.js', () => ({
 	getUserAnimeList: vi.fn()
 }));
 
-vi.mock('$lib/cache/meta.cache', () => ({
+vi.mock('#lib/cache/meta.cache.js', () => ({
 	getLastSync: vi.fn().mockResolvedValue(null),
 	setLastSync: vi.fn().mockResolvedValue(undefined),
 	purgeStaleAnilistCache: vi.fn().mockResolvedValue(0)
 }));
 
-vi.mock('$lib/cache/anime.cache', () => ({
+vi.mock('#lib/cache/anime.cache.js', () => ({
 	purgeStaleAnime: vi.fn().mockResolvedValue(0)
 }));
 

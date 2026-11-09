@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCurrentSeason, prevSeason, nextSeason } from '$lib/utils/season';
+import { getCurrentSeason, prevSeason, nextSeason } from '#lib/utils/season.js';
 
 describe('season utils', () => {
 	it('calculates current season with valid structure', () => {

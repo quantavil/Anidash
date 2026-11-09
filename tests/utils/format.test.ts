@@ -8,7 +8,7 @@ import {
 	formatListStatus,
 	formatAiringStatus,
 	formatLocalBroadcast
-} from '$lib/utils/format';
+} from '#lib/utils/format.js';
 
 describe('format utils', () => {
 	describe('formatNumberShort', () => {

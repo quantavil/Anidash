@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeLocalWithOnline, type DisplayAnime } from '$lib/utils/types';
+import { mergeLocalWithOnline, type DisplayAnime } from '#lib/utils/types.js';
 
 function makeDisplay(overrides: Partial<DisplayAnime>): DisplayAnime {
 	return {

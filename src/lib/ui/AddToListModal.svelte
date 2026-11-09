@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { Plus } from 'lucide-svelte';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { formatMediaType } from '$lib/utils/format';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { formatMediaType } from '#lib/utils/format.js';
 	import { toast } from 'svelte-sonner';
 	import Dialog from './Dialog.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 
-	import type { AnimeStatus } from '$lib/cache/db';
+	import type { AnimeStatus } from '#lib/cache/db.js';
 
 	let {
 		open = false,

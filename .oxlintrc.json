@@ -1,0 +1,12 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "unicorn", "oxc"],
+	"categories": { "correctness": "error" },
+	"rules": {
+		"no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+		"typescript/no-explicit-any": "warn",
+		"typescript/ban-ts-comment": "warn"
+	},
+	"env": { "builtin": true, "browser": true, "node": true },
+	"ignorePatterns": [".svelte-kit", "build", ".wrangler", "static"]
+}

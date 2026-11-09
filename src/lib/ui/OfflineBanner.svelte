@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { connection } from '$lib/utils/connection.svelte';
+	import { connection } from '#lib/utils/connection.svelte.js';
 	import { Wifi, WifiOff } from 'lucide-svelte';
 </script>
 

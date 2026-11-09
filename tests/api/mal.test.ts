@@ -7,10 +7,14 @@ import {
 	getSeasonal,
 	getRanking,
 	getAnimeDetail
-} from '$lib/api/mal';
-import type { MalAnimeLean, MalUserListEntry, MalAnimeDetail } from '$lib/api/schemas/mal.schema';
-import { MalAnimeLeanSchema, MalUserListResponseSchema } from '$lib/api/schemas/mal.schema';
-import { getUserAnimeList } from '$lib/api/mal';
+} from '#lib/api/mal.js';
+import type {
+	MalAnimeLean,
+	MalUserListEntry,
+	MalAnimeDetail
+} from '#lib/api/schemas/mal.schema.js';
+import { MalAnimeLeanSchema, MalUserListResponseSchema } from '#lib/api/schemas/mal.schema.js';
+import { getUserAnimeList } from '#lib/api/mal.js';
 
 describe('MAL API Mappers', () => {
 	it('should correctly map base anime node fields', () => {

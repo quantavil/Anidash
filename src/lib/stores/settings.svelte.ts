@@ -1,8 +1,8 @@
 // ─── Settings Store ───
 // Centralized store for user preferences. Persisted to localStorage.
 
-import { browser } from '$app/environment';
-import { STORAGE_KEYS } from '$lib/constants';
+import { browser } from '$app/env';
+import { STORAGE_KEYS } from '#lib/constants.js';
 
 class SettingsStore {
 	preferEnglish = $state(false);

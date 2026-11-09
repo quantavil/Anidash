@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settingsStore } from '$lib/stores/settings.svelte';
+	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 

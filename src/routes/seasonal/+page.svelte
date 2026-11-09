@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
-	import { getSeasonal } from '$lib/api/mal';
-	import { getSeasonalCache, setSeasonalCache } from '$lib/cache/meta.cache';
-	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
-	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
-	import { capitalize } from '$lib/utils/format';
+	import { getUrlParam, setUrlParams } from '#lib/utils/url-state.js';
+	import { getSeasonal } from '#lib/api/mal.js';
+	import { getSeasonalCache, setSeasonalCache } from '#lib/cache/meta.cache.js';
+	import { mapMalNodeToDisplay, type DisplayAnime } from '#lib/utils/types.js';
+	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '#lib/utils/season.js';
+	import { capitalize } from '#lib/utils/format.js';
 	import { ChevronLeft, ChevronRight, ArrowDown, ArrowUp, Dices } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
-	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
-	import FilterPanel from '$lib/ui/FilterPanel.svelte';
-	import { userListStore } from '$lib/stores/userlist.svelte';
+	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
+	import AnimeCardSkeleton from '#lib/ui/skeletons/AnimeCardSkeleton.svelte';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
+	import FilterPanel from '#lib/ui/FilterPanel.svelte';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import {
 		facetOfDisplay,
 		matchesFilters,
@@ -23,8 +23,8 @@
 		activeFilterCount,
 		pickRandom,
 		type AnimeFilters
-	} from '$lib/utils/filters';
-	import { sortDisplay, NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
+	} from '#lib/utils/filters.js';
+	import { sortDisplay, NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
 
 	// ─── Season State ───
 
@@ -69,7 +69,7 @@
 	const facetOptions = $derived(buildFacetOptions(anime.map(facetOfDisplay), filters));
 
 	function setParams(pairs: { key: string; value: string }[], replace = false) {
-		goto(setUrlParams(page.url, pairs), { keepFocus: true, noScroll: true, replaceState: replace });
+		goto(setUrlParams(page.url, pairs), { reset: false, replace: replace });
 	}
 	function setFilters(next: AnimeFilters) {
 		setParams(filtersToPairs(next), true);
@@ -150,7 +150,7 @@
 				{ key: 'year', value: String(year) },
 				{ key: 'season', value: season }
 			]),
-			{ noScroll: true }
+			{ reset: false }
 		);
 	}
 

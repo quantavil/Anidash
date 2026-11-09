@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { authStore } from '$lib/auth/auth.svelte';
+	import { authStore } from '#lib/auth/auth.svelte.js';
 	import { page } from '$app/state';
-	import Logo from '$lib/ui/Logo.svelte';
+	import Logo from '#lib/ui/Logo.svelte';
 	import { goto } from '$app/navigation';
 
 	const errorCode = $derived(page.url.searchParams.get('error'));
 
 	$effect(() => {
 		if (authStore.isAuthenticated) {
-			goto('/', { replaceState: true });
+			goto('/', { replace: true });
 		}
 	});
 </script>

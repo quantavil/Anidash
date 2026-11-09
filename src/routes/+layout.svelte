@@ -1,22 +1,22 @@
 <script lang="ts">
 	import '../app.css';
 
-	import { authStore } from '$lib/auth/auth.svelte';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { syncStore } from '$lib/stores/sync.svelte';
+	import { authStore } from '#lib/auth/auth.svelte.js';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { syncStore } from '#lib/stores/sync.svelte.js';
 	import { onMount } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 
-	import ListPageSkeleton from '$lib/ui/skeletons/ListPageSkeleton.svelte';
-	import FluidNav from '$lib/ui/FluidNav.svelte';
-	import OfflineBanner from '$lib/ui/OfflineBanner.svelte';
-	import CompleteAnimeDialog from '$lib/ui/CompleteAnimeDialog.svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
-	import { settingsStore } from '$lib/stores/settings.svelte';
-	import { logger } from '$lib/utils/logger';
+	import ListPageSkeleton from '#lib/ui/skeletons/ListPageSkeleton.svelte';
+	import FluidNav from '#lib/ui/FluidNav.svelte';
+	import OfflineBanner from '#lib/ui/OfflineBanner.svelte';
+	import CompleteAnimeDialog from '#lib/ui/CompleteAnimeDialog.svelte';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
+	import { settingsStore } from '#lib/stores/settings.svelte.js';
+	import { logger } from '#lib/utils/logger.js';
 
-	import { refreshTokens, needsRefresh } from '$lib/auth/tokens';
-	import { STORAGE_KEYS } from '$lib/constants';
+	import { refreshTokens, needsRefresh } from '#lib/auth/tokens.js';
+	import { STORAGE_KEYS } from '#lib/constants.js';
 
 	let { children } = $props();
 

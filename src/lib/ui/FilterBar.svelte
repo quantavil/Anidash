@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { getUrlParam, setUrlParam, setUrlParams } from '$lib/utils/url-state';
+	import { getUrlParam, setUrlParam, setUrlParams } from '#lib/utils/url-state.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { ArrowUpDown, ArrowDown, ArrowUp, Dices } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
 
-	import { NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
+	import { NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
 
 	let { onrandom, randomCount = 0 }: { onrandom?: () => void; randomCount?: number } = $props();
 
@@ -32,13 +32,12 @@
 	function toggleDir() {
 		const flipped: SortDir = currentDir === 'asc' ? 'desc' : 'asc';
 		goto(setUrlParam(page.url, 'dir', flipped === NATURAL_DIR[currentSort] ? '' : flipped), {
-			keepFocus: true,
-			noScroll: true
+			reset: false
 		});
 	}
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
-	import { debounce } from '$lib/utils/debounce';
+	import { debounce } from '#lib/utils/debounce.js';
 
 	let showSortMenu = $state(false);
 	let focusedIndex = $state(-1);
@@ -50,8 +49,7 @@
 				{ key: 'dir', value: '' }
 			]),
 			{
-				keepFocus: true,
-				noScroll: true
+				reset: false
 			}
 		);
 		showSortMenu = false;
@@ -90,7 +88,7 @@
 	}
 
 	const debouncedSearch = debounce((value: string) => {
-		goto(setUrlParam(page.url, 'q', value), { keepFocus: true, noScroll: true });
+		goto(setUrlParam(page.url, 'q', value), { reset: false });
 	}, 250);
 
 	function handleSearch(e: Event) {
@@ -105,7 +103,7 @@
 	});
 
 	function clearSearch() {
-		goto(setUrlParam(page.url, 'q', ''), { keepFocus: true, noScroll: true });
+		goto(setUrlParam(page.url, 'q', ''), { reset: false });
 	}
 
 	const sortLabel = $derived(

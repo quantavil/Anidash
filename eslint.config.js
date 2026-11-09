@@ -1,49 +1,25 @@
-import prettier from 'eslint-config-prettier';
+// Oxlint (.oxlintrc.json) covers general JS/TS correctness; ESLint is kept only for
+// Svelte-specific rules (runes, reactivity) that oxlint cannot run yet.
 import gitignore from 'eslint-config-flat-gitignore';
-import js from '@eslint/js';
 import svelte from 'eslint-plugin-svelte';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import ts from 'typescript-eslint';
-import svelteConfig from './svelte.config.js';
 
-export default defineConfig(
-	gitignore(),
-	js.configs.recommended,
-	ts.configs.recommended,
-	svelte.configs.recommended,
-	prettier,
-	svelte.configs.prettier,
-	{
-		languageOptions: { globals: { ...globals.browser, ...globals.node } },
-		rules: {
-			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
-			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+const svelteFiles = ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'];
+
+export default defineConfig(gitignore(), {
+	files: svelteFiles,
+	extends: [svelte.configs.recommended, svelte.configs.prettier],
+	languageOptions: {
+		globals: { ...globals.browser, ...globals.node },
+		parserOptions: {
+			projectService: true,
+			extraFileExtensions: ['.svelte'],
+			parser: ts.parser
 		}
 	},
-	{
-		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
-		languageOptions: {
-			parserOptions: {
-				projectService: true,
-				extraFileExtensions: ['.svelte'],
-				parser: ts.parser,
-				svelteConfig
-			}
-		}
-	},
-	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {
-			'svelte/no-navigation-without-resolve': 'off',
-			'@typescript-eslint/no-unused-vars': [
-				'warn',
-				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
-			],
-			'@typescript-eslint/no-explicit-any': 'warn',
-			'@typescript-eslint/ban-ts-comment': 'warn'
-		}
+	rules: {
+		'svelte/no-navigation-without-resolve': 'off'
 	}
-);
+});

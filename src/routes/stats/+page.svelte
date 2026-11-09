@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { syncStore } from '$lib/stores/sync.svelte';
-	import { authStore } from '$lib/auth/auth.svelte';
-	import { formatMediaType, formatRelativeDate, formatListStatus } from '$lib/utils/format';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { syncStore } from '#lib/stores/sync.svelte.js';
+	import { authStore } from '#lib/auth/auth.svelte.js';
+	import { formatMediaType, formatRelativeDate, formatListStatus } from '#lib/utils/format.js';
 	import { Film, Star, Tv, Play, Calendar, CircleCheck, Pause, Trash, Clock } from 'lucide-svelte';
-	import StatCard from '$lib/ui/StatCard.svelte';
-	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
-	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
-	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
+	import StatCard from '#lib/ui/StatCard.svelte';
+	import EpisodeCounter from '#lib/ui/EpisodeCounter.svelte';
+	import ImageWithFallback from '#lib/ui/ImageWithFallback.svelte';
+	import AnimeTitle from '#lib/ui/AnimeTitle.svelte';
 
 	// ─── Stats ───
 

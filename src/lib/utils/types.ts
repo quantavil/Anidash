@@ -2,8 +2,8 @@
 // Normalized from MAL or AniList responses for UI consumption.
 
 import { formatSeason } from './format';
-import type { UserListRecord } from '$lib/cache/db';
-import type { AnilistMedia } from '$lib/api/schemas/anilist.schema';
+import type { UserListRecord } from '#lib/cache/db.js';
+import type { AnilistMedia } from '#lib/api/schemas/anilist.schema.js';
 
 export interface DisplayAnime {
 	malId: number;
@@ -42,7 +42,7 @@ export function mapUserListRecordToDisplay(e: UserListRecord): DisplayAnime {
 
 /** Map a MAL search result node to DisplayAnime */
 export function mapMalNodeToDisplay(
-	node: import('$lib/api/schemas/mal.schema').MalAnimeLean
+	node: import('#lib/api/schemas/mal.schema.js').MalAnimeLean
 ): DisplayAnime {
 	return {
 		malId: node.id,

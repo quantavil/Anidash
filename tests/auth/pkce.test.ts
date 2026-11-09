@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generatePKCE } from '$lib/auth/pkce';
+import { generatePKCE } from '#lib/auth/pkce.js';
 
 describe('pkce auth utils', () => {
 	it('generates a compliant PKCE pair and state for MAL OAuth', () => {

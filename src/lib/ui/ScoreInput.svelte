@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import { Star } from 'lucide-svelte';
 
 	let { malId, score }: { malId: number; score: number } = $props();

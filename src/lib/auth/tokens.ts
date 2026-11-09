@@ -3,10 +3,10 @@
 // Note: Storing tokens in localStorage exposes them to Cross-Site Scripting (XSS) attacks.
 // Ensure strong Content-Security-Policy (CSP) headers and sanitize all user input.
 
-import { ok, err, type Result, zodIssuesToSummaries } from '$lib/api/result';
-import { MalTokenResponseSchema } from '$lib/api/schemas/mal.schema';
-import { STORAGE_KEYS } from '$lib/constants';
-import { AUTH_REFRESH_URL } from '$lib/api/config';
+import { ok, err, type Result, zodIssuesToSummaries } from '#lib/api/result.js';
+import { MalTokenResponseSchema } from '#lib/api/schemas/mal.schema.js';
+import { STORAGE_KEYS } from '#lib/constants.js';
+import { AUTH_REFRESH_URL } from '#lib/api/config.js';
 
 export interface TokenData {
 	accessToken: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { sortEntries } from '$lib/utils/sort';
-import type { UserListRecord } from '$lib/cache/db';
+import { sortEntries } from '#lib/utils/sort.js';
+import type { UserListRecord } from '#lib/cache/db.js';
 
 describe('sort utils', () => {
 	const sampleEntries: UserListRecord[] = [

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { userListStore } from '$lib/stores/userlist.svelte';
-import { mergeSyncQueue, getSyncQueue, deleteSyncQueue } from '$lib/cache/userlist.cache';
-import { updateAnimeStatus, deleteAnimeStatus } from '$lib/api/mal';
+import { userListStore } from '#lib/stores/userlist.svelte.js';
+import { mergeSyncQueue, getSyncQueue, deleteSyncQueue } from '#lib/cache/userlist.cache.js';
+import { updateAnimeStatus, deleteAnimeStatus } from '#lib/api/mal.js';
 
-vi.mock('$lib/cache/userlist.cache', () => ({
+vi.mock('#lib/cache/userlist.cache.js', () => ({
 	getAllEntries: vi.fn().mockResolvedValue([]),
 	putEntry: vi.fn().mockResolvedValue({ ok: true }),
 	removeEntry: vi.fn().mockResolvedValue({ ok: true }),
@@ -13,17 +13,17 @@ vi.mock('$lib/cache/userlist.cache', () => ({
 	deleteSyncQueue: vi.fn().mockResolvedValue({ ok: true })
 }));
 
-vi.mock('$lib/api/mal', () => ({
+vi.mock('#lib/api/mal.js', () => ({
 	updateAnimeStatus: vi.fn().mockResolvedValue({ ok: true }),
 	deleteAnimeStatus: vi.fn().mockResolvedValue({ ok: true }),
 	getAnimeDetail: vi.fn().mockResolvedValue({ ok: false })
 }));
 
-vi.mock('$lib/cache/anime.cache', () => ({
+vi.mock('#lib/cache/anime.cache.js', () => ({
 	putAnime: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock('$lib/stores/sync.svelte', () => ({
+vi.mock('#lib/stores/sync.svelte.js', () => ({
 	syncStore: {
 		fullSync: vi.fn().mockResolvedValue({ success: true }),
 		syncError: null,
@@ -113,7 +113,7 @@ describe('userlist.svelte.ts state', () => {
 	});
 
 	it('should handle IDB read failure gracefully in loadFromCache', async () => {
-		const { getAllEntries } = await import('$lib/cache/userlist.cache');
+		const { getAllEntries } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getAllEntries).mockRejectedValueOnce(new Error('IDB Failure'));
 
 		await expect(userListStore.loadFromCache()).resolves.not.toThrow();
@@ -121,7 +121,7 @@ describe('userlist.svelte.ts state', () => {
 	});
 
 	it('should catch flushPersistentQueue failure in syncFromRemote and return a cache error', async () => {
-		const { getSyncQueue } = await import('$lib/cache/userlist.cache');
+		const { getSyncQueue } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getSyncQueue).mockRejectedValueOnce(new Error('Queue Read Failed'));
 
 		const result = await userListStore.syncFromRemote();
@@ -138,7 +138,7 @@ describe('userlist.svelte.ts state', () => {
 		const expiredTime = now - (SEVEN_DAYS_MS + 1000); // 7 days + 1s ago
 		const validTime = now - 24 * 60 * 60 * 1000; // 1 day ago
 
-		const { getSyncQueue, deleteSyncQueue } = await import('$lib/cache/userlist.cache');
+		const { getSyncQueue, deleteSyncQueue } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getSyncQueue).mockResolvedValueOnce([
 			{ malId: 10, payload: { status: 'completed' }, timestamp: expiredTime },
 			{ malId: 11, payload: { status: 'watching' }, timestamp: validTime }
@@ -183,7 +183,7 @@ describe('userlist.svelte.ts state', () => {
 		const rec = userListStore.getEntry(22);
 		if (rec) rec.updatedAt = '2020-01-01T00:00:00.000Z';
 
-		const { getSyncQueue } = await import('$lib/cache/userlist.cache');
+		const { getSyncQueue } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getSyncQueue).mockResolvedValueOnce([
 			{ malId: 22, payload: { num_watched_episodes: 2 }, timestamp: Date.now() }
 		]);

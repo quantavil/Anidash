@@ -1,10 +1,10 @@
 // ─── Dub Info Store ───
 // Centralized store to hold the mapping of anime that have a dub.
 
-import { browser } from '$app/environment';
-import { getDB } from '$lib/cache/db';
-import { logger } from '$lib/utils/logger';
-import { STORAGE_KEYS } from '$lib/constants';
+import { browser } from '$app/env';
+import { getDB } from '#lib/cache/db.js';
+import { logger } from '#lib/utils/logger.js';
+import { STORAGE_KEYS } from '#lib/constants.js';
 import { SvelteSet } from 'svelte/reactivity';
 
 class DubStore {

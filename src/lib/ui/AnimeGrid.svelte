@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { UserListRecord } from '$lib/cache/db';
+	import type { UserListRecord } from '#lib/cache/db.js';
 	import { untrack } from 'svelte';
 	import AnimeCard from './AnimeCard.svelte';
 	import AnimeCardSkeleton from './skeletons/AnimeCardSkeleton.svelte';

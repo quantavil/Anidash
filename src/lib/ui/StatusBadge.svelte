@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import type { AnimeStatus } from '$lib/cache/db';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import type { AnimeStatus } from '#lib/cache/db.js';
 	import { Trash2 } from 'lucide-svelte';
 
 	let {

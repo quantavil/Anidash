@@ -13,7 +13,7 @@
 		label: string;
 		value: string | number;
 		// lucide-svelte icons only satisfy the SvelteComponent<any> signature.
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// oxlint-disable-next-line typescript/no-explicit-any
 		icon?: typeof SvelteComponent<any>;
 		color?: string;
 		href?: string;

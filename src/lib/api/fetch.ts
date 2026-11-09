@@ -1,8 +1,8 @@
 // ─── Authenticated fetch wrapper ───
 // Attaches Bearer token, handles proactive + reactive refresh.
 
-import { tokens, needsRefresh, refreshTokens } from '$lib/auth/tokens';
-import { ok, err, type Result } from '$lib/api/result';
+import { tokens, needsRefresh, refreshTokens } from '#lib/auth/tokens.js';
+import { ok, err, type Result } from '#lib/api/result.js';
 
 function tokenStillValid(): boolean {
 	const t = tokens.get();

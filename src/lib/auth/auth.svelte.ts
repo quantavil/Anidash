@@ -2,16 +2,16 @@
 // Manages authentication state, login flow, callback handling.
 
 import { goto } from '$app/navigation';
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { generatePKCE } from './pkce';
 import { tokens, parseAndSetTokens } from './tokens';
-import { authFetch } from '$lib/api/fetch';
-import { MAL_API_BASE, AUTH_TOKEN_URL } from '$lib/api/config';
-import { ok, err, type Result } from '$lib/api/result';
-import { MalUserSchema, type MalUser } from '$lib/api/schemas/mal.schema';
-import { zodIssuesToSummaries } from '$lib/api/result';
-import { STORAGE_KEYS } from '$lib/constants';
-import { logger } from '$lib/utils/logger';
+import { authFetch } from '#lib/api/fetch.js';
+import { MAL_API_BASE, AUTH_TOKEN_URL } from '#lib/api/config.js';
+import { ok, err, type Result } from '#lib/api/result.js';
+import { MalUserSchema, type MalUser } from '#lib/api/schemas/mal.schema.js';
+import { zodIssuesToSummaries } from '#lib/api/result.js';
+import { STORAGE_KEYS } from '#lib/constants.js';
+import { logger } from '#lib/utils/logger.js';
 
 function createAuthStore() {
 	let user = $state<MalUser | null>(null);
@@ -237,14 +237,14 @@ function createAuthStore() {
 		error = null;
 
 		try {
-			const { userListStore } = await import('$lib/stores/userlist.svelte');
+			const { userListStore } = await import('#lib/stores/userlist.svelte.js');
 			userListStore.clear();
 		} catch {
 			/* ignore */
 		}
 
 		try {
-			const { syncStore } = await import('$lib/stores/sync.svelte');
+			const { syncStore } = await import('#lib/stores/sync.svelte.js');
 			syncStore.reset();
 		} catch {
 			/* ignore */
@@ -252,7 +252,7 @@ function createAuthStore() {
 
 		// Clear IndexedDB
 		try {
-			const { clearUserCache } = await import('$lib/cache/db');
+			const { clearUserCache } = await import('#lib/cache/db.js');
 			await clearUserCache();
 		} catch {
 			// IDB cleanup can fail if locked — not critical

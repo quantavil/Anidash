@@ -2,8 +2,8 @@
 // Stores: lastSync timestamp, browse/seasonal grids, AniList detail cache.
 
 import { getDB, type MetaRecord } from './db';
-import { AnilistMediaSchema, type AnilistMedia } from '$lib/api/schemas/anilist.schema';
-import type { DisplayAnime } from '$lib/utils/types';
+import { AnilistMediaSchema, type AnilistMedia } from '#lib/api/schemas/anilist.schema.js';
+import type { DisplayAnime } from '#lib/utils/types.js';
 
 // ─── Keys ───
 

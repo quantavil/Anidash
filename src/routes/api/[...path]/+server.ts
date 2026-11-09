@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
-import { createIpRateLimiter, rateLimitedResponse } from '$lib/server/rate-limit';
-import { getMalClientId, jsonError } from '$lib/server/mal-env';
+import { createIpRateLimiter, rateLimitedResponse } from '#lib/server/rate-limit.js';
+import { getMalClientId, jsonError } from '#lib/server/mal-env.js';
 
 // Sized above the client-side MAL limiter (~2.5 req/s ≈ 150/min) so normal use is never
 // throttled by our own proxy; per-isolate, so best-effort abuse protection only.

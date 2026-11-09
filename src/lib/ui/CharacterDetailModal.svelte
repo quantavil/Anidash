@@ -2,7 +2,7 @@
 	import { Heart, ExternalLink, X } from 'lucide-svelte';
 	import Dialog from './Dialog.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
-	import { formatCharacterName } from '$lib/utils/format';
+	import { formatCharacterName } from '#lib/utils/format.js';
 
 	type AnilistCharacterEntry = {
 		id: number;

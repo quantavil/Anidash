@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatReviewExcerpt } from '$lib/utils/review-text';
+	import { formatReviewExcerpt } from '#lib/utils/review-text.js';
 
 	let { body }: { body: string } = $props();
 	let expanded = $state(false);

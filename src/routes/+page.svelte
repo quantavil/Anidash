@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/auth/auth.svelte';
-	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { sortEntries, NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
-	import { dubStore } from '$lib/stores/dub.svelte';
-	import { matchesFuzzy } from '$lib/utils/search';
-	import { formatListStatus } from '$lib/utils/format';
+	import { authStore } from '#lib/auth/auth.svelte.js';
+	import { getUrlParam, setUrlParams } from '#lib/utils/url-state.js';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { sortEntries, NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
+	import { matchesFuzzy } from '#lib/utils/search.js';
+	import { formatListStatus } from '#lib/utils/format.js';
 	import {
 		facetOfRecord,
 		matchesFilters,
@@ -17,15 +17,15 @@
 		activeFilterCount,
 		pickRandom,
 		type AnimeFilters
-	} from '$lib/utils/filters';
+	} from '#lib/utils/filters.js';
 
 	import { ArrowUpRight } from 'lucide-svelte';
-	import StoryWindow from '$lib/ui/StoryWindow.svelte';
-	import TabBar from '$lib/ui/TabBar.svelte';
-	import FilterBar from '$lib/ui/FilterBar.svelte';
-	import FilterPanel from '$lib/ui/FilterPanel.svelte';
-	import AnimeGrid from '$lib/ui/AnimeGrid.svelte';
-	import ListPageSkeleton from '$lib/ui/skeletons/ListPageSkeleton.svelte';
+	import StoryWindow from '#lib/ui/StoryWindow.svelte';
+	import TabBar from '#lib/ui/TabBar.svelte';
+	import FilterBar from '#lib/ui/FilterBar.svelte';
+	import FilterPanel from '#lib/ui/FilterPanel.svelte';
+	import AnimeGrid from '#lib/ui/AnimeGrid.svelte';
+	import ListPageSkeleton from '#lib/ui/skeletons/ListPageSkeleton.svelte';
 
 	// ─── URL State ───
 
@@ -42,9 +42,8 @@
 
 	function setFilters(next: AnimeFilters) {
 		goto(setUrlParams(page.url, filtersToPairs(next)), {
-			keepFocus: true,
-			noScroll: true,
-			replaceState: true
+			reset: false,
+			replace: true
 		});
 	}
 

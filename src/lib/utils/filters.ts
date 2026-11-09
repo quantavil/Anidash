@@ -3,8 +3,9 @@
 // genre/type/score (only q/limit/offset/fields), so every filter runs client-side over
 // the rows already loaded. State round-trips through URL params so views are shareable.
 
-import type { UserListRecord } from '$lib/cache/db';
+import type { UserListRecord } from '#lib/cache/db.js';
 import type { DisplayAnime } from './types';
+import type { UrlLike } from './url-state';
 
 export interface AnimeFilters {
 	types: string[];
@@ -203,7 +204,7 @@ const list = (v: string | null): string[] =>
 			]
 		: [];
 
-export const FILTER_PARAM_KEYS = [
+const FILTER_PARAM_KEYS = [
 	'type',
 	'genre',
 	'gm',
@@ -220,7 +221,7 @@ export const FILTER_PARAM_KEYS = [
 	'hide'
 ] as const;
 
-export function filtersFromUrl(url: URL): AnimeFilters {
+export function filtersFromUrl(url: UrlLike): AnimeFilters {
 	const p = url.searchParams;
 	return {
 		types: list(p.get('type')).map((t) => t.toLowerCase()),

@@ -24,5 +24,5 @@ export function createRateLimiter(minIntervalMs: number) {
 }
 
 /** AniList: 90/min (667ms), degraded 30/min still safe with 700ms */
-export const ANILIST_MIN_INTERVAL_MS = 700;
+const ANILIST_MIN_INTERVAL_MS = 700;
 export const anilistLimiter = createRateLimiter(ANILIST_MIN_INTERVAL_MS);

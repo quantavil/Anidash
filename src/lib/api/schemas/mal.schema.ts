@@ -63,8 +63,6 @@ export const MalTokenResponseSchema = z.object({
 	refresh_token: z.string().optional() // MAL sometimes omits on refresh
 });
 
-export type MalTokenResponse = z.infer<typeof MalTokenResponseSchema>;
-
 // ─── Anime (lean — for list responses) ───
 
 export const MalAnimeLeanSchema = z.object({
@@ -92,7 +90,7 @@ export type MalAnimeLean = z.infer<typeof MalAnimeLeanSchema>;
 
 // ─── User List Status (from GET response) ───
 
-export const MalListStatusSchema = z.object({
+const MalListStatusSchema = z.object({
 	status: z.enum(['watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch']),
 	score: z.number().nullable().optional(),
 	num_episodes_watched: z.number().nullable().optional(),
@@ -104,7 +102,7 @@ export const MalListStatusSchema = z.object({
 
 // ─── User List Entry (node + list_status) ───
 
-export const MalUserListEntrySchema = z.object({
+const MalUserListEntrySchema = z.object({
 	node: MalAnimeLeanSchema,
 	list_status: MalListStatusSchema
 });
@@ -176,7 +174,7 @@ export type MalAnimeSearchResponse = z.infer<typeof MalAnimeSearchResponseSchema
 // ─── Status Update Payload (for PATCH) ───
 // Note: MAL uses `num_watched_episodes` in PATCH (not `num_episodes_watched`)
 
-export const MalStatusUpdateSchema = z.object({
+const MalStatusUpdateSchema = z.object({
 	status: z.enum(['watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch']).optional(),
 	score: z.number().min(0).max(10).optional(),
 	num_watched_episodes: z.number().min(0).optional(),

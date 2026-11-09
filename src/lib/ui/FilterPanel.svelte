@@ -5,8 +5,8 @@
 		activeFilterCount,
 		type AnimeFilters,
 		type FacetOptions
-	} from '$lib/utils/filters';
-	import { formatMediaType } from '$lib/utils/format';
+	} from '#lib/utils/filters.js';
+	import { formatMediaType } from '#lib/utils/format.js';
 
 	let {
 		filters,

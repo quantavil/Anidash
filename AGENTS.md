@@ -12,14 +12,14 @@ The original AniDash interface is restored from `c8baa61`: black/violet surfaces
 
 - **No fallback**: AniList detail is `Media(idMal: Int type:ANIME)` direct. If `null` → empty, never `Page{media(search)}` title fallback. No Jikan, no backward compat, no dead aliases. AniList answers an unknown MAL id with **HTTP 404 + `data:{Media:null}`** — `gqlFetch` treats that as `ok(null)`, not an error.
 - **Single enrichment budget**: detail charas/recs/tags/trailer/airing count as one AniList fetch. Use `anilistLimiter` 700ms (90/min → 30/min degraded). Never fire parallel AniList calls for same `malId`.
-- **Browser headers**: `fetch(ANILIST_GQL)` must send only `Content-Type` + `Accept`. `User-Agent` is forbidden in browser fetch. CSP `connect-src` + `preconnect` must include `https://graphql.anilist.co` (`svelte.config.js`, `src/app.html`).
+- **Browser headers**: `fetch(ANILIST_GQL)` must send only `Content-Type` + `Accept`. `User-Agent` is forbidden in browser fetch. CSP `connect-src` + `preconnect` must include `https://graphql.anilist.co` (`vite.config.ts` `sveltekit({ kit })`, `src/app.html`).
 - **Validation**: All AniList responses Zod-validated (`AnilistMediaSchema`, which mirrors exactly what `MEDIA_DETAIL_QUERY` requests — add a field to both or neither). Surface `rate_limit` with `retryAfter` ms, not generic `api` 429.
 - **Cache**: `anilist:fetch:{malId}` 7d TTL, written/read by `loadAnilistMedia()` (the only call the UI makes; it also de-dupes in-flight requests per `malId`), GC'd via `purgeStaleAnilistCache()`; `browse:popular:v2` + `seasonal:YYYY:season` are single-key SWR (24h), not GC'd by the AniList purger. Do not broaden prefix.
 - **Trailer**: YouTube embed only if `site==='youtube'` + `id` passes `^[a-zA-Z0-9_-]{11}$` (trim + regex) → `safeTrailerId`. Prevents `?autoplay` injection. CSP `frame-src` must remain restricted to `https://www.youtube.com`.
 - **Untrusted text**: Render MAL `anime.synopsis` as plain `{}`. AniList `description` (HTML) is not queried and must never be `{@html}`'d. AniList review bodies pass through `formatReviewExcerpt()` and remain plain text; do not add an HTML/DOMPurify rendering path.
 - **Tab default**: `TabBar` + `+page.svelte` default `watching` (empty URL param = `watching` via `getUrlParam` `??` + `setUrlParam` delete).
 - **Query correctness**: AniList `MediaTag` has `isAdult` not `isGeneral`. Never query `isGeneral` (400). Tags query is `tags{name rank isAdult}`.
-- **Cloudflare variables**: `wrangler.toml [vars]` supplies the public `VITE_MAL_CLIENT_ID` and `MAL_CLIENT_ID` (they must be the same value). `MAL_CLIENT_SECRET` must remain a Cloudflare **Secret** (dashboard type _Secret_, or `.dev.vars` locally) and must never be committed. Server code reads credentials only via `$lib/server/mal-env.ts` from `platform.env` (no `process.env` fallback; `vite dev` gets `platform.env` from adapter-cloudflare's platform proxy). Auth/API endpoints are same-origin (`$lib/api/config.ts`); there is no `VITE_WORKER_URL`.
+- **Cloudflare variables**: `wrangler.toml [vars]` supplies the public `VITE_MAL_CLIENT_ID` and `MAL_CLIENT_ID` (they must be the same value). `MAL_CLIENT_SECRET` must remain a Cloudflare **Secret** (dashboard type _Secret_, or `.dev.vars` locally) and must never be committed. Server code reads credentials only via `#lib/server/mal-env.ts` from `platform.env` (no `process.env` fallback; `vite dev` gets `platform.env` from adapter-cloudflare's platform proxy). Auth/API endpoints are same-origin (`#lib/api/config.ts`); there is no `VITE_WORKER_URL`.
 - **Token refresh**: only a definitive rejection of the refresh token (4xx except 408/429/`invalid_client`) clears tokens. Throttling, 5xx, or a misconfigured client must keep the session.
 - **Sync queue**: `flushSync` sends the _merged_ queued payload and acks with `deleteSyncQueue(malId, timestamp)` so a newer merged edit is never deleted unsent. `bulkPut` keeps a locally-present entry missing from MAL only while its edit is still queued.
 - **Seasonal**: fetch with `limit=500` (MAL's max); the default of 100 silently truncates a season (fall 2025 has 327 entries).
@@ -40,8 +40,8 @@ The original AniDash interface is restored from `c8baa61`: black/violet surfaces
 - `src/lib/utils/review-text.ts` — safe plain-text normalization for AniList review markup.
 - `src/routes/anime/[id]/+page.svelte` — `loadAnime` (MAL) + `loadAnilistData` (single call, closure-guarded `if(id!==Number(page.params.id))return`), `safeTrailerId`, tags/trailer/airing/reviews sections.
 - `src/lib/cache/meta.cache.ts` — `getAnilistCache/setAnilistCache`, `purgeStaleAnilistCache` only `anilist:fetch:`.
-- `src/service-worker.ts` — offline app shell (see constraint above).
-- `svelte.config.js` / `src/app.html` — CSP + preconnect for AniList; YouTube-only `frame-src`.
+- `src/service-worker.ts` — offline app shell (see constraint above). Kit 3 `$app/manifest` entries are `{ path }` objects without a leading slash; prefix `/` before matching `url.pathname`. It is excluded from `tsconfig.json` (Kit 3 requirement) and verified by the real-browser offline check.
+- `vite.config.ts` (SvelteKit 3 config lives here; no `svelte.config.js`) / `src/app.html` — CSP + preconnect for AniList; YouTube-only `frame-src`.
 - `tests/api/anilist.test.ts` — regression: no `isGeneral`, direct `Media(idMal)` lookup, 429 mapping, 404+null, browser headers, tag schema.
 - `tests/server/oauth.test.ts`, `tests/auth/tokens.test.ts` — credential injection, missing-secret 500, refresh failure classification.
 - `tests/utils/review-text.test.ts` — review image-directive removal, whitespace normalization, truncation.
@@ -50,7 +50,9 @@ The original AniDash interface is restored from `c8baa61`: black/violet surfaces
 
 ```sh
 VITE_MAL_CLIENT_ID=dummy bun run check   # 0 errors
-VITE_MAL_CLIENT_ID=dummy bun run test        # all pass (14 files)
+VITE_MAL_CLIENT_ID=dummy bun run test        # all pass (15 files)
+bun run lint                                 # oxfmt --check, oxlint, eslint (Svelte rules only)
+bun run knip                                 # no unused files/exports/deps
 VITE_MAL_CLIENT_ID=dummy bun run build   # Cloudflare production build
 # live GraphQL smoke (no isGeneral):
 # python3 -c "import json,urllib.request; ... Media(idMal:53149) -> 18 chars"
@@ -63,6 +65,8 @@ Commit style: `type(scope): subject` (e.g. `fix(anilist): reject invalid trailer
 Use Bun 1.4.2 (`packageManager` and `bun.lock`) for installation and script commands. Run `bun install --frozen-lockfile` and `bun run test` (Vitest), not `bun test`. Keep the Node runtime for tools that declare it.
 
 Use the newest versions supported by the active SvelteKit toolchain. Cloudflare Pages must use the Node version pinned in `.node-version`; keep `package.json#engines.node` aligned with it and all direct dependency engine floors. Keep TypeScript on 6.x until `@sveltejs/kit`, `svelte-check`, and `typescript-eslint` all declare TypeScript 7 support; do not add a second compiler alias.
+
+SvelteKit 3: config lives in `vite.config.ts` (`sveltekit({...})`, no `svelte.config.js`); imports use `#lib/*` (package.json `imports`, explicit `.js`/`.svelte.js`/`.svelte` extensions) instead of `$lib`; use `$app/env` and `$app/manifest`. Tooling is oxc: `oxfmt` (formatter, `.oxfmtrc.json`, replaces Prettier), `oxlint` (`.oxlintrc.json`, general JS/TS correctness) and `knip` (dead code). ESLint remains only for `eslint-plugin-svelte` rules oxlint cannot run; do not re-add Prettier or typescript-eslint rule sets.
 
 ## Context7
 

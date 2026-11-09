@@ -2,28 +2,28 @@
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
-	import { searchAnime as malSearchAnime, getRanking } from '$lib/api/mal';
+	import { getUrlParam, setUrlParams } from '#lib/utils/url-state.js';
+	import { searchAnime as malSearchAnime, getRanking } from '#lib/api/mal.js';
 	import {
 		mapMalNodeToDisplay,
 		mapUserListRecordToDisplay,
 		mergeLocalWithOnline,
 		type DisplayAnime
-	} from '$lib/utils/types';
+	} from '#lib/utils/types.js';
 	import { LoaderCircle, SearchX, ArrowDown, ArrowUp } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import SearchInput from '$lib/ui/SearchInput.svelte';
-	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
-	import FilterPanel from '$lib/ui/FilterPanel.svelte';
-	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
-	import { debounce } from '$lib/utils/debounce';
-	import { POPULAR_CACHE_KEY, POPULAR_CACHE_TTL_MS } from '$lib/constants';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { putEntry } from '$lib/cache/userlist.cache';
-	import { logger } from '$lib/utils/logger';
-	import { matchesFuzzy, getSearchKeyword } from '$lib/utils/search';
-	import { getPopularCache, setPopularCache } from '$lib/cache/meta.cache';
+	import SearchInput from '#lib/ui/SearchInput.svelte';
+	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
+	import FilterPanel from '#lib/ui/FilterPanel.svelte';
+	import AnimeCardSkeleton from '#lib/ui/skeletons/AnimeCardSkeleton.svelte';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
+	import { debounce } from '#lib/utils/debounce.js';
+	import { POPULAR_CACHE_KEY, POPULAR_CACHE_TTL_MS } from '#lib/constants.js';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { putEntry } from '#lib/cache/userlist.cache.js';
+	import { logger } from '#lib/utils/logger.js';
+	import { matchesFuzzy, getSearchKeyword } from '#lib/utils/search.js';
+	import { getPopularCache, setPopularCache } from '#lib/cache/meta.cache.js';
 	import {
 		facetOfDisplay,
 		matchesFilters,
@@ -33,8 +33,8 @@
 		activeFilterCount,
 		CLEAR_FILTER_PAIRS,
 		type AnimeFilters
-	} from '$lib/utils/filters';
-	import { sortDisplay, NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
+	} from '#lib/utils/filters.js';
+	import { sortDisplay, NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
 
 	// ─── Constants ───
 
@@ -338,14 +338,13 @@
 	// ─── Handlers ───
 
 	function setParams(pairs: { key: string; value: string }[]) {
-		goto(setUrlParams(page.url, pairs), { keepFocus: true, noScroll: true });
+		goto(setUrlParams(page.url, pairs), { reset: false });
 	}
 
 	function setFilters(next: AnimeFilters) {
 		goto(setUrlParams(page.url, filtersToPairs(next)), {
-			keepFocus: true,
-			noScroll: true,
-			replaceState: true
+			reset: false,
+			replace: true
 		});
 	}
 
@@ -458,8 +457,8 @@
 			{:else}
 				{filteredResults.length}
 				{filteredResults.length === 1 ? 'title' : 'titles'} · {sourceLabel}{#if filterCount > 0 || dubStore.dubMode}
-					· filtered from {baseResults.length} loaded{/if}{#if loadingMore}
-					· scanning more…{/if}
+					&nbsp;· filtered from {baseResults.length} loaded{/if}{#if loadingMore}
+					&nbsp;· scanning more…{/if}
 			{/if}
 		</p>
 

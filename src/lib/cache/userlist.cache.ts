@@ -2,7 +2,7 @@
 // Always reflects the last-known MAL state. Sync on login.
 
 import { getDB, type UserListRecord, type SyncQueueRecord } from './db';
-import { ok, err, type Result } from '$lib/api/result';
+import { ok, err, type Result } from '#lib/api/result.js';
 
 // ─── Read ───
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AnilistMediaSchema, AnilistTagSchema } from '$lib/api/schemas/anilist.schema';
-import { mapAnilistToEnriched } from '$lib/utils/types';
-import { _detailQuery, fetchAnilistMediaByMalId } from '$lib/api/anilist';
+import { AnilistMediaSchema, AnilistTagSchema } from '#lib/api/schemas/anilist.schema.js';
+import { mapAnilistToEnriched } from '#lib/utils/types.js';
+import { _detailQuery, fetchAnilistMediaByMalId } from '#lib/api/anilist.js';
 
 describe('AnilistMediaSchema', () => {
 	const sample = {

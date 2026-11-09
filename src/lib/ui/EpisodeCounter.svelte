@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import { Plus, Minus, Check } from 'lucide-svelte';
 
 	let {

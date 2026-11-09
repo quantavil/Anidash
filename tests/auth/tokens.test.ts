@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { tokens, parseAndSetTokens, needsRefresh, refreshTokens } from '$lib/auth/tokens';
+import { tokens, parseAndSetTokens, needsRefresh, refreshTokens } from '#lib/auth/tokens.js';
 
 const storage = new Map<string, string>();
 const localStorageMock = {

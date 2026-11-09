@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { UserListRecord } from '$lib/cache/db';
-	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
+	import type { UserListRecord } from '#lib/cache/db.js';
+	import { formatMediaType, formatNumberShort } from '#lib/utils/format.js';
 	import { Star, Mic } from 'lucide-svelte';
 	import StatusBadge from './StatusBadge.svelte';
 	import ProgressLine from './ProgressLine.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
 	import EpisodeCounter from './EpisodeCounter.svelte';
 
 	let {

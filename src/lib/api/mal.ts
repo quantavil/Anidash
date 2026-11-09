@@ -10,7 +10,7 @@ import { buildSearchParams } from './params';
 import { MAL_API_BASE, MAL_MIN_INTERVAL_MS } from './config';
 import { ok, err, type Result, zodIssuesToSummaries, type Err } from './result';
 import type { AppError } from './result';
-import { logger } from '$lib/utils/logger';
+import { logger } from '#lib/utils/logger.js';
 import {
 	MalUserListResponseSchema,
 	MalAnimeDetailSchema,
@@ -21,7 +21,7 @@ import {
 	type MalStatusUpdate,
 	type MalAnimeLean
 } from './schemas/mal.schema';
-import type { UserListRecord, DetailedAnimeRecord } from '$lib/cache/db';
+import type { UserListRecord, DetailedAnimeRecord } from '#lib/cache/db.js';
 
 // ─── Rate Limiter ───
 

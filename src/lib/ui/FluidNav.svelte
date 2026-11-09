@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { authStore } from '$lib/auth/auth.svelte';
-	import { syncStore } from '$lib/stores/sync.svelte';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
+	import { authStore } from '#lib/auth/auth.svelte.js';
+	import { syncStore } from '#lib/stores/sync.svelte.js';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
 	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages, Mic } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
-	import { settingsStore } from '$lib/stores/settings.svelte';
+	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { toast } from 'svelte-sonner';
 
 	async function handleSync() {

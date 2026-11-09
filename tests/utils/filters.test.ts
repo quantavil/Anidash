@@ -8,9 +8,9 @@ import {
 	filtersToPairs,
 	matchesFilters,
 	type AnimeFilters
-} from '$lib/utils/filters';
-import { sortDisplay } from '$lib/utils/sort';
-import type { DisplayAnime } from '$lib/utils/types';
+} from '#lib/utils/filters.js';
+import { sortDisplay } from '#lib/utils/sort.js';
+import type { DisplayAnime } from '#lib/utils/types.js';
 
 const mk = (o: Partial<DisplayAnime> & { malId: number }): DisplayAnime => ({
 	title: `T${o.malId}`,

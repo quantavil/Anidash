@@ -1,5 +1,5 @@
-import { createIpRateLimiter, rateLimitedResponse } from '$lib/server/rate-limit';
-import { getMalClientId, getMalClientSecret, jsonError } from '$lib/server/mal-env';
+import { createIpRateLimiter, rateLimitedResponse } from '#lib/server/rate-limit.js';
+import { getMalClientId, getMalClientSecret, jsonError } from '#lib/server/mal-env.js';
 
 const MAL_TOKEN_URL = 'https://myanimelist.net/v1/oauth2/token';
 

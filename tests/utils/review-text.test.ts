@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatReviewExcerpt } from '$lib/utils/review-text';
+import { formatReviewExcerpt } from '#lib/utils/review-text.js';
 
 describe('formatReviewExcerpt', () => {
 	it('removes AniList image directives and lightweight formatting from review excerpts', () => {

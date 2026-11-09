@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { jsonError } from '$lib/server/mal-env';
+import { jsonError } from '#lib/server/mal-env.js';
 import { handleOAuthRequest, stringFields } from '../oauth';
 
 export const POST: RequestHandler = async ({ request, platform }) => {

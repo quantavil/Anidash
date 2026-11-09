@@ -2,7 +2,7 @@
 // Single source of truth for the user's anime list.
 // All mutations are optimistic: update locally, sync to MAL in background.
 
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 import { toast } from 'svelte-sonner';
 
@@ -13,15 +13,15 @@ import {
 	mergeSyncQueue,
 	getSyncQueue,
 	deleteSyncQueue
-} from '$lib/cache/userlist.cache';
-import { updateAnimeStatus, getAnimeDetail, deleteAnimeStatus } from '$lib/api/mal';
-import { putAnime } from '$lib/cache/anime.cache';
+} from '#lib/cache/userlist.cache.js';
+import { updateAnimeStatus, getAnimeDetail, deleteAnimeStatus } from '#lib/api/mal.js';
+import { putAnime } from '#lib/cache/anime.cache.js';
 import { syncStore } from './sync.svelte.ts';
-import { debounce, type DebouncedFn } from '$lib/utils/debounce';
+import { debounce, type DebouncedFn } from '#lib/utils/debounce.js';
 import { SvelteMap } from 'svelte/reactivity';
-import { ok, err, type Result } from '$lib/api/result';
-import type { UserListRecord, AnimeStatus } from '$lib/cache/db';
-import { logger } from '$lib/utils/logger';
+import { ok, err, type Result } from '#lib/api/result.js';
+import type { UserListRecord, AnimeStatus } from '#lib/cache/db.js';
+import { logger } from '#lib/utils/logger.js';
 
 /** Show an error toast. Centralizes what used to be repeated dynamic imports. */
 function notifyError(message: string, options?: { id?: string }): void {
@@ -176,7 +176,7 @@ function createUserListStore() {
 
 		// 3. Merge this change into any pending payload for the anime so rapid edits
 		//    to different fields are all synced, not just the most recent one.
-		pendingPayloads.set(malId, { ...(pendingPayloads.get(malId) ?? {}), ...malPayload });
+		pendingPayloads.set(malId, { ...pendingPayloads.get(malId), ...malPayload });
 
 		// 4. Debounced MAL sync (one reused debounce per anime)
 		let syncFn = pendingSyncs.get(malId);

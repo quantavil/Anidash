@@ -9,14 +9,18 @@
 // Deliberately NOT cached: /api/* and /auth/* (live MAL data and credentials) and
 // cross-origin requests (AniList, MAL images) — those keep their own caches/fallbacks.
 
-import { build, files, version } from '$service-worker';
+import { immutable, assets } from '$app/manifest';
+import { version } from '$app/env';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
 const CACHE = `anidash-${version}`;
 const SHELL_URL = '/';
 // The README preview image is documentation, not part of the app.
-const ASSETS = [...build, ...files.filter((f) => !f.startsWith('/screenshots/'))];
+// Manifest entries are `{ path }` objects relative to the base path (no leading slash).
+const ASSETS = [...immutable, ...assets]
+	.map((f) => `/${f.path}`)
+	.filter((p) => !p.startsWith('/screenshots/'));
 const ASSET_SET = new Set(ASSETS);
 
 sw.addEventListener('install', (event) => {

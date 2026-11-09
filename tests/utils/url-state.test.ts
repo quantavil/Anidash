@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getUrlParam, setUrlParam, setUrlParams } from '$lib/utils/url-state';
+import { getUrlParam, setUrlParam, setUrlParams } from '#lib/utils/url-state.js';
 
 describe('url-state utils', () => {
 	it('reads url parameter with fallback default', () => {

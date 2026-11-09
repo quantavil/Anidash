@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ConfirmDialog from './ConfirmDialog.svelte';
-	import { userListStore } from '$lib/stores/userlist.svelte';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
 
 	let {
 		open = $bindable(false),

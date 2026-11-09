@@ -2,13 +2,13 @@
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 
-	import { getAnimeDetail } from '$lib/api/mal';
-	import { loadAnilistMedia } from '$lib/api/anilist';
-	import { mapAnilistToEnriched } from '$lib/utils/types';
-	import { putAnime, getAnimeAllowStale } from '$lib/cache/anime.cache';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import type { DetailedAnimeRecord } from '$lib/cache/db';
-	import type { AnilistEnriched } from '$lib/utils/types';
+	import { getAnimeDetail } from '#lib/api/mal.js';
+	import { loadAnilistMedia } from '#lib/api/anilist.js';
+	import { mapAnilistToEnriched } from '#lib/utils/types.js';
+	import { putAnime, getAnimeAllowStale } from '#lib/cache/anime.cache.js';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import type { DetailedAnimeRecord } from '#lib/cache/db.js';
+	import type { AnilistEnriched } from '#lib/utils/types.js';
 
 	import {
 		formatMediaType,
@@ -17,23 +17,23 @@
 		formatLocalBroadcast,
 		formatNumberShort,
 		formatCharacterName
-	} from '$lib/utils/format';
-	import ReviewText from '$lib/ui/ReviewText.svelte';
+	} from '#lib/utils/format.js';
+	import ReviewText from '#lib/ui/ReviewText.svelte';
 	import { Film, Star, ExternalLink, Calendar, Tv, Users, Clock, Plus, Mic } from 'lucide-svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
 
-	import ExternalSitesRow from '$lib/ui/ExternalSitesRow.svelte';
+	import ExternalSitesRow from '#lib/ui/ExternalSitesRow.svelte';
 
-	import AnimeTitle from '$lib/ui/AnimeTitle.svelte';
-	import StatusBadge from '$lib/ui/StatusBadge.svelte';
-	import EpisodeCounter from '$lib/ui/EpisodeCounter.svelte';
-	import ScoreInput from '$lib/ui/ScoreInput.svelte';
-	import GenreBadge from '$lib/ui/GenreBadge.svelte';
-	import AddToListModal from '$lib/ui/AddToListModal.svelte';
-	import CharacterDetailModal from '$lib/ui/CharacterDetailModal.svelte';
-	import AnimeDetailSkeleton from '$lib/ui/skeletons/AnimeDetailSkeleton.svelte';
-	import ImageWithFallback from '$lib/ui/ImageWithFallback.svelte';
-	import ProgressLine from '$lib/ui/ProgressLine.svelte';
+	import AnimeTitle from '#lib/ui/AnimeTitle.svelte';
+	import StatusBadge from '#lib/ui/StatusBadge.svelte';
+	import EpisodeCounter from '#lib/ui/EpisodeCounter.svelte';
+	import ScoreInput from '#lib/ui/ScoreInput.svelte';
+	import GenreBadge from '#lib/ui/GenreBadge.svelte';
+	import AddToListModal from '#lib/ui/AddToListModal.svelte';
+	import CharacterDetailModal from '#lib/ui/CharacterDetailModal.svelte';
+	import AnimeDetailSkeleton from '#lib/ui/skeletons/AnimeDetailSkeleton.svelte';
+	import ImageWithFallback from '#lib/ui/ImageWithFallback.svelte';
+	import ProgressLine from '#lib/ui/ProgressLine.svelte';
 
 	const malId = $derived(Number(page.params.id));
 

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { DisplayAnime } from '$lib/utils/types';
-	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { dubStore } from '$lib/stores/dub.svelte';
-	import { authStore } from '$lib/auth/auth.svelte';
+	import type { DisplayAnime } from '#lib/utils/types.js';
+	import { userListStore } from '#lib/stores/userlist.svelte.js';
+	import { dubStore } from '#lib/stores/dub.svelte.js';
+	import { authStore } from '#lib/auth/auth.svelte.js';
 	import { toast } from 'svelte-sonner';
-	import { formatMediaType, formatNumberShort } from '$lib/utils/format';
+	import { formatMediaType, formatNumberShort } from '#lib/utils/format.js';
 	import { Star, Plus, Mic } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';

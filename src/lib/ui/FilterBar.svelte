@@ -1,21 +1,41 @@
 <script lang="ts">
-	import { getUrlParam, setUrlParam } from '$lib/utils/url-state';
+	import { getUrlParam, setUrlParam, setUrlParams } from '$lib/utils/url-state';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { ArrowUpDown } from 'lucide-svelte';
+	import { ArrowUpDown, ArrowDown, ArrowUp, Dices } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
 
-	import type { SortKey } from '$lib/utils/sort';
+	import { NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
+
+	let { onrandom, randomCount = 0 }: { onrandom?: () => void; randomCount?: number } = $props();
 
 	const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 		{ key: 'updated', label: 'Last Updated' },
 		{ key: 'title', label: 'Title' },
 		{ key: 'score', label: 'My Score' },
 		{ key: 'mean', label: 'Rating' },
-		{ key: 'progress', label: 'Progress' }
+		{ key: 'progress', label: 'Progress' },
+		{ key: 'start', label: 'Release date' },
+		{ key: 'popularity', label: 'Popularity' },
+		{ key: 'episodes', label: 'Episodes' }
 	];
 
-	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
+	const currentSort = $derived.by(() => {
+		const raw = getUrlParam(page.url, 'sort', 'updated');
+		return (SORT_OPTIONS.some((o) => o.key === raw) ? raw : 'updated') as SortKey;
+	});
+	const currentDir = $derived.by((): SortDir => {
+		const raw = getUrlParam(page.url, 'dir', '');
+		return raw === 'asc' || raw === 'desc' ? raw : NATURAL_DIR[currentSort];
+	});
+
+	function toggleDir() {
+		const flipped: SortDir = currentDir === 'asc' ? 'desc' : 'asc';
+		goto(setUrlParam(page.url, 'dir', flipped === NATURAL_DIR[currentSort] ? '' : flipped), {
+			keepFocus: true,
+			noScroll: true
+		});
+	}
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
 
 	import { debounce } from '$lib/utils/debounce';
@@ -24,10 +44,16 @@
 	let focusedIndex = $state(-1);
 
 	function setSort(key: SortKey) {
-		goto(setUrlParam(page.url, 'sort', key === 'updated' ? '' : key), {
-			keepFocus: true,
-			noScroll: true
-		});
+		goto(
+			setUrlParams(page.url, [
+				{ key: 'sort', value: key === 'updated' ? '' : key },
+				{ key: 'dir', value: '' }
+			]),
+			{
+				keepFocus: true,
+				noScroll: true
+			}
+		);
 		showSortMenu = false;
 		focusedIndex = -1;
 	}
@@ -100,6 +126,17 @@
 
 	<!-- Controls -->
 	<div class="flex items-center gap-2">
+		{#if onrandom}
+			<button
+				onclick={onrandom}
+				disabled={randomCount === 0}
+				title="Open a random title from the current view"
+				aria-label="Random pick from the {randomCount} shown"
+				class="flex min-h-11 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40"
+			>
+				<Dices size={14} /> Random
+			</button>
+		{/if}
 		<!-- Sort -->
 		<div class="relative">
 			<button
@@ -143,5 +180,13 @@
 				</div>
 			{/if}
 		</div>
+		<button
+			onclick={toggleDir}
+			aria-label="Sort direction: {currentDir === 'asc' ? 'ascending' : 'descending'}"
+			title={currentDir === 'asc' ? 'Ascending' : 'Descending'}
+			class="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95"
+		>
+			{#if currentDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
+		</button>
 	</div>
 </div>

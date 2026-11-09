@@ -150,15 +150,6 @@ export function getDB(): Promise<IDBPDatabase<AniDashDB>> {
 	return dbPromise;
 }
 
-/** Close the DB connection (useful for logout cleanup) */
-export async function closeDB(): Promise<void> {
-	if (dbPromise) {
-		const db = await dbPromise;
-		db.close();
-		dbPromise = null;
-	}
-}
-
 /** Clear only user-specific data from IndexedDB on logout */
 export async function clearUserCache(): Promise<void> {
 	const db = await getDB();

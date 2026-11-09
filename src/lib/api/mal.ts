@@ -295,29 +295,15 @@ const SEARCH_FIELDS = ['id', 'title', ...BASE_FIELDS].join(',');
 
 export async function searchAnime(
 	query: string,
-	options?: {
-		genre?: number;
-		type?: string;
-		status?: string;
-		minScore?: number;
-		orderBy?: string;
-		sortDir?: string;
-		nsfw?: boolean;
-		offset?: number;
-		limit?: number;
-	}
+	options?: { nsfw?: boolean; offset?: number; limit?: number }
 ): Promise<Result<MalAnimeSearchResponse>> {
+	// MAL v2 `/anime` honours only q/limit/offset/fields/nsfw — genre/type/score/sort
+	// params are silently ignored, so filtering and sorting happen client-side.
 	const params = buildSearchParams({
 		q: query,
 		fields: SEARCH_FIELDS,
 		limit: options?.limit ?? 25,
 		offset: options?.offset,
-		genres: options?.genre,
-		type: options?.type,
-		status: options?.status,
-		min_score: options?.minScore,
-		order_by: options?.orderBy,
-		sort: options?.sortDir,
 		nsfw: options?.nsfw ?? true
 	});
 
@@ -332,7 +318,6 @@ export async function getSeasonal(
 	season: string,
 	options?: {
 		sort?: string;
-		filter?: string;
 		offset?: number;
 		limit?: number;
 		nsfw?: boolean;
@@ -340,9 +325,8 @@ export async function getSeasonal(
 ): Promise<Result<MalAnimeSearchResponse>> {
 	const params = buildSearchParams({
 		fields: SEARCH_FIELDS,
-		limit: options?.limit ?? 100,
+		limit: options?.limit ?? 500,
 		sort: options?.sort,
-		filter: options?.filter,
 		offset: options?.offset,
 		nsfw: options?.nsfw ?? true
 	});

@@ -226,7 +226,7 @@ async function doRefresh(): Promise<Result<void>> {
 export function parseAndSetTokens(body: unknown, fallbackRefreshToken?: string): Result<void> {
 	const parsed = MalTokenResponseSchema.safeParse(body);
 	if (!parsed.success) {
-		tokens.clear();
+		// A malformed body is not a rejection of the refresh token: keep the stored session.
 		return err({
 			type: 'validation',
 			message: 'Invalid token response from server',

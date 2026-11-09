@@ -59,14 +59,17 @@ describe('tokens auth storage and refresh helpers', () => {
 		expect(stored?.refreshToken).toBe('existing_refresh_token');
 	});
 
-	it('clears storage and returns validation error on invalid response', () => {
-		const invalidResponse = {
-			something_wrong: true
+	it('returns a validation error on an invalid response and keeps the stored session', () => {
+		const existing = {
+			accessToken: 'a',
+			refreshToken: 'r',
+			expiresAt: Date.now() + 7_200_000
 		};
+		tokens.set(existing);
 
-		const result = parseAndSetTokens(invalidResponse);
+		const result = parseAndSetTokens({ something_wrong: true });
 		expect(result.ok).toBe(false);
-		expect(tokens.get()).toBeNull();
+		expect(tokens.get()).toEqual(existing);
 	});
 
 	it('correctly calculates needsRefresh based on expiry window', () => {

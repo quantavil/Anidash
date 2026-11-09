@@ -69,10 +69,6 @@ function createSyncStore() {
 		return activeSyncPromise;
 	}
 
-	function clearError(): void {
-		syncError = null;
-	}
-
 	/** Report an error observed by another store (e.g. a failed background sync). */
 	function reportError(error: AppError): void {
 		syncError = error;
@@ -97,7 +93,6 @@ function createSyncStore() {
 		},
 		init,
 		fullSync,
-		clearError,
 		reportError,
 		reset
 	};

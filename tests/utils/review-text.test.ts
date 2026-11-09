@@ -22,4 +22,10 @@ Such a **cute** chubster, isn't he?`;
 	it('returns an empty string for an empty review', () => {
 		expect(formatReviewExcerpt('', 280)).toBe('');
 	});
+
+	it('strips spoiler markers and inline HTML tags but keeps the text', () => {
+		expect(formatReviewExcerpt('Great<br>show ~!the twist!~ <b>really</b>', 280)).toBe(
+			'Great show the twist really'
+		);
+	});
 });

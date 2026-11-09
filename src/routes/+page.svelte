@@ -1,17 +1,29 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/auth/auth.svelte';
-	import { getUrlParam } from '$lib/utils/url-state';
+	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
 	import { userListStore } from '$lib/stores/userlist.svelte';
-	import { sortEntries, type SortKey } from '$lib/utils/sort';
+	import { sortEntries, NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
 	import { dubStore } from '$lib/stores/dub.svelte';
 	import { matchesFuzzy } from '$lib/utils/search';
 	import { formatListStatus } from '$lib/utils/format';
+	import {
+		facetOfRecord,
+		matchesFilters,
+		buildFacetOptions,
+		filtersFromUrl,
+		filtersToPairs,
+		activeFilterCount,
+		pickRandom,
+		type AnimeFilters
+	} from '$lib/utils/filters';
 
 	import { ArrowUpRight } from 'lucide-svelte';
 	import StoryWindow from '$lib/ui/StoryWindow.svelte';
 	import TabBar from '$lib/ui/TabBar.svelte';
 	import FilterBar from '$lib/ui/FilterBar.svelte';
+	import FilterPanel from '$lib/ui/FilterPanel.svelte';
 	import AnimeGrid from '$lib/ui/AnimeGrid.svelte';
 	import ListPageSkeleton from '$lib/ui/skeletons/ListPageSkeleton.svelte';
 
@@ -19,30 +31,42 @@
 
 	const currentTab = $derived(getUrlParam(page.url, 'tab', 'watching'));
 	const currentSort = $derived(getUrlParam(page.url, 'sort', 'updated') as SortKey);
-
+	const currentDir = $derived.by((): SortDir => {
+		const raw = getUrlParam(page.url, 'dir', '');
+		return raw === 'asc' || raw === 'desc' ? raw : (NATURAL_DIR[currentSort] ?? 'desc');
+	});
 	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
+	const filters = $derived(filtersFromUrl(page.url));
+	const filterCount = $derived(activeFilterCount(filters));
+	const filterKey = $derived(page.url.search);
 
-	// ─── Derived Data & Stable Sort State ───
-	// Keep card ordering stable while user interacts with episode counts/scores on the page,
-	// only re-sorting when active tab, sort method, search query, or item membership changes.
+	function setFilters(next: AnimeFilters) {
+		goto(setUrlParams(page.url, filtersToPairs(next)), {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true
+		});
+	}
+
+	// ─── Derived Data ───
+
+	const tabEntries = $derived(
+		userListStore.allEntries.filter((e) => currentTab === 'all' || e.status === currentTab)
+	);
+	// Offer only values that exist in the current tab, so every option can match something.
+	const facetOptions = $derived(buildFacetOptions(tabEntries.map(facetOfRecord), filters));
 
 	let orderedIds = $state.raw<number[]>([]);
 
 	$effect(() => {
-		const matching = userListStore.allEntries.filter((e) => {
-			if (currentTab !== 'all' && e.status !== currentTab) return false;
+		const f = filters;
+		const matching = tabEntries.filter((e) => {
 			if (currentQuery && !matchesFuzzy(e.title, e.titleEnglish, currentQuery)) return false;
 			if (dubStore.dubMode && dubStore.isReady && !dubStore.hasDub(e.malId)) return false;
-			return true;
+			return matchesFilters(f, facetOfRecord(e));
 		});
 
-		// Explicitly track reactive context inputs
-		void currentTab;
-		void currentSort;
-		void currentQuery;
-		void dubStore.dubMode;
-
-		orderedIds = sortEntries(matching, currentSort).map((e) => e.malId);
+		orderedIds = sortEntries(matching, currentSort, currentDir).map((e) => e.malId);
 	});
 
 	// Tell "nothing here yet" apart from "your filters hide everything", and point the
@@ -56,12 +80,10 @@
 				cta: 'Browse anime'
 			};
 		}
-		if (currentQuery || (dubStore.dubMode && dubStore.isReady)) {
+		if (currentQuery || filterCount > 0 || (dubStore.dubMode && dubStore.isReady)) {
 			return {
 				title: 'No matches',
-				hint: currentQuery
-					? `Nothing in this tab matches “${currentQuery}”.`
-					: 'Nothing in this tab has an English dub. Turn off Dub Mode to see everything.'
+				hint: 'Nothing in this tab fits your search and filters. Remove a filter chip above to widen it.'
 			};
 		}
 		return {
@@ -81,6 +103,11 @@
 					e !== undefined && (currentTab === 'all' || e.status === currentTab)
 			)
 	);
+
+	function randomPick() {
+		const pick = pickRandom(filteredEntries);
+		if (pick) goto(`/anime/${pick.malId}`);
+	}
 </script>
 
 {#if !authStore.isAuthenticated}
@@ -111,14 +138,17 @@
 		</div>
 
 		<!-- Filters -->
+		<div class="mb-3">
+			<FilterBar onrandom={randomPick} randomCount={filteredEntries.length} />
+		</div>
 		<div class="mb-5">
-			<FilterBar />
+			<FilterPanel {filters} options={facetOptions} mode="list" onchange={setFilters} />
 		</div>
 
 		<!-- Grid / List -->
 		<AnimeGrid
 			entries={filteredEntries}
-			resetKey="{currentTab}-{currentSort}-{currentQuery}"
+			resetKey="{currentTab}-{filterKey}"
 			loading={false}
 			empty={emptyState}
 		/>
@@ -126,7 +156,9 @@
 		<!-- Stats footer -->
 		{#if filteredEntries.length > 0}
 			<div class="mt-6 border-t border-border pt-4 text-center text-xs text-text-muted">
-				Showing {filteredEntries.length} of {userListStore.totalCount} entries
+				Showing {filteredEntries.length} of {tabEntries.length}{currentTab === 'all'
+					? ''
+					: ` in ${formatListStatus(currentTab)}`} · {userListStore.totalCount} total
 			</div>
 		{/if}
 	</div>

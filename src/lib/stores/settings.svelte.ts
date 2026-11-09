@@ -19,13 +19,6 @@ class SettingsStore {
 			localStorage.setItem(STORAGE_KEYS.PREFER_ENGLISH, String(this.preferEnglish));
 		}
 	}
-
-	setPreferEnglish(value: boolean) {
-		this.preferEnglish = value;
-		if (browser) {
-			localStorage.setItem(STORAGE_KEYS.PREFER_ENGLISH, String(value));
-		}
-	}
 }
 
 export const settingsStore = new SettingsStore();

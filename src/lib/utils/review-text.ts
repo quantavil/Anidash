@@ -6,6 +6,8 @@ export function formatReviewExcerpt(body: string, maxLength = 280): string {
 		.replace(/^\s*~~~\s*img\d*%?\(.*\)\s*~~~\s*$/gim, ' ')
 		.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
 		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+		.replace(/<\/?[a-z][^>]*>/gi, ' ')
+		.replace(/~!|!~/g, '')
 		.replace(/^\s{0,3}#{1,6}\s*/gm, '')
 		.replace(/^\s*>\s?/gm, '')
 		.replace(/~~~|[*_`]/g, '')

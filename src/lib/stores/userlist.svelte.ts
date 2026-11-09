@@ -40,6 +40,9 @@ function createUserListStore() {
 	// Accumulated MAL payloads per anime, merged across rapid edits and flushed
 	// when the debounce fires. Prevents a later edit from dropping an earlier one.
 	const pendingPayloads = new SvelteMap<number, Record<string, unknown>>();
+	// Local changes made while a full sync is in flight (null record = removed). The server
+	// snapshot may predate them, so they are re-applied once the snapshot lands.
+	let syncTouched: SvelteMap<number, UserListRecord | null> | null = null;
 
 	// Global complete confirmation dialog state
 	let showCompleteDialog = $state(false);
@@ -97,21 +100,44 @@ function createUserListStore() {
 	}
 
 	async function syncFromRemote(): Promise<Result<void>> {
+		const owner = syncTouched === null;
+		const touched = (syncTouched ??= new SvelteMap());
 		try {
-			await flushPersistentQueue();
-		} catch (e) {
-			logger.error('Failed to flush persistent queue in syncFromRemote:', e);
-			return err({
-				type: 'cache',
-				message: e instanceof Error ? e.message : 'Failed to flush persistent queue'
-			});
+			try {
+				await flushPersistentQueue();
+			} catch (e) {
+				logger.error('Failed to flush persistent queue in syncFromRemote:', e);
+				return err({
+					type: 'cache',
+					message: e instanceof Error ? e.message : 'Failed to flush persistent queue'
+				});
+			}
+			const result = await syncStore.fullSync();
+			if (result.success) {
+				await loadFromCache();
+				reapplyTouched(touched);
+				return ok(undefined);
+			}
+			return err(syncStore.syncError ?? { type: 'network', message: 'Sync failed' });
+		} finally {
+			if (owner) syncTouched = null;
 		}
-		const result = await syncStore.fullSync();
-		if (result.success) {
-			await loadFromCache();
-			return ok(undefined);
+	}
+
+	/** Restore edits/adds/removes the user made while the sync response was in flight. */
+	function reapplyTouched(touched: SvelteMap<number, UserListRecord | null>): void {
+		if (touched.size === 0) return;
+		const next = { ...entries };
+		for (const [malId, rec] of touched) {
+			if (rec === null) {
+				delete next[malId];
+				void removeEntry(malId);
+			} else {
+				next[malId] = rec;
+				void putEntry($state.snapshot(rec));
+			}
 		}
-		return err(syncStore.syncError ?? { type: 'network', message: 'Sync failed' });
+		entries = next;
 	}
 
 	// ─── Optimistic Mutations ───
@@ -133,6 +159,7 @@ function createUserListStore() {
 			...entries,
 			[malId]: updated
 		};
+		syncTouched?.set(malId, updated);
 
 		// 2. Update IDB
 		putEntry($state.snapshot(updated))
@@ -181,8 +208,11 @@ function createUserListStore() {
 		// Persist to the offline queue first, merging with any change already queued.
 		const queueRes = await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
 		if (!queueRes.ok) {
+			// Could not persist for retry — still try MAL now rather than drop the edit.
 			logger.error('Failed to save to sync queue:', queueRes.error);
 			notifyError('Offline sync failed. Your changes could not be queued.');
+			const direct = await updateAnimeStatus(malId, payload);
+			if (direct.ok) markSynced(malId);
 			return;
 		}
 		// Send the merged payload: an earlier edit that failed to sync must ride along,
@@ -314,12 +344,14 @@ function createUserListStore() {
 		const newEntries = { ...entries };
 		delete newEntries[malId];
 		entries = newEntries;
+		syncTouched?.set(malId, null);
 
+		// A failed local delete must not stop the MAL delete: the entry is already gone
+		// from the UI, and the next full sync reconciles the stale row.
 		const removeRes = await removeEntry(malId);
 		if (!removeRes.ok) {
 			logger.error(`Failed to remove entry ${malId} from IndexedDB:`, removeRes.error);
-			notifyError('Local database write failed. Entry could not be deleted.');
-			return err(removeRes.error);
+			notifyError('Local database write failed. Entry could not be deleted locally.');
 		}
 
 		// 2. Sync to MAL
@@ -338,6 +370,10 @@ function createUserListStore() {
 				notifyError('Offline sync failed. Deletion could not be queued.');
 				return err(queueRes.error);
 			}
+		} else {
+			// MAL accepted the delete: drop any older queued edit, or a later flush would re-add it.
+			const clearRes = await deleteSyncQueue(malId);
+			if (!clearRes.ok) logger.error(`Failed to clear queued edits for ${malId}:`, clearRes.error);
 		}
 
 		return ok(undefined);
@@ -401,6 +437,7 @@ function createUserListStore() {
 			...entries,
 			[malId]: newEntry
 		};
+		syncTouched?.set(malId, newEntry);
 
 		// 2. Persist to IndexedDB
 		const putRes = await putEntry($state.snapshot(newEntry));
@@ -418,14 +455,22 @@ function createUserListStore() {
 
 		// If explicitly offline, queue for later sync and complete
 		if (typeof navigator !== 'undefined' && !navigator.onLine) {
-			await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+			const queueRes = await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+			if (!queueRes.ok) {
+				notifyError('Offline sync failed. Your changes could not be queued.');
+				return err(queueRes.error);
+			}
 			return ok(undefined);
 		}
 
 		// 4. Update MAL with offline queue fallback
 		const result = await updateAnimeStatus(malId, payload);
 		if (!result.ok) {
-			await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+			const queueRes = await mergeSyncQueue({ malId, payload, timestamp: Date.now() });
+			if (!queueRes.ok) {
+				notifyError('Offline sync failed. Your changes could not be queued.');
+				return err(queueRes.error);
+			}
 			notifyError('Sync delayed. Edit saved locally & queued for sync.', {
 				id: 'offline-sync-error'
 			});
@@ -439,9 +484,10 @@ function createUserListStore() {
 					const d = detailResult.value;
 					if (titleEnglish) d.titleEnglish = titleEnglish;
 					finalEpisodes = d.numEpisodes;
-					if (status === 'completed' && finalEpisodes > 0) {
-						payload.num_watched_episodes = finalEpisodes;
-						await updateAnimeStatus(malId, payload);
+					// Only top up episodes while the entry is still what was added; the user
+					// may have changed its status while detail loaded, and that must not be reverted.
+					if (status === 'completed' && finalEpisodes > 0 && entries[malId]?.status === status) {
+						await updateAnimeStatus(malId, { status, num_watched_episodes: finalEpisodes });
 					}
 
 					// Build on the live entry: the user may have edited it while detail loaded.
@@ -468,6 +514,7 @@ function createUserListStore() {
 					};
 
 					entries = { ...entries, [malId]: enrichedEntry };
+					if (syncTouched?.has(malId)) syncTouched.set(malId, enrichedEntry);
 					await putEntry($state.snapshot(enrichedEntry));
 					await putAnime(d);
 				}
@@ -547,6 +594,10 @@ function createUserListStore() {
 	}
 
 	function clear(): void {
+		// Drop debounced edits so they cannot reach the next account.
+		for (const syncFn of pendingSyncs.values()) syncFn.cancel();
+		pendingSyncs.clear();
+		pendingPayloads.clear();
 		entries = {};
 		initialized = false;
 	}

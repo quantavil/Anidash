@@ -98,3 +98,38 @@ describe('sort utils', () => {
 		expect(sorted.map((e) => e.malId)).toEqual([2, 1, 3]);
 	});
 });
+
+describe('sort direction', () => {
+	const e = (malId: number, title: string, numEpisodes: number) =>
+		({
+			malId,
+			title,
+			titleEnglish: null,
+			mainPicture: null,
+			mean: null,
+			numEpisodes,
+			genres: [],
+			studios: [],
+			startSeason: null,
+			mediaType: 'tv',
+			animeStatus: 'finished_airing',
+			numListUsers: 0,
+			numScoringUsers: 0,
+			status: 'completed',
+			score: 0,
+			numWatchedEpisodes: 0,
+			isRewatching: false,
+			updatedAt: null,
+			startDate: null,
+			finishDate: null
+		}) as UserListRecord;
+	const rows = [e(1, 'B', 12), e(2, 'A', 0), e(3, 'C', 24)];
+
+	it('reverses natural order on request', () => {
+		expect(sortEntries(rows, 'title', 'desc').map((r) => r.title)).toEqual(['C', 'B', 'A']);
+	});
+	it('keeps entries without data last in both directions', () => {
+		expect(sortEntries(rows, 'episodes', 'desc').map((r) => r.malId)).toEqual([3, 1, 2]);
+		expect(sortEntries(rows, 'episodes', 'asc').map((r) => r.malId)).toEqual([1, 3, 2]);
+	});
+});

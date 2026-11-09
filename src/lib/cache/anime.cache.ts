@@ -25,17 +25,6 @@ export async function putAnime(record: AnimeRecord): Promise<void> {
 	});
 }
 
-/** Put multiple anime records into cache */
-export async function putAnimeBatch(records: AnimeRecord[]): Promise<void> {
-	const db = await getDB();
-	const tx = db.transaction('anime', 'readwrite');
-	const now = Date.now();
-
-	await Promise.all(records.map((record) => tx.store.put({ ...record, cachedAt: now })));
-
-	await tx.done;
-}
-
 /** Purge all stale anime records (run on app startup) */
 export async function purgeStaleAnime(): Promise<number> {
 	const db = await getDB();

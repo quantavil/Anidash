@@ -1,18 +1,30 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getUrlParam } from '$lib/utils/url-state';
+	import { getUrlParam, setUrlParams } from '$lib/utils/url-state';
 	import { getSeasonal } from '$lib/api/mal';
 	import { getSeasonalCache, setSeasonalCache } from '$lib/cache/meta.cache';
 	import { mapMalNodeToDisplay, type DisplayAnime } from '$lib/utils/types';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '$lib/utils/season';
-	import { formatMediaType, capitalize } from '$lib/utils/format';
-	import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-svelte';
+	import { capitalize } from '$lib/utils/format';
+	import { ChevronLeft, ChevronRight, ArrowDown, ArrowUp, Dices } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '$lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '$lib/ui/skeletons/AnimeCardSkeleton.svelte';
 	import { dubStore } from '$lib/stores/dub.svelte';
-	import { MEDIA_TYPE_FILTER_OPTIONS } from '$lib/constants';
+	import FilterPanel from '$lib/ui/FilterPanel.svelte';
+	import { userListStore } from '$lib/stores/userlist.svelte';
+	import {
+		facetOfDisplay,
+		matchesFilters,
+		buildFacetOptions,
+		filtersFromUrl,
+		filtersToPairs,
+		activeFilterCount,
+		pickRandom,
+		type AnimeFilters
+	} from '$lib/utils/filters';
+	import { sortDisplay, NATURAL_DIR, type SortKey, type SortDir } from '$lib/utils/sort';
 
 	// ─── Season State ───
 
@@ -34,34 +46,60 @@
 
 	let anime = $state.raw<DisplayAnime[]>([]);
 	let loading = $state(true);
-	let filterType = $state('');
-	let sortByRating = $state(false);
-	let sliceLimit = $state(20);
+	let sliceLimit = $state(40);
 
+	const SORTS: { value: '' | SortKey; label: string }[] = [
+		{ value: '', label: 'Default order' },
+		{ value: 'popularity', label: 'Popularity' },
+		{ value: 'mean', label: 'Rating' },
+		{ value: 'start', label: 'Release date' },
+		{ value: 'episodes', label: 'Episodes' },
+		{ value: 'title', label: 'Title' }
+	];
+	const sortKey = $derived.by((): SortKey | null => {
+		const raw = getUrlParam(page.url, 'sort', '');
+		return SORTS.some((s) => s.value && s.value === raw) ? (raw as SortKey) : null;
+	});
+	const sortDir = $derived.by((): SortDir => {
+		const raw = getUrlParam(page.url, 'dir', '');
+		return raw === 'asc' || raw === 'desc' ? raw : sortKey ? NATURAL_DIR[sortKey] : 'desc';
+	});
+	const filters = $derived(filtersFromUrl(page.url));
+	const filterCount = $derived(activeFilterCount(filters));
+	const facetOptions = $derived(buildFacetOptions(anime.map(facetOfDisplay), filters));
+
+	function setParams(pairs: { key: string; value: string }[], replace = false) {
+		goto(setUrlParams(page.url, pairs), { keepFocus: true, noScroll: true, replaceState: replace });
+	}
+	function setFilters(next: AnimeFilters) {
+		setParams(filtersToPairs(next), true);
+	}
+
+	// Reset paging whenever the visible set changes.
 	$effect(() => {
-		// Reset slice limit when search filters or season changes
-		const _trigger = `${seasonYear}-${seasonKey}-${filterType}-${sortByRating}-${dubStore.dubMode}`;
-		sliceLimit = 20;
+		void [seasonYear, seasonKey, page.url.search, dubStore.dubMode];
+		sliceLimit = 40;
 	});
 
 	const filteredAnime = $derived.by(() => {
-		let res = filterType
-			? anime.filter((a) => a.mediaType.toLowerCase() === filterType.toLowerCase())
-			: [...anime];
-
-		if (dubStore.dubMode && dubStore.isReady) {
-			res = res.filter((a) => dubStore.hasDub(a.malId));
-		}
-
-		if (sortByRating) {
-			res.sort((a, b) => (b.mean ?? 0) - (a.mean ?? 0));
-		}
-		return res;
+		const f = filters;
+		const dubOnly = dubStore.dubMode && dubStore.isReady;
+		const matched = anime.filter(
+			(a) =>
+				(!dubOnly || dubStore.hasDub(a.malId)) &&
+				matchesFilters(f, facetOfDisplay(a), {
+					inList: (id) => userListStore.getEntry(id) !== undefined
+				})
+		);
+		return sortDisplay(matched, sortKey, sortDir);
 	});
 
 	const displayedAnime = $derived(filteredAnime.slice(0, sliceLimit));
 
-	const TYPES = MEDIA_TYPE_FILTER_OPTIONS;
+	function randomPick() {
+		const pick = pickRandom(filteredAnime);
+		if (pick) goto(`/anime/${pick.malId}`);
+	}
 
 	// ─── Fetch ───
 
@@ -106,7 +144,14 @@
 	// ─── Navigation ───
 
 	function goToSeason(year: number, season: Season) {
-		goto(`/seasonal?year=${year}&season=${season}`);
+		// Keep filters/sort while hopping between seasons.
+		goto(
+			setUrlParams(page.url, [
+				{ key: 'year', value: String(year) },
+				{ key: 'season', value: season }
+			]),
+			{ noScroll: true }
+		);
 	}
 
 	// ─── Lifecycle ───
@@ -117,7 +162,6 @@
 		const key = `${seasonYear}-${seasonKey}`;
 		if (key !== prevSeasonKey) {
 			prevSeasonKey = key;
-			filterType = '';
 			loadSeason();
 		}
 	});
@@ -169,33 +213,48 @@
 		</div>
 	</div>
 
-	<!-- Type Filter and Sort -->
-	<div class="mt-5 flex flex-wrap items-center justify-between gap-4">
-		<div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-			{#each TYPES as t, _idx (_idx)}
-				<button
-					onclick={() => (filterType = t.value)}
-					class="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
-			  {filterType === t.value
-						? 'bg-primary/15 text-primary'
-						: 'bg-surface-1 text-text-muted hover:bg-surface-2 hover:text-text-secondary'}"
-				>
-					{t.label}
-				</button>
+	<!-- Sort / random -->
+	<div class="mt-5 flex flex-wrap items-center gap-2">
+		<select
+			aria-label="Sort season"
+			value={sortKey ?? ''}
+			onchange={(e) =>
+				setParams([
+					{ key: 'sort', value: (e.target as HTMLSelectElement).value },
+					{ key: 'dir', value: '' }
+				])}
+			class="min-h-11 cursor-pointer appearance-none rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary outline-none focus:bg-white/10"
+		>
+			{#each SORTS as s (s.value)}
+				<option value={s.value} class="bg-surface-2">{s.label}</option>
 			{/each}
-		</div>
+		</select>
+		<button
+			type="button"
+			disabled={!sortKey}
+			onclick={() => {
+				const flipped = sortDir === 'asc' ? 'desc' : 'asc';
+				setParams([
+					{ key: 'dir', value: sortKey && flipped === NATURAL_DIR[sortKey] ? '' : flipped }
+				]);
+			}}
+			aria-label="Sort direction: {sortDir === 'asc' ? 'ascending' : 'descending'}"
+			class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary disabled:cursor-default disabled:opacity-40"
+		>
+			{#if sortDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
+		</button>
+		<button
+			type="button"
+			onclick={randomPick}
+			disabled={filteredAnime.length === 0}
+			class="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40"
+		>
+			<Dices size={14} /> Random pick
+		</button>
+	</div>
 
-		<div class="flex items-center gap-2">
-			<button
-				onclick={() => (sortByRating = !sortByRating)}
-				class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] {sortByRating
-					? 'text-primary border-primary/30'
-					: 'text-text-secondary'}"
-			>
-				<ArrowUpDown size={14} />
-				Rating
-			</button>
-		</div>
+	<div class="mt-3">
+		<FilterPanel {filters} options={facetOptions} mode="season" onchange={setFilters} />
 	</div>
 
 	<!-- Results -->
@@ -214,7 +273,7 @@
 			{#if filteredAnime.length > sliceLimit}
 				<div class="mt-8 flex justify-center">
 					<button
-						onclick={() => (sliceLimit += 20)}
+						onclick={() => (sliceLimit += 40)}
 						class="rounded-xl border border-white/10 bg-surface-1 px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface-2 transition-all active:scale-95 shadow-md"
 					>
 						Load More
@@ -222,7 +281,7 @@
 				</div>
 			{/if}
 
-			{#if filterType && filteredAnime.length < anime.length}
+			{#if filteredAnime.length < anime.length}
 				<p class="mt-4 text-center text-xs text-text-muted">
 					Showing {filteredAnime.length} of {anime.length} ({capitalize(seasonKey)}
 					{seasonYear})
@@ -234,8 +293,8 @@
 			>
 				<div class="mb-3 text-4xl">🌸</div>
 				<p class="text-sm text-text-secondary">
-					{filterType
-						? `No ${formatMediaType(filterType)} anime this season`
+					{filterCount > 0
+						? 'No anime this season match your filters'
 						: 'No anime found for this season'}
 				</p>
 			</div>

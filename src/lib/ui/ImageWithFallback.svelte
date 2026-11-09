@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Film, User } from 'lucide-svelte';
 
 	let {
@@ -22,16 +23,19 @@
 	let imgEl = $state<HTMLImageElement | null>(null);
 
 	$effect(() => {
-		// Reset state when src changes
+		// Reset state when src changes. Only `src` is tracked: reading `imgEl` here would
+		// re-run the effect when a failed <img> unmounts, reset `error`, and loop forever.
 		void src;
-		loaded = false;
-		error = false;
-		// Cached/decoded images can lose their load event across keyed
-		// re-renders — sync from the element instead of trusting the event.
-		if (imgEl?.complete) {
-			loaded = imgEl.naturalWidth > 0;
-			error = imgEl.naturalWidth === 0;
-		}
+		untrack(() => {
+			loaded = false;
+			error = false;
+			// Cached/decoded images can lose their load event across keyed
+			// re-renders — sync from the element instead of trusting the event.
+			if (imgEl?.complete) {
+				loaded = imgEl.naturalWidth > 0;
+				error = imgEl.naturalWidth === 0;
+			}
+		});
 	});
 </script>
 

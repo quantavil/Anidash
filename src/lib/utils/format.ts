@@ -64,30 +64,6 @@ export function formatListStatus(status: string): string {
 	return STATUS_LABELS[status] ?? status;
 }
 
-type StatusVariant = 'badge' | 'dot';
-export const STATUS_COLORS: Record<string, Record<StatusVariant, string>> = {
-	watching: {
-		badge: 'bg-primary/20 text-[#bfb5ff] border-primary/40',
-		dot: 'bg-primary'
-	},
-	completed: {
-		badge: 'bg-success/15 text-success border-success/30',
-		dot: 'bg-success'
-	},
-	on_hold: {
-		badge: 'bg-warning/15 text-warning border-warning/30',
-		dot: 'bg-warning'
-	},
-	dropped: {
-		badge: 'bg-error/15 text-error border-error/30',
-		dot: 'bg-error'
-	},
-	plan_to_watch: {
-		badge: 'bg-info/15 text-info border-info/30',
-		dot: 'bg-info'
-	}
-};
-
 const ANIME_STATUS_LABELS: Record<string, string> = {
 	currently_airing: 'Currently Airing',
 	finished_airing: 'Finished Airing',
@@ -111,9 +87,20 @@ export function formatLocalBroadcast(dayOfWeek: string, startTime?: string): str
 
 	const [hours, minutes] = startTime.split(':').map(Number);
 
-	// 2023-01-01 was a Sunday. We use this as a reference date in UTC.
-	// JST is UTC+9. To get UTC time, subtract 9 from JST hours.
-	const refDate = new Date(Date.UTC(2023, 0, 1 + jstDayIndex, hours - 9, minutes));
+	// Anchor on the next occurrence of that weekday (a UTC date whose weekday is
+	// `jstDayIndex`) rather than a fixed winter date, so the viewer's current DST offset
+	// applies. JST is UTC+9: subtract 9 from the JST hours to get UTC.
+	const now = new Date();
+	const daysAhead = (jstDayIndex - now.getUTCDay() + 7) % 7;
+	const refDate = new Date(
+		Date.UTC(
+			now.getUTCFullYear(),
+			now.getUTCMonth(),
+			now.getUTCDate() + daysAhead,
+			hours - 9,
+			minutes
+		)
+	);
 
 	const localDay = refDate.toLocaleDateString(undefined, { weekday: 'long' });
 	const localTime = refDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });

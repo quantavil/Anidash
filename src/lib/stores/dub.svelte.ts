@@ -10,7 +10,6 @@ import { SvelteSet } from 'svelte/reactivity';
 class DubStore {
 	dubs = $state<SvelteSet<number>>(new SvelteSet());
 	dubMode = $state(false);
-	isLoading = $state(false);
 	isReady = $state(false);
 	#initPromise: Promise<void> | null = null;
 	#hasInitialized = false;
@@ -24,7 +23,6 @@ class DubStore {
 		if (this.#initPromise) return this.#initPromise;
 
 		this.#initPromise = (async () => {
-			this.isLoading = true;
 			try {
 				const db = await getDB();
 				const cached = await db.get('meta', 'dubInfo');
@@ -73,7 +71,6 @@ class DubStore {
 			} catch (e) {
 				logger.error('Critical failure in DubStore init:', e);
 			} finally {
-				this.isLoading = false;
 				this.isReady = true;
 				this.#hasInitialized = true;
 			}

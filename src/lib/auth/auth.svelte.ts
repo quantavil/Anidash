@@ -13,15 +13,12 @@ import { zodIssuesToSummaries } from '$lib/api/result';
 import { STORAGE_KEYS } from '$lib/constants';
 import { logger } from '$lib/utils/logger';
 
-const AUTH_ROUTES = ['/login', '/auth/callback'];
-
 function createAuthStore() {
 	let user = $state<MalUser | null>(null);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 
 	const isAuthenticated = $derived(user !== null);
-	const userId = $derived(user?.id ?? null);
 
 	// ─── Initialize ───
 
@@ -264,12 +261,6 @@ function createAuthStore() {
 		goto('/login');
 	}
 
-	// ─── Auth Guard ───
-
-	function isAuthRoute(pathname: string): boolean {
-		return AUTH_ROUTES.some((route) => pathname.startsWith(route));
-	}
-
 	return {
 		get user() {
 			return user;
@@ -280,9 +271,6 @@ function createAuthStore() {
 		get isAuthenticated() {
 			return isAuthenticated;
 		},
-		get userId() {
-			return userId;
-		},
 		get error() {
 			return error;
 		},
@@ -290,9 +278,7 @@ function createAuthStore() {
 		init,
 		login,
 		handleCallback,
-		logout,
-		isAuthRoute,
-		fetchUserProfile
+		logout
 	};
 }
 

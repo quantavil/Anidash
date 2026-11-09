@@ -4,6 +4,11 @@
 import { tokens, needsRefresh, refreshTokens } from '$lib/auth/tokens';
 import { ok, err, type Result } from '$lib/api/result';
 
+function tokenStillValid(): boolean {
+	const t = tokens.get();
+	return !!t && Date.now() < t.expiresAt;
+}
+
 /**
  * Authenticated fetch — returns Result<Response>.
  * - Proactively refreshes token if expiring within 1hr
@@ -16,7 +21,9 @@ export async function authFetch(url: string, options?: RequestInit): Promise<Res
 	// Proactive refresh (no-op when there are no tokens)
 	if (needsRefresh()) {
 		const refreshed = await refreshTokens();
-		if (!refreshed.ok) {
+		// The early refresh window opens an hour before expiry, so a transient failure
+		// there is not fatal: keep using the token until it actually expires.
+		if (!refreshed.ok && !tokenStillValid()) {
 			return err(refreshed.error);
 		}
 	}

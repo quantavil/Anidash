@@ -7,8 +7,7 @@ export type AppError =
 	| { type: 'api'; status: number; message: string; body?: unknown }
 	| { type: 'validation'; message: string; issues: ZodIssueSummary[] }
 	| { type: 'cache'; message: string }
-	| { type: 'rate_limit'; retryAfter: number; message: string }
-	| { type: 'not_found'; message: string };
+	| { type: 'rate_limit'; retryAfter: number; message: string };
 
 export interface ZodIssueSummary {
 	path: (string | number)[];

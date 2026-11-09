@@ -30,10 +30,10 @@
 
 	const current = getCurrentSeason();
 	const urlYear = $derived(Number(getUrlParam(page.url, 'year', String(current.year))));
-	const VALID_SEASONS: Season[] = ['winter', 'spring', 'summer', 'fall'];
+	const VALID_SEASONS = new Set<string>(['winter', 'spring', 'summer', 'fall']);
 	const urlSeason = $derived.by(() => {
 		const raw = getUrlParam(page.url, 'season', current.season);
-		return VALID_SEASONS.includes(raw as Season) ? (raw as Season) : current.season;
+		return VALID_SEASONS.has(raw) ? (raw as Season) : current.season;
 	});
 
 	const seasonYear = $derived(urlYear || current.year);
@@ -69,10 +69,10 @@
 	const facetOptions = $derived(buildFacetOptions(anime.map(facetOfDisplay), filters));
 
 	function setParams(pairs: { key: string; value: string }[], replace = false) {
-		goto(setUrlParams(page.url, pairs), { reset: false, replace: replace });
+		goto(setUrlParams(page.url, pairs), { reset: false, replace });
 	}
-	function setFilters(next: AnimeFilters) {
-		setParams(filtersToPairs(next), true);
+	function setFilters(updated: AnimeFilters) {
+		setParams(filtersToPairs(updated), true);
 	}
 
 	// Reset paging whenever the visible set changes.

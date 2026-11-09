@@ -56,7 +56,7 @@
 
 		const allGenres = Object.entries(genreDist)
 			.map(([label, count]) => ({ label, count }))
-			.sort((a, b) => b.count - a.count);
+			.toSorted((a, b) => b.count - a.count);
 
 		const topGenres = allGenres.slice(0, 5);
 		const otherCount = allGenres.slice(5).reduce((sum, item) => sum + item.count, 0);
@@ -69,13 +69,9 @@
 		let cumulativePct = 0;
 		const donutSlices = genres.map((item) => {
 			const percentage = (item.count / totalGenreCount) * 100;
-			const slice = {
-				...item,
-				percentage,
-				offset: -cumulativePct
-			};
+			const offset = -cumulativePct;
 			cumulativePct += percentage;
-			return slice;
+			return { label: item.label, count: item.count, percentage, offset };
 		});
 
 		return {
@@ -141,14 +137,18 @@
 
 	const watching = $derived(
 		[...userListStore.watching]
-			.sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
+			.toSorted(
+				(a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime()
+			)
 			.slice(0, 6)
 	);
 
 	const recentlyUpdated = $derived(
 		userListStore.allEntries
 			.filter((e) => e.updatedAt)
-			.sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())
+			.toSorted(
+				(a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime()
+			)
 			.slice(0, 8)
 	);
 </script>

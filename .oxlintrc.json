@@ -1,12 +1,33 @@
 {
 	"$schema": "./node_modules/oxlint/configuration_schema.json",
 	"plugins": ["typescript", "unicorn", "oxc"],
-	"categories": { "correctness": "error" },
-	"rules": {
-		"no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
-		"typescript/no-explicit-any": "warn",
-		"typescript/ban-ts-comment": "warn"
+	"categories": {
+		"correctness": "error",
+		"suspicious": "error",
+		"perf": "error"
 	},
-	"env": { "builtin": true, "browser": true, "node": true },
-	"ignorePatterns": [".svelte-kit", "build", ".wrangler", "static"]
+	"rules": {
+		"no-unused-vars": [
+			"warn",
+			{
+				"argsIgnorePattern": "^_",
+				"varsIgnorePattern": "^_"
+			}
+		],
+		"typescript/no-explicit-any": "warn",
+		"typescript/ban-ts-comment": "warn",
+		"svelte/prefer-svelte-reactivity": "error",
+		"no-await-in-loop": "off",
+		"no-underscore-dangle": "off",
+		"unicorn/consistent-function-scoping": "off",
+		"unicorn/require-post-message-target-origin": "off",
+		"unicorn/require-module-specifiers": "off"
+	},
+	"env": {
+		"builtin": true,
+		"browser": true,
+		"node": true
+	},
+	"ignorePatterns": [".svelte-kit", "build", ".wrangler", "static"],
+	"jsPlugins": ["eslint-plugin-svelte"]
 }

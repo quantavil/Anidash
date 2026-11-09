@@ -165,7 +165,7 @@ function countBy(values: Iterable<string>): { name: string; count: number }[] {
 	for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
 	return [...counts.entries()]
 		.map(([name, count]) => ({ name, count }))
-		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+		.toSorted((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
 /** Options present in the loaded rows, always including anything already selected. */

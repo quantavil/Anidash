@@ -17,18 +17,14 @@
 		interactive?: boolean;
 	} = $props();
 
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let showingEnglish = $state(settingsStore.preferEnglish);
+	// Writable derived: follows the global preference, but a local flip overrides it.
+	let showingEnglish = $derived(settingsStore.preferEnglish);
 
 	const hasBothTitles = $derived(titleEnglish !== null && titleEnglish !== title);
 
 	const displayTitle = $derived.by(() => {
 		if (!hasBothTitles) return title;
 		return showingEnglish ? titleEnglish! : title;
-	});
-
-	$effect(() => {
-		showingEnglish = settingsStore.preferEnglish;
 	});
 
 	function handleFlip(e: Event) {

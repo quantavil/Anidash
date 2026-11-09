@@ -42,7 +42,7 @@ export function sortEntries(
 ): UserListRecord[] {
 	const sign = dir === NATURAL_DIR[key] ? 1 : -1;
 	const startKey = new Map(entries.map((e) => [e.malId, facetOfRecord(e).startKey]));
-	return [...entries].sort((a, b) => {
+	return entries.toSorted((a, b) => {
 		switch (key) {
 			case 'title':
 				return sign * a.title.localeCompare(b.title);
@@ -79,7 +79,7 @@ export function sortDisplay(
 ): DisplayAnime[] {
 	if (!key) return items;
 	const startKey = new Map(items.map((a) => [a.malId, facetOfDisplay(a).startKey]));
-	return [...items].sort((a, b) => {
+	return items.toSorted((a, b) => {
 		switch (key) {
 			case 'title':
 				return dir === 'asc' ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title);

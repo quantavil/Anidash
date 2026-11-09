@@ -121,7 +121,6 @@ describe('userlist.svelte.ts state', () => {
 	});
 
 	it('should catch flushPersistentQueue failure in syncFromRemote and return a cache error', async () => {
-		const { getSyncQueue } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getSyncQueue).mockRejectedValueOnce(new Error('Queue Read Failed'));
 
 		const result = await userListStore.syncFromRemote();
@@ -138,7 +137,6 @@ describe('userlist.svelte.ts state', () => {
 		const expiredTime = now - (SEVEN_DAYS_MS + 1000); // 7 days + 1s ago
 		const validTime = now - 24 * 60 * 60 * 1000; // 1 day ago
 
-		const { getSyncQueue, deleteSyncQueue } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getSyncQueue).mockResolvedValueOnce([
 			{ malId: 10, payload: { status: 'completed' }, timestamp: expiredTime },
 			{ malId: 11, payload: { status: 'watching' }, timestamp: validTime }
@@ -183,7 +181,6 @@ describe('userlist.svelte.ts state', () => {
 		const rec = userListStore.getEntry(22);
 		if (rec) rec.updatedAt = '2020-01-01T00:00:00.000Z';
 
-		const { getSyncQueue } = await import('#lib/cache/userlist.cache.js');
 		vi.mocked(getSyncQueue).mockResolvedValueOnce([
 			{ malId: 22, payload: { num_watched_episodes: 2 }, timestamp: Date.now() }
 		]);

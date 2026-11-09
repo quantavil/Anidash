@@ -139,7 +139,7 @@ describe('AniList response mapping', () => {
 		});
 		await fetchAnilistMediaByMalId(2);
 		const init = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
-		expect(Object.keys(init.headers as Record<string, string>).sort()).toEqual([
+		expect(Object.keys(init.headers as Record<string, string>).toSorted()).toEqual([
 			'Accept',
 			'Content-Type'
 		]);

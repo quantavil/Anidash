@@ -54,9 +54,10 @@
 		if (next === -1) return;
 		e.preventDefault();
 		selectTab(tabs[next].key);
-		(e.currentTarget as HTMLElement).parentElement
-			?.querySelectorAll<HTMLElement>('[role="tab"]')
-			[next]?.focus();
+		const tabEls = (e.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLElement>(
+			'[role="tab"]'
+		);
+		tabEls?.[next]?.focus();
 	}
 
 	function getCount(key: TabKey): number {

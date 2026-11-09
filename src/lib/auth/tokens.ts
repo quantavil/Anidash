@@ -112,7 +112,7 @@ async function waitForOtherTabRefresh(originalExpiresAt: number): Promise<Result
 			channel.close();
 		};
 
-		channel.onmessage = (e) => {
+		channel.addEventListener('message', (e) => {
 			if (e.data === 'success') {
 				const current = tokens.get();
 				if (current && current.expiresAt > originalExpiresAt) {
@@ -123,7 +123,7 @@ async function waitForOtherTabRefresh(originalExpiresAt: number): Promise<Result
 			}
 			cleanup();
 			resolve(doRefresh());
-		};
+		});
 
 		// Safety timeout in case the other tab crashes/closes
 		timeoutId = setTimeout(() => {

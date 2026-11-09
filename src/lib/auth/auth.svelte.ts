@@ -60,8 +60,8 @@ function createAuthStore() {
 				}
 				isLoading = false;
 			})
-			.catch((err) => {
-				logger.error('Background revalidation failed:', err);
+			.catch((cause) => {
+				logger.error('Background revalidation failed:', cause);
 				isLoading = false;
 			});
 	}

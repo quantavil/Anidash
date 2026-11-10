@@ -6,13 +6,18 @@
 		malId,
 		watched,
 		total,
-		compact = false
+		compact = false,
+		inline = false
 	}: {
 		malId: number;
 		watched: number;
 		total: number;
 		compact?: boolean;
+		/** Content-sized stepper for list rows. */
+		inline?: boolean;
 	} = $props();
+
+	const iconSize = $derived(compact || inline ? 12 : 14);
 
 	const unknown = $derived(total === 0);
 	const isComplete = $derived(!unknown && watched >= total && total > 0);
@@ -32,7 +37,9 @@
 </script>
 
 <div
-	class="pill-base {isComplete ? 'complete' : ''} {compact ? 'compact' : ''}"
+	class="pill-base {isComplete ? 'complete' : ''} {compact ? 'compact' : ''} {inline
+		? 'inline'
+		: ''}"
 	onclick={(e) => e.stopPropagation()}
 	role="presentation"
 >
@@ -49,14 +56,14 @@
 		aria-label="Decrease episode count"
 	>
 		<div class="minus-wrapper">
-			<Minus size={compact ? 12 : 14} strokeWidth={2.5} />
+			<Minus size={iconSize} strokeWidth={2.5} />
 		</div>
 	</button>
 
 	<!-- Episode count -->
 	<div class="pill-count" class:complete={isComplete}>
 		<span class="watched-num">{watched}</span>/<span>{unknown ? '?' : total}</span>
-		{#if !compact}
+		{#if !compact && !inline}
 			<span class="ep-lbl">ep</span>
 		{/if}
 	</div>
@@ -75,11 +82,11 @@
 	>
 		{#if isComplete}
 			<div class="animate-complete-pop">
-				<Check size={compact ? 12 : 14} strokeWidth={2.5} />
+				<Check size={iconSize} strokeWidth={2.5} />
 			</div>
 		{:else}
 			<div class="plus-wrapper">
-				<Plus size={compact ? 12 : 14} strokeWidth={2.5} />
+				<Plus size={iconSize} strokeWidth={2.5} />
 			</div>
 		{/if}
 	</button>
@@ -112,6 +119,40 @@
 		height: 34px;
 		border-radius: 8px;
 		padding: 0 2px;
+	}
+
+	.pill-base.inline {
+		width: auto;
+		max-width: none;
+		height: 32px;
+		gap: 2px;
+		border-radius: 8px;
+		padding: 0 2px;
+	}
+
+	.pill-base.inline .pill-btn {
+		height: 26px;
+		width: 28px;
+	}
+
+	.pill-base.inline .pill-count {
+		min-width: 46px;
+		text-align: center;
+		font-size: 11px;
+	}
+
+	.pill-base.inline .pill-count .watched-num {
+		font-size: 13px;
+	}
+
+	/* The step-forward action gets the accent so the row has one obvious control. */
+	.pill-base.inline .pill-btn-plus:not(:disabled) {
+		background: rgba(139, 126, 248, 0.16);
+		color: #b8b0ff;
+	}
+
+	.pill-base.inline .pill-btn-plus:hover:not(:disabled) {
+		background: rgba(139, 126, 248, 0.28);
 	}
 
 	.pill-base:hover {

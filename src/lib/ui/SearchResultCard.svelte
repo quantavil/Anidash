@@ -2,14 +2,13 @@
 	import type { DisplayAnime } from '#lib/utils/types.js';
 	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
-	import { authStore } from '#lib/auth/auth.svelte.js';
-	import { toast } from 'svelte-sonner';
 	import { formatMediaType, formatNumberShort } from '#lib/utils/format.js';
-	import { Star, Plus, Mic } from 'lucide-svelte';
+	import { Star, Mic } from 'lucide-svelte';
 	import GenreBadge from './GenreBadge.svelte';
 	import ImageWithFallback from './ImageWithFallback.svelte';
 	import AnimeTitle from './AnimeTitle.svelte';
 	import StatusBadge from './StatusBadge.svelte';
+	import AddToListButton from './AddToListButton.svelte';
 
 	let { anime, index = 0 }: { anime: DisplayAnime; index?: number } = $props();
 
@@ -25,33 +24,6 @@
 	);
 	// Below 360px the episode count is dropped so type and season stay on one line.
 	const metaShort = $derived([metaParts.type, metaParts.season].filter(Boolean).join(' · '));
-
-	let adding = $state(false);
-
-	async function handleAdd(e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
-		if (!authStore.isAuthenticated) {
-			toast.info('Please login to add to your list');
-			authStore.login();
-			return;
-		}
-		adding = true;
-		const result = await userListStore.addToList(
-			anime.malId,
-			'plan_to_watch',
-			anime.titleEnglish,
-			anime.title,
-			anime.mainPicture,
-			anime.genres
-		);
-		adding = false;
-		if (result.ok) {
-			toast.success(`Added ${anime.title} to Plan to Watch`);
-		} else {
-			toast.error(result.error.message || 'Failed to add anime');
-		}
-	}
 </script>
 
 <div
@@ -128,22 +100,7 @@
 
 		<!-- Add to List button (if not in list) -->
 		{#if !inList}
-			<button
-				onclick={handleAdd}
-				disabled={adding}
-				aria-label="Add {anime.title} to Plan to Watch"
-				class="relative z-[2] mt-2 min-h-9 flex items-center justify-center gap-1 rounded-md border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
-			>
-				{#if adding}
-					<div
-						class="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
-					></div>
-					<span>Adding...</span>
-				{:else}
-					<Plus size={12} />
-					<span>Add to List</span>
-				{/if}
-			</button>
+			<AddToListButton {anime} class="mt-2 min-h-9 py-1.5" />
 		{/if}
 	</div>
 </div>

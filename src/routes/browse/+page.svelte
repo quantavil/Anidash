@@ -17,7 +17,8 @@
 	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
 	import SearchResultRow from '#lib/ui/SearchResultRow.svelte';
 	import ResultsLayout from '#lib/ui/ResultsLayout.svelte';
-	import ResultsBar from '#lib/ui/ResultsBar.svelte';
+	import DubChip from '#lib/ui/DubChip.svelte';
+	import ViewToggle from '#lib/ui/ViewToggle.svelte';
 	import ResultsSkeleton from '#lib/ui/skeletons/ResultsSkeleton.svelte';
 	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import FilterPanel from '#lib/ui/FilterPanel.svelte';
@@ -378,6 +379,7 @@
 {/snippet}
 
 {#snippet sortTools()}
+	<ViewToggle section="browse" />
 	<SortMenu
 		options={SORTS}
 		value={sortKey ?? ''}
@@ -436,7 +438,7 @@
 	<!-- Results -->
 	<div class="mt-5">
 		{#if !idle}
-			<ResultsBar section="browse">
+			<p class="mb-3 min-h-5 truncate text-xs text-text-secondary" aria-live="polite">
 				{#if loading}
 					Loading…
 				{:else}
@@ -445,7 +447,8 @@
 						&nbsp;· filtered from {baseResults.length} loaded{/if}{#if loadingMore}
 						&nbsp;· scanning more…{/if}
 				{/if}
-			</ResultsBar>
+			</p>
+			<DubChip />
 		{/if}
 
 		{#if idle}

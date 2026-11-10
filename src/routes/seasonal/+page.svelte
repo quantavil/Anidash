@@ -7,12 +7,14 @@
 	import { mapMalNodeToDisplay, type DisplayAnime } from '#lib/utils/types.js';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '#lib/utils/season.js';
 	import { capitalize } from '#lib/utils/format.js';
-	import { ChevronLeft, ChevronRight, Dices } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
 	import SearchResultRow from '#lib/ui/SearchResultRow.svelte';
 	import ResultsLayout from '#lib/ui/ResultsLayout.svelte';
-	import ResultsBar from '#lib/ui/ResultsBar.svelte';
+	import DubChip from '#lib/ui/DubChip.svelte';
+	import RandomButton from '#lib/ui/RandomButton.svelte';
+	import ViewToggle from '#lib/ui/ViewToggle.svelte';
 	import ResultsSkeleton from '#lib/ui/skeletons/ResultsSkeleton.svelte';
 	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
@@ -174,16 +176,8 @@
 </script>
 
 {#snippet trailing()}
-	<button
-		type="button"
-		onclick={randomPick}
-		disabled={filteredAnime.length === 0}
-		title="Open a random title from the current view"
-		aria-label="Random pick from the {filteredAnime.length} shown"
-		class="flex h-9 w-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-white/5 bg-white/5 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40 sm:h-10 sm:w-auto sm:px-4"
-	>
-		<Dices size={15} /><span class="hidden sm:inline">Random</span>
-	</button>
+	<RandomButton count={filteredAnime.length} onclick={randomPick} />
+	<ViewToggle section="seasonal" />
 	<SortMenu
 		options={SORTS}
 		value={sortKey ?? ''}
@@ -217,7 +211,9 @@
 				{seasonYear}
 			</h1>
 			<p class="mt-1 text-sm text-text-secondary">
-				{anime.length} anime this season
+				{filteredAnime.length < anime.length
+					? `${filteredAnime.length} of ${anime.length}`
+					: anime.length} anime this season
 			</p>
 		</div>
 
@@ -257,11 +253,7 @@
 
 	<!-- Results -->
 	<div class="mt-5">
-		<ResultsBar section="seasonal">
-			{filteredAnime.length}
-			{filteredAnime.length === 1 ? 'title' : 'titles'}{#if filteredAnime.length < anime.length}
-				&nbsp;· filtered from {anime.length}{/if}
-		</ResultsBar>
+		<DubChip />
 
 		{#if loading}
 			<ResultsSkeleton {view} />

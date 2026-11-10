@@ -185,10 +185,11 @@
 			</div>
 		{/if}
 		<div class="min-w-0">
-			<h1 class="truncate text-2xl font-bold text-text-primary">
-				Welcome back{authStore.user?.name ? `, ${authStore.user.name}` : ''}
+			<p class="text-xs font-medium tracking-widest text-text-muted uppercase">Welcome back</p>
+			<h1 class="truncate text-3xl leading-tight font-bold text-text-primary">
+				{authStore.user?.name ?? 'Your stats'}
 			</h1>
-			<p class="mt-1 text-sm text-text-secondary">
+			<p class="mt-0.5 text-xs text-text-secondary">
 				{#if syncStore.lastSynced}
 					Last synced {formatRelativeDate(new Date(syncStore.lastSynced).toISOString())}
 				{:else}

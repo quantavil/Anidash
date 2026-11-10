@@ -3,18 +3,16 @@
 	import { dubStore } from '#lib/stores/dub.svelte.js';
 	import { settingsStore, VIEW_SECTIONS, type ViewMode } from '#lib/stores/settings.svelte.js';
 	import { LayoutGrid, List, LogOut, User } from 'lucide-svelte';
+	import SegmentedControl from '#lib/ui/SegmentedControl.svelte';
 
 	const VIEW_MODES: { value: ViewMode; label: string; icon: typeof List }[] = [
 		{ value: 'grid', label: 'Grid', icon: LayoutGrid },
 		{ value: 'list', label: 'List', icon: List }
 	];
-
-	const segCls = (on: boolean) =>
-		`flex min-h-9 cursor-pointer items-center justify-center gap-1.5 px-3.5 text-sm font-medium transition-colors ${
-			on
-				? 'bg-primary/20 text-primary'
-				: 'text-text-secondary hover:bg-white/10 hover:text-text-primary'
-		}`;
+	const TITLE_LANGS = [
+		{ value: 'romaji', label: 'Romaji' },
+		{ value: 'english', label: 'English' }
+	];
 </script>
 
 <svelte:head>
@@ -23,7 +21,6 @@
 
 <div class="mx-auto max-w-2xl py-6">
 	<h1 class="text-2xl font-bold text-text-primary">Settings</h1>
-	<p class="mt-1 text-sm text-text-secondary">Saved on this device.</p>
 
 	<!-- Account -->
 	<section class="mt-6" aria-labelledby="account-h">
@@ -50,7 +47,7 @@
 					{/if}
 					<div class="min-w-0">
 						<p class="truncate text-sm font-medium text-text-primary">{authStore.user?.name}</p>
-						<p class="text-xs text-text-muted">MyAnimeList · view profile stats</p>
+						<p class="text-xs text-text-muted">MyAnimeList</p>
 					</div>
 				</a>
 				<button
@@ -82,9 +79,6 @@
 			<div class="flex items-center justify-between gap-4 p-3">
 				<div class="min-w-0">
 					<p id="dub-l" class="text-sm font-medium text-text-primary">Dubbed only</p>
-					<p class="text-xs text-text-muted">
-						Show only anime with an English dub in My List, Browse and Seasonal.
-					</p>
 				</div>
 				<button
 					type="button"
@@ -107,28 +101,13 @@
 			<div class="flex items-center justify-between gap-4 p-3">
 				<div class="min-w-0">
 					<p id="lang-l" class="text-sm font-medium text-text-primary">Title language</p>
-					<p class="text-xs text-text-muted">
-						Which title is shown first on cards and detail pages.
-					</p>
 				</div>
-				<div
-					class="inline-flex shrink-0 overflow-hidden rounded-md border border-white/5 bg-white/5"
-					role="group"
-					aria-labelledby="lang-l"
-				>
-					<button
-						type="button"
-						aria-pressed={!settingsStore.preferEnglish}
-						onclick={() => settingsStore.setPreferEnglish(false)}
-						class={segCls(!settingsStore.preferEnglish)}>Romaji</button
-					>
-					<button
-						type="button"
-						aria-pressed={settingsStore.preferEnglish}
-						onclick={() => settingsStore.setPreferEnglish(true)}
-						class={segCls(settingsStore.preferEnglish)}>English</button
-					>
-				</div>
+				<SegmentedControl
+					labelledby="lang-l"
+					options={TITLE_LANGS}
+					value={settingsStore.preferEnglish ? 'english' : 'romaji'}
+					onselect={(v) => settingsStore.setPreferEnglish(v === 'english')}
+				/>
 			</div>
 		</div>
 	</section>
@@ -142,28 +121,14 @@
 			{#each VIEW_SECTIONS as sec (sec.id)}
 				<div class="flex items-center justify-between gap-4 p-3">
 					<p id="view-{sec.id}" class="text-sm font-medium text-text-primary">{sec.label}</p>
-					<div
-						class="inline-flex shrink-0 overflow-hidden rounded-md border border-white/5 bg-white/5"
-						role="group"
-						aria-labelledby="view-{sec.id}"
-					>
-						{#each VIEW_MODES as m (m.value)}
-							{@const on = settingsStore.views[sec.id] === m.value}
-							<button
-								type="button"
-								aria-pressed={on}
-								onclick={() => settingsStore.setView(sec.id, m.value)}
-								class={segCls(on)}
-							>
-								<m.icon size={14} />{m.label}
-							</button>
-						{/each}
-					</div>
+					<SegmentedControl
+						labelledby="view-{sec.id}"
+						options={VIEW_MODES}
+						value={settingsStore.views[sec.id]}
+						onselect={(m) => settingsStore.setView(sec.id, m)}
+					/>
 				</div>
 			{/each}
 		</div>
-		<p class="mt-2 text-xs text-text-muted">
-			You can also switch any section from the toggle above its results.
-		</p>
 	</section>
 </div>

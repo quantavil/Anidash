@@ -2,10 +2,11 @@
 	import { getUrlParam, setUrlParam, setUrlParams } from '#lib/utils/url-state.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { Dices } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
 	import SortMenu from './SortMenu.svelte';
 	import FilterPanel from './FilterPanel.svelte';
+	import RandomButton from './RandomButton.svelte';
+	import ViewToggle from './ViewToggle.svelte';
 	import type { AnimeFilters, FacetOptions } from '#lib/utils/filters.js';
 	import { debounce } from '#lib/utils/debounce.js';
 	import { NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
@@ -93,17 +94,9 @@
 
 {#snippet controls()}
 	{#if onrandom}
-		<button
-			type="button"
-			onclick={onrandom}
-			disabled={randomCount === 0}
-			title="Open a random title from the current view"
-			aria-label="Random pick from the {randomCount} shown"
-			class="flex h-9 w-9 items-center justify-center gap-1.5 rounded-md border border-white/5 bg-white/5 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40 sm:h-10 sm:w-auto sm:px-4"
-		>
-			<Dices size={15} /><span class="hidden sm:inline">Random</span>
-		</button>
+		<RandomButton count={randomCount} onclick={onrandom} />
 	{/if}
+	<ViewToggle section="list" />
 	<SortMenu
 		options={SORT_OPTIONS}
 		value={currentSort}

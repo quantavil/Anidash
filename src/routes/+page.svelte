@@ -25,7 +25,7 @@
 	import TabBar from '#lib/ui/TabBar.svelte';
 	import FilterBar from '#lib/ui/FilterBar.svelte';
 	import AnimeGrid from '#lib/ui/AnimeGrid.svelte';
-	import ResultsBar from '#lib/ui/ResultsBar.svelte';
+	import DubChip from '#lib/ui/DubChip.svelte';
 	import ListPageSkeleton from '#lib/ui/skeletons/ListPageSkeleton.svelte';
 
 	// ─── URL State ───
@@ -149,12 +149,7 @@
 			/>
 		</div>
 
-		<ResultsBar section="list">
-			{filteredEntries.length}
-			{filteredEntries.length === 1 ? 'title' : 'titles'}{currentTab === 'all'
-				? ''
-				: ` in ${formatListStatus(currentTab)}`}
-		</ResultsBar>
+		<DubChip />
 
 		<!-- Grid / List -->
 		<AnimeGrid

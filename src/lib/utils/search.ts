@@ -1,5 +1,14 @@
 // ─── Search Utility Functions ───
 
+/** No search runs before this many characters (MAL v2 rejects shorter queries). */
+export const MIN_QUERY_LEN = 3;
+
+/** The query to act on: trimmed, or '' while it is still shorter than MIN_QUERY_LEN. */
+export function effectiveQuery(raw: string): string {
+	const q = raw.trim();
+	return q.length >= MIN_QUERY_LEN ? q : '';
+}
+
 const STOP_WORDS = new Set([
 	'the',
 	'a',

@@ -92,8 +92,8 @@
 		justify-content: space-between;
 		width: 100%;
 		max-width: 220px; /* Cap width for detail pane / list rows */
-		height: 48px;
-		border-radius: 22px;
+		height: 38px;
+		border-radius: 10px;
 		padding: 0 2px;
 		position: relative;
 		overflow: hidden;
@@ -109,8 +109,8 @@
 	.pill-base.compact {
 		width: 100%;
 		max-width: 100%; /* Fill the card controls space completely */
-		height: 48px;
-		border-radius: 16px;
+		height: 34px;
+		border-radius: 8px;
 		padding: 0 2px;
 	}
 
@@ -126,11 +126,11 @@
 
 	.pill-btn {
 		display: flex;
-		height: 44px;
-		width: 44px;
+		height: 32px;
+		width: 36px;
 		align-items: center;
 		justify-content: center;
-		border-radius: 50%;
+		border-radius: 7px;
 		cursor: pointer;
 		border: 1px solid transparent;
 		background: transparent;
@@ -141,8 +141,8 @@
 	}
 
 	.pill-base.compact .pill-btn {
-		height: 44px;
-		width: 44px;
+		height: 30px;
+		width: 34px;
 	}
 
 	.pill-btn:hover:not(:disabled) {

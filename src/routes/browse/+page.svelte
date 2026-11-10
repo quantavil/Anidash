@@ -10,21 +10,28 @@
 		mergeLocalWithOnline,
 		type DisplayAnime
 	} from '#lib/utils/types.js';
-	import { LoaderCircle, SearchX } from 'lucide-svelte';
+	import { LoaderCircle, Search, SearchX } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchInput from '#lib/ui/SearchInput.svelte';
 	import SortMenu from '#lib/ui/SortMenu.svelte';
 	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
+	import SearchResultRow from '#lib/ui/SearchResultRow.svelte';
+	import ResultsLayout from '#lib/ui/ResultsLayout.svelte';
+	import ResultsBar from '#lib/ui/ResultsBar.svelte';
+	import ResultsSkeleton from '#lib/ui/skeletons/ResultsSkeleton.svelte';
+	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import FilterPanel from '#lib/ui/FilterPanel.svelte';
-	import AnimeCardSkeleton from '#lib/ui/skeletons/AnimeCardSkeleton.svelte';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
 	import { debounce } from '#lib/utils/debounce.js';
-	import { POPULAR_CACHE_KEY, POPULAR_CACHE_TTL_MS } from '#lib/constants.js';
 	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import { putEntry } from '#lib/cache/userlist.cache.js';
 	import { logger } from '#lib/utils/logger.js';
-	import { matchesFuzzy, getSearchKeyword } from '#lib/utils/search.js';
-	import { getPopularCache, setPopularCache } from '#lib/cache/meta.cache.js';
+	import {
+		matchesFuzzy,
+		getSearchKeyword,
+		effectiveQuery,
+		MIN_QUERY_LEN
+	} from '#lib/utils/search.js';
 	import {
 		facetOfDisplay,
 		matchesFilters,
@@ -41,12 +48,14 @@
 
 	/** MAL search caps `limit` at 100; ranking allows more but 100 keeps pages snappy. */
 	const PAGE_SIZE = 100;
-	const MIN_QUERY_LEN = 3; // MAL v2 rejects shorter queries
 	/** With filters on, keep scanning further pages until this many matches are visible. */
 	const AUTO_SCAN_TARGET = 24;
 	const AUTO_SCAN_PAGES = 5;
 
-	/** MAL ranking_type per chart. MAL v2 cannot filter or sort search results itself. */
+	/**
+	 * Optional shortcuts: nothing loads until a title is searched or a chart is picked.
+	 * MAL ranking_type per chart. MAL v2 cannot filter or sort search results itself.
+	 */
 	const CHARTS = [
 		{ value: 'popular', label: 'Popular', ranking: 'bypopularity' },
 		{ value: 'top', label: 'Top rated', ranking: 'all' },
@@ -55,7 +64,6 @@
 		{ value: 'favorite', label: 'Most favorited', ranking: 'favorite' },
 		{ value: 'movie', label: 'Top movies', ranking: 'movie' }
 	] as const;
-	const DEFAULT_CHART = 'popular';
 
 	const SORTS: { value: '' | SortKey; label: string }[] = [
 		{ value: '', label: 'Default order' },
@@ -68,11 +76,12 @@
 
 	// ─── URL State ───
 
-	const query = $derived(getUrlParam(page.url, 'q', '').trim());
-	const chart = $derived.by(() => {
-		const raw = getUrlParam(page.url, 'chart', DEFAULT_CHART);
-		return CHARTS.find((c) => c.value === raw) ?? CHARTS[0];
-	});
+	const rawQuery = $derived(getUrlParam(page.url, 'q', '').trim());
+	// Nothing is searched until the query reaches MIN_QUERY_LEN characters.
+	const query = $derived(effectiveQuery(rawQuery));
+	const chart = $derived(
+		CHARTS.find((c) => c.value === getUrlParam(page.url, 'chart', '')) ?? null
+	);
 	const sortKey = $derived.by((): SortKey | null => {
 		const raw = getUrlParam(page.url, 'sort', '');
 		return SORTS.some((s) => s.value && s.value === raw) ? (raw as SortKey) : null;
@@ -85,8 +94,9 @@
 	const filterCount = $derived(activeFilterCount(filters));
 	const filterKey = $derived(JSON.stringify(filters));
 
-	const hasQuery = $derived(query.length >= MIN_QUERY_LEN);
-	const isSearching = $derived(query.length > 0);
+	const tooShort = $derived(rawQuery.length > 0 && query === '');
+	const idle = $derived(!query && !chart);
+	const view = $derived(settingsStore.views.browse);
 
 	// ─── State ───
 
@@ -123,9 +133,9 @@
 	// ─── Result pipeline: merge → filter → sort ───
 
 	const baseResults = $derived.by(() => {
-		if (!isSearching) return results;
+		if (!query) return results;
 
-		// Titles already on the list match instantly, even offline or under 3 characters.
+		// Titles already on the list match instantly, even offline.
 		const local = userListStore.allEntries
 			.filter((e) => matchesFuzzy(e.title, e.titleEnglish, query))
 			.map(mapUserListRecordToDisplay);
@@ -192,8 +202,7 @@
 
 		// Snapshot params before awaiting so late URL changes are caught by the guard.
 		const q = query;
-		const ranking = chart.ranking;
-		const isDefaultChart = chart.value === DEFAULT_CHART;
+		const ranking = chart?.ranking;
 
 		function commit(mapped: DisplayAnime[], next: boolean) {
 			if (append) {
@@ -212,17 +221,15 @@
 		const offset = (p - 1) * PAGE_SIZE;
 
 		if (!q) {
+			if (!ranking) return;
 			const res = await getRanking(ranking, { limit: PAGE_SIZE, offset });
 			if (searchId !== currentSearchId) return;
 			if (!res.ok) return failFetch(p);
 
-			const mapped = res.value.data.map((item) => mapMalNodeToDisplay(item.node));
-
-			// Cache only the default landing payload for instant future visits.
-			if (p === 1 && isDefaultChart && mapped.length > 0) {
-				setPopularCache(POPULAR_CACHE_KEY, mapped).catch(() => {});
-			}
-			commit(mapped, !!res.value.paging?.next);
+			commit(
+				res.value.data.map((item) => mapMalNodeToDisplay(item.node)),
+				!!res.value.paging?.next
+			);
 			return;
 		}
 
@@ -265,32 +272,12 @@
 		hasNextPage = false;
 		fetchFailed = false;
 
-		// Short queries search saved records only; MAL rejects fewer than three characters.
-		if (query && !hasQuery) {
+		// Nothing to search yet: no query of 3+ characters and no chart picked.
+		if (idle) {
 			results = [];
 			loading = false;
 			loadingMore = false;
 			return;
-		}
-
-		// Stale-while-revalidate: paint the cached default chart instantly,
-		// then refresh silently when older than the TTL.
-		if (!query && chart.value === DEFAULT_CHART) {
-			try {
-				const cached = await getPopularCache(POPULAR_CACHE_KEY);
-				if (searchId !== currentSearchId) return;
-				if (cached && cached.value.length > 0) {
-					results = cached.value;
-					currentPage = 1;
-					hasNextPage = cached.value.length >= PAGE_SIZE;
-					loading = false;
-					if (Date.now() - cached.updatedAt < POPULAR_CACHE_TTL_MS) return;
-					await fetchOnline(1, false, searchId, { silent: true });
-					return;
-				}
-			} catch {
-				// cache unavailable — fall through to network
-			}
 		}
 
 		results = [];
@@ -299,7 +286,7 @@
 
 	// Re-fetch only when the *source* changes. Filters and sort are client-side.
 	$effect(() => {
-		const source = `${query}|${chart.value}`;
+		const source = `${query}|${chart?.value ?? ''}`;
 		if (source !== prevSource) {
 			prevSource = source;
 			untrack(runSearch);
@@ -373,7 +360,7 @@
 		setParams([{ key: 'dir', value: sortKey && flipped === NATURAL_DIR[sortKey] ? '' : flipped }]);
 	}
 
-	const sourceLabel = $derived(isSearching ? `“${query}”` : chart.label);
+	const sourceLabel = $derived(query ? `“${query}”` : (chart?.label ?? ''));
 </script>
 
 {#snippet searchTool()}
@@ -381,7 +368,7 @@
 		bind:this={searchEl}
 		id="browse-search"
 		value={searchInput}
-		placeholder="Search by title…  ( / )"
+		placeholder="Search anime by title (3+ letters)  ( / )"
 		oninput={handleSearchInput}
 		onclear={clearSearch}
 		onkeydown={handleKeyDown}
@@ -415,15 +402,14 @@
 <div class="py-6">
 	<h1 class="text-2xl font-bold text-text-primary">Browse</h1>
 
-	<!-- Charts (when not searching) -->
-	{#if !isSearching}
+	<!-- Optional chart shortcuts (hidden while a search is active) -->
+	{#if !query}
 		<div class="filter-scroll mt-4" role="group" aria-label="Charts">
 			{#each CHARTS as c (c.value)}
-				{@const active = chart.value === c.value}
+				{@const active = chart?.value === c.value}
 				<button
 					type="button"
-					onclick={() =>
-						setParams([{ key: 'chart', value: c.value === DEFAULT_CHART ? '' : c.value }])}
+					onclick={() => setParams([{ key: 'chart', value: active ? '' : c.value }])}
 					aria-pressed={active}
 					class="min-h-9 shrink-0 cursor-pointer rounded-md border px-3.5 text-sm font-medium transition-colors {active
 						? 'border-primary/50 bg-primary/15 text-primary'
@@ -449,27 +435,45 @@
 
 	<!-- Results -->
 	<div class="mt-5">
-		<p class="mb-3 min-h-4 text-xs text-text-secondary" aria-live="polite">
-			{#if loading}
-				Loading…
-			{:else}
-				{filteredResults.length}
-				{filteredResults.length === 1 ? 'title' : 'titles'} · {sourceLabel}{#if filterCount > 0 || dubStore.dubMode}
-					&nbsp;· filtered from {baseResults.length} loaded{/if}{#if loadingMore}
-					&nbsp;· scanning more…{/if}
-			{/if}
-		</p>
+		{#if !idle}
+			<ResultsBar section="browse">
+				{#if loading}
+					Loading…
+				{:else}
+					{filteredResults.length}
+					{filteredResults.length === 1 ? 'title' : 'titles'} · {sourceLabel}{#if filterCount > 0 || dubStore.dubMode}
+						&nbsp;· filtered from {baseResults.length} loaded{/if}{#if loadingMore}
+						&nbsp;· scanning more…{/if}
+				{/if}
+			</ResultsBar>
+		{/if}
 
-		{#if loading && baseResults.length === 0}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-				<AnimeCardSkeleton count={10} />
+		{#if idle}
+			<div
+				class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-4 py-16 text-center"
+			>
+				<Search size={36} class="mb-3 text-text-muted" strokeWidth={1.5} />
+				<p class="text-sm text-text-secondary">
+					{tooShort
+						? `Type ${MIN_QUERY_LEN - rawQuery.length} more character${MIN_QUERY_LEN - rawQuery.length === 1 ? '' : 's'} to search`
+						: 'Search MyAnimeList by title'}
+				</p>
+				<p class="mt-1 text-xs text-text-muted">
+					Then narrow results with filters, or pick a chart above to browse one.
+				</p>
 			</div>
+		{:else if loading && baseResults.length === 0}
+			<ResultsSkeleton {view} />
 		{:else if filteredResults.length > 0}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<ResultsLayout {view}>
 				{#each filteredResults as anime, i (anime.malId)}
-					<SearchResultCard {anime} index={i} />
+					{#if view === 'list'}
+						<SearchResultRow {anime} index={i} />
+					{:else}
+						<SearchResultCard {anime} index={i} />
+					{/if}
 				{/each}
-			</div>
+			</ResultsLayout>
 
 			{#if hasNextPage}
 				<div class="flex justify-center py-8">
@@ -509,13 +513,11 @@
 			>
 				<SearchX size={36} class="mb-3 text-text-muted" strokeWidth={1.5} />
 				<p class="text-sm text-text-secondary">
-					{isSearching && !hasQuery
-						? `Type ${MIN_QUERY_LEN - query.length} more character${MIN_QUERY_LEN - query.length === 1 ? '' : 's'} to search MyAnimeList`
-						: filterCount > 0
-							? hasNextPage
-								? 'No matches in the titles loaded so far'
-								: 'Nothing matches these filters'
-							: 'No anime found'}
+					{filterCount > 0
+						? hasNextPage
+							? 'No matches in the titles loaded so far'
+							: 'Nothing matches these filters'
+						: 'No anime found'}
 				</p>
 				{#if hasNextPage && filterCount > 0 && !loadingMore}
 					<button

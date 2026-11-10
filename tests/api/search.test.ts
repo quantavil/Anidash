@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { matchesFuzzy, getSearchKeyword } from '../../src/lib/utils/search';
+import {
+	matchesFuzzy,
+	getSearchKeyword,
+	effectiveQuery,
+	MIN_QUERY_LEN
+} from '../../src/lib/utils/search';
 
 describe('Fuzzy Search Matching Logic', () => {
 	const anime = {
@@ -117,5 +122,19 @@ describe('Browse Page Fuzzy Merging & De-duplication', () => {
 		expect(merged.length).toBe(2);
 		expect(merged[0].malId).toBe(52578); // Local version preferred/de-duplicated
 		expect(merged[1].malId).toBe(3);
+	});
+});
+
+describe('effectiveQuery', () => {
+	it('ignores queries shorter than the minimum', () => {
+		expect(MIN_QUERY_LEN).toBe(3);
+		expect(effectiveQuery('')).toBe('');
+		expect(effectiveQuery('na')).toBe('');
+		expect(effectiveQuery('  na  ')).toBe('');
+	});
+
+	it('returns the trimmed query once it is long enough', () => {
+		expect(effectiveQuery('nar')).toBe('nar');
+		expect(effectiveQuery('  naruto ')).toBe('naruto');
 	});
 });

@@ -3,7 +3,18 @@
 	import { syncStore } from '#lib/stores/sync.svelte.js';
 	import { authStore } from '#lib/auth/auth.svelte.js';
 	import { formatMediaType, formatRelativeDate, formatListStatus } from '#lib/utils/format.js';
-	import { Film, Star, Tv, Play, Calendar, CircleCheck, Pause, Trash, Clock } from 'lucide-svelte';
+	import {
+		Film,
+		Star,
+		Tv,
+		Play,
+		Calendar,
+		CircleCheck,
+		Pause,
+		Trash,
+		Clock,
+		User
+	} from 'lucide-svelte';
 	import StatCard from '#lib/ui/StatCard.svelte';
 	import EpisodeCounter from '#lib/ui/EpisodeCounter.svelte';
 	import ImageWithFallback from '#lib/ui/ImageWithFallback.svelte';
@@ -159,17 +170,32 @@
 
 <div class="py-6 pb-24 lg:pb-6">
 	<!-- Greeting -->
-	<div class="mb-6">
-		<h1 class="text-2xl font-bold text-text-primary">
-			Welcome back{authStore.user?.name ? `, ${authStore.user.name}` : ''}
-		</h1>
-		<p class="mt-1 text-sm text-text-secondary">
-			{#if syncStore.lastSynced}
-				Last synced {formatRelativeDate(new Date(syncStore.lastSynced).toISOString())}
-			{:else}
-				Sync your list to get started
-			{/if}
-		</p>
+	<div class="mb-6 flex items-center gap-4">
+		{#if authStore.user?.picture}
+			<img
+				src={authStore.user.picture}
+				alt=""
+				class="h-14 w-14 shrink-0 rounded-xl border border-white/10 object-cover sm:h-16 sm:w-16"
+			/>
+		{:else}
+			<div
+				class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-surface-2 sm:h-16 sm:w-16"
+			>
+				<User size={26} class="text-text-muted" />
+			</div>
+		{/if}
+		<div class="min-w-0">
+			<h1 class="truncate text-2xl font-bold text-text-primary">
+				Welcome back{authStore.user?.name ? `, ${authStore.user.name}` : ''}
+			</h1>
+			<p class="mt-1 text-sm text-text-secondary">
+				{#if syncStore.lastSynced}
+					Last synced {formatRelativeDate(new Date(syncStore.lastSynced).toISOString())}
+				{:else}
+					Sync your list to get started
+				{/if}
+			</p>
+		</div>
 	</div>
 
 	<!-- Stats Grid -->

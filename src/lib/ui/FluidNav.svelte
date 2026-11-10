@@ -3,11 +3,9 @@
 	import { authStore } from '#lib/auth/auth.svelte.js';
 	import { syncStore } from '#lib/stores/sync.svelte.js';
 	import { userListStore } from '#lib/stores/userlist.svelte.js';
-	import { dubStore } from '#lib/stores/dub.svelte.js';
-	import { List, Search, Calendar, LogOut, RefreshCw, User, Languages, Mic } from 'lucide-svelte';
+	import { List, Search, Calendar, RefreshCw, User, Settings } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import Logo from './Logo.svelte';
-	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { toast } from 'svelte-sonner';
 
 	async function handleSync() {
@@ -24,10 +22,6 @@
 		}
 	}
 
-	function handleLogout() {
-		authStore.logout();
-	}
-
 	const NAV_ITEMS = [
 		{ href: '/', label: 'My List', icon: List },
 		{ href: '/browse', label: 'Browse', icon: Search },
@@ -37,91 +31,47 @@
 </script>
 
 {#snippet globalActions(isMobile: boolean)}
+	{@const btn = `flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 ${isMobile ? 'h-8 w-8' : 'group h-9 w-9'}`}
+	{@const onSettings = page.url.pathname === '/settings'}
 	<div class="flex items-center {isMobile ? 'gap-2' : 'gap-2 pr-1'}">
-		<!-- Dub Mode Toggle -->
-		<button
-			onclick={() => dubStore.toggleDubMode()}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile
-				? 'h-8 w-8'
-				: 'group h-9 w-9'} {dubStore.dubMode ? 'text-primary' : 'text-text-muted'}"
-			title="Toggle Dub Mode"
-			aria-label="Toggle Dub Mode"
-		>
-			<Mic size={isMobile ? 14 : 16} class={dubStore.dubMode ? 'animate-pulse' : ''} />
-		</button>
+		<!-- Sync -->
+		{#if authStore.isAuthenticated}
+			<button
+				onclick={handleSync}
+				disabled={syncStore.isSyncing}
+				class="{btn} text-text-secondary disabled:opacity-50"
+				title="Sync"
+				aria-label="Sync list with MyAnimeList"
+			>
+				<RefreshCw
+					size={isMobile ? 14 : 16}
+					class="transition-transform duration-700 ease-spring {isMobile
+						? ''
+						: 'group-hover:scale-110'} {syncStore.isSyncing ? 'animate-spin' : ''}"
+				/>
+			</button>
+		{/if}
 
-		<!-- Title Preference Toggle -->
-		<button
-			onclick={() => settingsStore.togglePreferEnglish()}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 {isMobile
-				? 'h-8 w-8'
-				: 'group h-9 w-9'} {settingsStore.preferEnglish ? 'text-primary' : 'text-text-muted'}"
-			title="Toggle English/Romaji titles"
-			aria-label="Toggle language preference"
+		<!-- Settings: dub-only, title language, layouts, account -->
+		<a
+			href="/settings"
+			class="{btn} {onSettings ? 'bg-white/15 text-primary' : 'text-text-secondary'}"
+			title="Settings"
+			aria-label="Settings"
+			aria-current={onSettings ? 'page' : undefined}
 		>
-			<Languages size={isMobile ? 14 : 16} />
-		</button>
-
-		<!-- Sync Button -->
-		<button
-			onclick={handleSync}
-			disabled={syncStore.isSyncing}
-			class="flex items-center justify-center rounded-full bg-white/5 transition-all duration-700 ease-spring hover:bg-white/15 active:scale-90 disabled:opacity-50 text-text-secondary {isMobile
-				? 'h-8 w-8'
-				: 'group h-9 w-9'}"
-			title="Sync"
-			aria-label="Sync list with MyAnimeList"
-		>
-			<RefreshCw
+			<Settings
 				size={isMobile ? 14 : 16}
 				class="transition-transform duration-700 ease-spring {isMobile
 					? ''
-					: 'group-hover:scale-110'} {syncStore.isSyncing ? 'animate-spin' : ''}"
+					: 'group-hover:rotate-45'}"
 			/>
-		</button>
+		</a>
 
-		<!-- Profile / Logout / Login -->
-		{#if authStore.isAuthenticated}
-			<div
-				class="flex items-center {isMobile
-					? 'gap-1.5 ml-1 pr-2'
-					: 'gap-2 pl-1 pr-3'} rounded-full border border-white/5 bg-surface-2/50 py-1 pl-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-			>
-				<a
-					href="/stats"
-					class="flex items-center transition-transform hover:scale-105 active:scale-95"
-					title="View Profile Stats"
-					aria-label="View Profile Stats"
-				>
-					{#if authStore.user?.picture}
-						<img
-							src={authStore.user.picture}
-							alt={authStore.user.name}
-							class="{isMobile ? 'h-6 w-6' : 'h-7 w-7'} rounded-full object-cover"
-						/>
-					{:else}
-						<div
-							class="flex {isMobile
-								? 'h-6 w-6'
-								: 'h-7 w-7'} items-center justify-center rounded-full bg-surface-3"
-						>
-							<User size={isMobile ? 12 : 14} class="text-text-muted" />
-						</div>
-					{/if}
-				</a>
-				<button
-					onclick={handleLogout}
-					class="text-text-muted transition-colors hover:text-error {isMobile ? '' : 'ml-1'}"
-					title="Logout"
-					aria-label="Logout"
-				>
-					<LogOut size={isMobile ? 14 : 16} />
-				</button>
-			</div>
-		{:else}
+		{#if !authStore.isAuthenticated}
 			<button
 				onclick={() => authStore.login()}
-				class="ml-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95"
+				class="ml-1 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95"
 			>
 				Login
 			</button>

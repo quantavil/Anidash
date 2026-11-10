@@ -10,7 +10,11 @@
 	import { ChevronLeft, ChevronRight, Dices } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
-	import AnimeCardSkeleton from '#lib/ui/skeletons/AnimeCardSkeleton.svelte';
+	import SearchResultRow from '#lib/ui/SearchResultRow.svelte';
+	import ResultsLayout from '#lib/ui/ResultsLayout.svelte';
+	import ResultsBar from '#lib/ui/ResultsBar.svelte';
+	import ResultsSkeleton from '#lib/ui/skeletons/ResultsSkeleton.svelte';
+	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
 	import FilterPanel from '#lib/ui/FilterPanel.svelte';
 	import SortMenu from '#lib/ui/SortMenu.svelte';
@@ -96,6 +100,7 @@
 	});
 
 	const displayedAnime = $derived(filteredAnime.slice(0, sliceLimit));
+	const view = $derived(settingsStore.views.seasonal);
 
 	function randomPick() {
 		const pick = pickRandom(filteredAnime);
@@ -251,17 +256,25 @@
 	</div>
 
 	<!-- Results -->
-	<div class="mt-6">
+	<div class="mt-5">
+		<ResultsBar section="seasonal">
+			{filteredAnime.length}
+			{filteredAnime.length === 1 ? 'title' : 'titles'}{#if filteredAnime.length < anime.length}
+				&nbsp;· filtered from {anime.length}{/if}
+		</ResultsBar>
+
 		{#if loading}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-				<AnimeCardSkeleton count={10} />
-			</div>
+			<ResultsSkeleton {view} />
 		{:else if filteredAnime.length > 0}
-			<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			<ResultsLayout {view}>
 				{#each displayedAnime as anime, i (anime.malId)}
-					<SearchResultCard {anime} index={i} />
+					{#if view === 'list'}
+						<SearchResultRow {anime} index={i} />
+					{:else}
+						<SearchResultCard {anime} index={i} />
+					{/if}
 				{/each}
-			</div>
+			</ResultsLayout>
 
 			{#if filteredAnime.length > sliceLimit}
 				<div class="mt-8 flex justify-center">
@@ -272,13 +285,6 @@
 						Load More
 					</button>
 				</div>
-			{/if}
-
-			{#if filteredAnime.length < anime.length}
-				<p class="mt-4 text-center text-xs text-text-muted">
-					Showing {filteredAnime.length} of {anime.length} ({capitalize(seasonKey)}
-					{seasonYear})
-				</p>
 			{/if}
 		{:else}
 			<div

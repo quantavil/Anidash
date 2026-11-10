@@ -47,20 +47,14 @@
 	let showAllGenres = $state(false);
 
 	const count = $derived(activeFilterCount(filters));
-	// Which genres show is decided by popularity; they are then laid out shortest-first so
-	// the wrapped rows pack tightly instead of leaving gaps.
+	// `options.genres` is already sorted by count, so the most common genres come first.
 	const visibleGenres = $derived(
-		(showAllGenres
+		showAllGenres
 			? options.genres
 			: options.genres.filter(
 					(g, i) =>
 						i < GENRE_PREVIEW || filters.genres.includes(g.name) || filters.exclude.includes(g.name)
 				)
-		).toSorted(
-			(a, b) =>
-				a.name.length + String(a.count).length - (b.name.length + String(b.count).length) ||
-				a.name.localeCompare(b.name)
-		)
 	);
 
 	function set(patch: Partial<AnimeFilters>) {

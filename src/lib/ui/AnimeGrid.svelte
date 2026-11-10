@@ -1,17 +1,22 @@
 <script lang="ts">
 	import type { UserListRecord } from '#lib/cache/db.js';
 	import { untrack } from 'svelte';
+	import type { ViewMode } from '#lib/stores/settings.svelte.js';
 	import AnimeCard from './AnimeCard.svelte';
-	import AnimeCardSkeleton from './skeletons/AnimeCardSkeleton.svelte';
+	import AnimeRow from './AnimeRow.svelte';
+	import ResultsLayout from './ResultsLayout.svelte';
+	import ResultsSkeleton from './skeletons/ResultsSkeleton.svelte';
 
 	let {
 		entries = [],
 		loading = false,
+		view = 'grid',
 		resetKey,
 		empty = { title: 'No anime found', hint: 'Try a different filter or add anime from Browse' }
 	}: {
 		entries: UserListRecord[];
 		loading?: boolean;
+		view?: ViewMode;
 		resetKey?: string;
 		/** Copy (and optional call-to-action) shown when there is nothing to list. */
 		empty?: { title: string; hint: string; href?: string; cta?: string };
@@ -60,9 +65,7 @@
 </script>
 
 {#if loading}
-	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-		<AnimeCardSkeleton count={12} />
-	</div>
+	<ResultsSkeleton {view} count={12} />
 {:else if entries.length === 0}
 	<div
 		class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center"
@@ -80,11 +83,15 @@
 		{/if}
 	</div>
 {:else}
-	<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+	<ResultsLayout {view}>
 		{#each visibleEntries as entry, i (entry.malId)}
-			<AnimeCard {entry} index={i} />
+			{#if view === 'list'}
+				<AnimeRow {entry} index={i} />
+			{:else}
+				<AnimeCard {entry} index={i} />
+			{/if}
 		{/each}
-	</div>
+	</ResultsLayout>
 
 	{#if limit < entries.length}
 		<!-- Infinite scroll loader anchor -->

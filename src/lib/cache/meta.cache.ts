@@ -1,5 +1,5 @@
 // ─── Metadata cache (IndexedDB) ───
-// Stores: lastSync timestamp, browse/seasonal grids, AniList detail cache.
+// Stores: lastSync timestamp, seasonal grids, AniList detail cache.
 
 import { getDB, type MetaRecord } from './db';
 import { AnilistMediaSchema, type AnilistMedia } from '#lib/api/schemas/anilist.schema.js';
@@ -31,21 +31,6 @@ export async function getLastSync(): Promise<number | null> {
 export async function setLastSync(timestamp: number): Promise<void> {
 	const db = await getDB();
 	await db.put('meta', { key: KEY_LAST_SYNC, value: timestamp, updatedAt: Date.now() });
-}
-
-// ─── Browse Popular (stale-while-revalidate) ───
-
-/** Returns the cached popular grid, or null when absent/invalid. */
-export async function getPopularCache(
-	key: string
-): Promise<{ value: DisplayAnime[]; updatedAt: number } | null> {
-	const record = await getMetaRecord(key);
-	if (!record || !Array.isArray(record.value)) return null;
-	return { value: record.value as DisplayAnime[], updatedAt: record.updatedAt };
-}
-
-export async function setPopularCache(key: string, animeList: DisplayAnime[]): Promise<void> {
-	await putMetaRecord(key, animeList);
 }
 
 // ─── Seasonal Cache ───

@@ -85,7 +85,7 @@
 {#snippet search()}
 	<SearchInput
 		value={currentQuery}
-		placeholder="Search your list…"
+		placeholder="Search your list… (3+ letters)"
 		oninput={handleSearch}
 		onclear={clearSearch}
 	/>

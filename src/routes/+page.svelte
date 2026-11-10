@@ -6,7 +6,8 @@
 	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import { sortEntries, NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
-	import { matchesFuzzy } from '#lib/utils/search.js';
+	import { matchesFuzzy, effectiveQuery } from '#lib/utils/search.js';
+	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { formatListStatus } from '#lib/utils/format.js';
 	import {
 		facetOfRecord,
@@ -24,6 +25,7 @@
 	import TabBar from '#lib/ui/TabBar.svelte';
 	import FilterBar from '#lib/ui/FilterBar.svelte';
 	import AnimeGrid from '#lib/ui/AnimeGrid.svelte';
+	import ResultsBar from '#lib/ui/ResultsBar.svelte';
 	import ListPageSkeleton from '#lib/ui/skeletons/ListPageSkeleton.svelte';
 
 	// ─── URL State ───
@@ -34,7 +36,8 @@
 		const raw = getUrlParam(page.url, 'dir', '');
 		return raw === 'asc' || raw === 'desc' ? raw : (NATURAL_DIR[currentSort] ?? 'desc');
 	});
-	const currentQuery = $derived(getUrlParam(page.url, 'q', ''));
+	// Searching starts at 3 characters; shorter input leaves the list untouched.
+	const currentQuery = $derived(effectiveQuery(getUrlParam(page.url, 'q', '')));
 	const filters = $derived(filtersFromUrl(page.url));
 	const filterCount = $derived(activeFilterCount(filters));
 	const filterKey = $derived(page.url.search);
@@ -146,8 +149,16 @@
 			/>
 		</div>
 
+		<ResultsBar section="list">
+			{filteredEntries.length}
+			{filteredEntries.length === 1 ? 'title' : 'titles'}{currentTab === 'all'
+				? ''
+				: ` in ${formatListStatus(currentTab)}`}
+		</ResultsBar>
+
 		<!-- Grid / List -->
 		<AnimeGrid
+			view={settingsStore.views.list}
 			entries={filteredEntries}
 			resetKey="{currentTab}-{filterKey}"
 			loading={false}

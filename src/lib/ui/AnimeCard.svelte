@@ -88,7 +88,7 @@
 
 			<!-- Type + Season -->
 			<div class="flex items-center justify-between gap-1 text-xs text-text-muted">
-				<div class="flex flex-wrap items-center gap-2">
+				<div class="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
 					{#if entry.mediaType}
 						<span>{formatMediaType(entry.mediaType)}</span>
 					{/if}

@@ -63,7 +63,7 @@
 	}
 
 	const btn =
-		'flex h-10 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 sm:h-11';
+		'flex h-9 items-center justify-center rounded-md border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 sm:h-10';
 </script>
 
 <div class="relative">
@@ -75,7 +75,7 @@
 		aria-expanded={open}
 		aria-label="{label}: {current}"
 		title="{label}: {current}"
-		class="{btn} w-10 gap-1.5 text-sm sm:w-auto sm:px-4"
+		class="{btn} w-9 gap-1.5 text-sm sm:w-auto sm:px-4"
 	>
 		<ArrowUpDown size={14} />
 		<span class="hidden sm:inline">{current}</span>
@@ -109,7 +109,7 @@
 	disabled={dirDisabled}
 	aria-label="Sort direction: {dir === 'asc' ? 'ascending' : 'descending'}"
 	title={dir === 'asc' ? 'Ascending' : 'Descending'}
-	class="{btn} w-10 cursor-pointer disabled:cursor-default disabled:opacity-40 sm:w-11"
+	class="{btn} w-9 cursor-pointer disabled:cursor-default disabled:opacity-40 sm:w-10"
 >
 	{#if dir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
 </button>

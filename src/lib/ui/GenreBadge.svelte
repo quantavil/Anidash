@@ -3,7 +3,7 @@
 </script>
 
 <span
-	class="inline-block rounded-full border border-border bg-surface-1 text-text-secondary
+	class="inline-block max-w-full truncate rounded-md border border-border bg-surface-1 text-text-secondary
     {small ? 'px-1.5 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'}"
 >
 	{name}

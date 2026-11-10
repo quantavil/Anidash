@@ -89,7 +89,7 @@
 			oninput={handleInput}
 			onkeydown={handleKeydown}
 			onblur={handleBlur}
-			class="h-10 w-full rounded-full sm:h-11 border border-white/5 bg-white/5 py-2.5 pl-10 pr-12 text-sm text-text-primary outline-none transition-all duration-500 ease-spring placeholder:text-text-muted focus:bg-white/10 focus:outline-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+			class="h-9 w-full rounded-md sm:h-10 border border-white/5 bg-white/5 py-2.5 pl-10 pr-12 text-sm text-text-primary outline-none transition-all duration-500 ease-spring placeholder:text-text-muted focus:bg-white/10 focus:outline-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
 		/>
 
 		<button
@@ -97,7 +97,7 @@
 			onmousedown={(e) => e.preventDefault()}
 			onclick={handleClear}
 			aria-label={value ? 'Clear search' : 'Close search'}
-			class="absolute right-0.5 top-1/2 flex h-10 w-10 sm:h-11 sm:w-11 -translate-y-1/2 items-center justify-center text-text-muted transition-colors hover:text-text-secondary"
+			class="absolute right-0.5 top-1/2 flex h-9 w-9 sm:h-10 sm:w-10 -translate-y-1/2 items-center justify-center text-text-muted transition-colors hover:text-text-secondary"
 		>
 			<X size={15} />
 		</button>
@@ -108,7 +108,7 @@
 		onclick={focus}
 		aria-label="Search"
 		title={placeholder}
-		class="flex h-10 min-w-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border text-sm transition-colors active:scale-95 sm:h-11 sm:min-w-11 {value
+		class="flex h-9 min-w-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border text-sm transition-colors active:scale-95 sm:h-10 sm:min-w-11 {value
 			? 'border-primary/40 bg-primary/10 px-3 text-primary'
 			: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
 	>

@@ -15,6 +15,16 @@
 
 	const listEntry = $derived(userListStore.getEntry(anime.malId));
 	const inList = $derived(listEntry !== undefined);
+	const metaParts = $derived({
+		type: anime.mediaType ? formatMediaType(anime.mediaType) : '',
+		eps: anime.numEpisodes > 0 ? `${anime.numEpisodes} eps` : '',
+		season: anime.startSeason ?? ''
+	});
+	const meta = $derived(
+		[metaParts.type, metaParts.eps, metaParts.season].filter(Boolean).join(' · ')
+	);
+	// Below 360px the episode count is dropped so type and season stay on one line.
+	const metaShort = $derived([metaParts.type, metaParts.season].filter(Boolean).join(' · '));
 
 	let adding = $state(false);
 
@@ -45,7 +55,7 @@
 </script>
 
 <div
-	class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface-1 transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 feed-card-contain"
+	class="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface-1 transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 feed-card-contain"
 >
 	<a
 		href="/anime/{anime.malId}"
@@ -85,38 +95,31 @@
 	</div>
 
 	<!-- Info -->
-	<div class="flex flex-1 flex-col gap-1.5 p-3">
+	<div class="flex flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
 		<AnimeTitle
 			title={anime.title}
 			titleEnglish={anime.titleEnglish}
 			tag="h3"
 			interactive={false}
-			class="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
+			class="line-clamp-2 text-sm font-medium leading-tight text-text-primary group-hover:text-primary"
 		/>
 
 		<div class="flex items-center justify-between gap-1">
-			<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
-				{#if anime.mediaType}
-					<span class="whitespace-nowrap">{formatMediaType(anime.mediaType)}</span>
-				{/if}
-				{#if anime.numEpisodes > 0}
-					<span class="whitespace-nowrap">· {anime.numEpisodes} eps</span>
-				{/if}
-				{#if anime.startSeason}
-					<span class="whitespace-nowrap">· {anime.startSeason}</span>
-				{/if}
-			</div>
+			<p class="min-w-0 truncate text-[11px] text-text-secondary sm:text-xs" title={meta}>
+				<span class="max-[359px]:hidden">{meta}</span>
+				<span class="min-[360px]:hidden">{metaShort}</span>
+			</p>
 
 			{#if listEntry}
-				<div class="relative z-[2] -mr-3">
+				<div class="relative z-[2] -mr-3 shrink-0">
 					<StatusBadge malId={listEntry.malId} status={listEntry.status} />
 				</div>
 			{/if}
 		</div>
 
-		<!-- Genres (show first 2) -->
+		<!-- Genres (first 2, one line) -->
 		{#if anime.genres.length > 0}
-			<div class="mt-auto flex flex-wrap gap-1 pt-1">
+			<div class="mt-auto flex gap-1 overflow-hidden pt-1">
 				{#each anime.genres.slice(0, 2) as genre, _idx (_idx)}
 					<GenreBadge name={genre} small />
 				{/each}
@@ -129,7 +132,7 @@
 				onclick={handleAdd}
 				disabled={adding}
 				aria-label="Add {anime.title} to Plan to Watch"
-				class="relative z-[2] mt-2 min-h-11 flex items-center justify-center gap-1 rounded-lg border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+				class="relative z-[2] mt-2 min-h-9 flex items-center justify-center gap-1 rounded-md border border-dashed border-primary/40 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
 			>
 				{#if adding}
 					<div

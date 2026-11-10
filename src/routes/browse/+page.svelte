@@ -425,7 +425,7 @@
 					onclick={() =>
 						setParams([{ key: 'chart', value: c.value === DEFAULT_CHART ? '' : c.value }])}
 					aria-pressed={active}
-					class="min-h-11 shrink-0 cursor-pointer rounded-full border px-4 text-sm font-medium transition-colors {active
+					class="min-h-9 shrink-0 cursor-pointer rounded-md border px-3.5 text-sm font-medium transition-colors {active
 						? 'border-primary/50 bg-primary/15 text-primary'
 						: 'border-white/5 bg-white/5 text-text-secondary hover:border-white/15 hover:text-text-primary'}"
 				>
@@ -481,7 +481,7 @@
 					{:else}
 						<button
 							onclick={() => fetchOnline(currentPage + 1, true, currentSearchId)}
-							class="min-h-11 cursor-pointer rounded-full border border-white/10 bg-white/5 px-6 text-sm font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
+							class="min-h-10 cursor-pointer rounded-md border border-white/10 bg-white/5 px-6 text-sm font-semibold text-text-primary transition-all hover:bg-white/10 active:scale-95"
 						>
 							Load {PAGE_SIZE} more
 						</button>

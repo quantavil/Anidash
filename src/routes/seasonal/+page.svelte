@@ -175,7 +175,7 @@
 		disabled={filteredAnime.length === 0}
 		title="Open a random title from the current view"
 		aria-label="Random pick from the {filteredAnime.length} shown"
-		class="flex h-10 w-10 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-white/5 bg-white/5 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40 sm:h-11 sm:w-auto sm:px-4"
+		class="flex h-9 w-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-white/5 bg-white/5 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40 sm:h-10 sm:w-auto sm:px-4"
 	>
 		<Dices size={15} /><span class="hidden sm:inline">Random</span>
 	</button>

@@ -81,15 +81,14 @@
 	}
 
 	const chip = (active: boolean) =>
-		`min-h-9 shrink-0 cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+		`min-h-7 shrink-0 cursor-pointer rounded-md border px-2 py-0.5 text-xs font-medium transition-colors ${
 			active
 				? 'border-primary/50 bg-primary/15 text-primary'
 				: 'border-white/5 bg-white/5 text-text-secondary hover:border-white/15 hover:text-text-primary'
 		}`;
 	const selectCls =
-		'min-h-9 rounded-lg border border-white/5 bg-white/5 px-2.5 text-xs text-text-primary outline-none focus:bg-white/10';
-	const labelCls =
-		'mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-text-muted';
+		'min-h-8 w-full rounded-md border border-white/5 bg-white/5 px-2.5 text-xs text-text-primary outline-none focus:bg-white/10';
+	const labelCls = 'mb-1 block text-[10px] font-semibold uppercase tracking-wider text-text-muted';
 
 	/** Active filters as removable summary chips. */
 	const summary = $derived.by(() => {
@@ -137,7 +136,7 @@
 			onclick={() => (open = !open)}
 			aria-expanded={open}
 			aria-controls="filter-panel"
-			class="flex h-10 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors sm:h-11 sm:gap-2 sm:px-4 {open ||
+			class="flex h-9 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-sm transition-colors sm:h-10 sm:gap-2 sm:px-4 {open ||
 			count > 0
 				? 'border-primary/40 bg-primary/10 text-primary'
 				: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
@@ -145,9 +144,7 @@
 			<SlidersHorizontal size={14} />
 			Filters
 			{#if count > 0}
-				<span class="rounded-full bg-primary px-1.5 text-[11px] font-bold text-[#17122e]"
-					>{count}</span
-				>
+				<span class="rounded bg-primary px-1.5 text-[11px] font-bold text-[#17122e]">{count}</span>
 			{/if}
 			<ChevronDown size={14} class="transition-transform {open ? 'rotate-180' : ''}" />
 		</button>
@@ -163,7 +160,7 @@
 					type="button"
 					onclick={() => set(s.clear)}
 					aria-label="Remove filter {s.label}"
-					class="flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-primary/30 bg-primary/10 pl-3 pr-2 text-xs text-primary hover:bg-primary/20"
+					class="flex min-h-8 cursor-pointer items-center gap-1 rounded-md border border-primary/30 bg-primary/10 pl-2.5 pr-1.5 text-xs text-primary hover:bg-primary/20"
 				>
 					{s.label}<X size={12} />
 				</button>
@@ -172,7 +169,7 @@
 			<button
 				type="button"
 				onclick={() => onchange({ ...EMPTY_FILTERS })}
-				class="min-h-9 cursor-pointer px-2 text-xs text-text-muted underline-offset-2 hover:text-text-primary hover:underline"
+				class="min-h-8 cursor-pointer px-2 text-xs text-text-muted underline-offset-2 hover:text-text-primary hover:underline"
 			>
 				Clear all
 			</button>
@@ -182,11 +179,11 @@
 	{#if open}
 		<div
 			id="filter-panel"
-			class="grid gap-5 rounded-xl border border-border bg-surface-1 p-4 sm:grid-cols-2"
+			class="grid grid-cols-2 gap-x-3 gap-y-3.5 rounded-lg border border-border bg-surface-1 p-3 sm:grid-cols-4 sm:p-4"
 		>
-			<div>
+			<div class="col-span-2">
 				<span class={labelCls}>Format</span>
-				<div class="flex flex-wrap gap-1.5">
+				<div class="flex flex-wrap gap-1">
 					{#each TYPES as t (t)}
 						<button
 							type="button"
@@ -198,9 +195,9 @@
 				</div>
 			</div>
 
-			<div>
+			<div class="col-span-2">
 				<span class={labelCls}>Airing</span>
-				<div class="flex flex-wrap gap-1.5">
+				<div class="flex flex-wrap gap-1">
 					{#each AIRING as a (a.value)}
 						<button
 							type="button"
@@ -212,9 +209,13 @@
 				</div>
 			</div>
 
-			<div class="sm:col-span-2">
-				<div class="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-					<span class="{labelCls} !mb-0">Genres · click to include, again to exclude</span>
+			<div class="col-span-2 sm:col-span-4">
+				<div class="mb-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+					<span class="{labelCls} !mb-0"
+						>Genres <span class="font-normal normal-case tracking-normal opacity-70"
+							>· tap to include, twice to exclude</span
+						></span
+					>
 					{#if filters.genres.length > 1}
 						<div class="flex gap-1" role="group" aria-label="Genre match mode">
 							<button
@@ -232,7 +233,7 @@
 						</div>
 					{/if}
 				</div>
-				<div class="flex flex-wrap gap-1.5">
+				<div class="flex max-h-44 flex-wrap gap-1 overflow-y-auto overscroll-contain sm:max-h-56">
 					{#each visibleGenres as g (g.name)}
 						{@const inc = filters.genres.includes(g.name)}
 						{@const exc = filters.exclude.includes(g.name)}
@@ -240,7 +241,7 @@
 							type="button"
 							onclick={() => cycleGenre(g.name)}
 							aria-pressed={inc || exc ? 'true' : 'false'}
-							class="min-h-9 cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors {inc
+							class="min-h-7 cursor-pointer rounded-md border px-2.5 py-0.5 text-xs font-medium transition-colors {inc
 								? 'border-primary/50 bg-primary/15 text-primary'
 								: exc
 									? 'border-error/40 bg-error/10 text-error line-through'
@@ -252,7 +253,7 @@
 					{#if options.genres.length > visibleGenres.length || showAllGenres}
 						<button
 							type="button"
-							class="min-h-9 cursor-pointer px-2 text-xs text-primary hover:underline"
+							class="min-h-7 cursor-pointer px-2 text-xs text-primary hover:underline"
 							onclick={() => (showAllGenres = !showAllGenres)}
 						>
 							{showAllGenres ? 'Fewer' : `All ${options.genres.length}`}
@@ -261,11 +262,11 @@
 				</div>
 			</div>
 
-			<div class="grid grid-cols-2 gap-3">
+			<div class="col-span-1">
 				<label>
 					<span class={labelCls}>Min rating</span>
 					<select
-						class="{selectCls} w-full"
+						class={selectCls}
 						value={filters.minScore}
 						onchange={(e) => set({ minScore: Number((e.target as HTMLSelectElement).value) })}
 					>
@@ -273,10 +274,12 @@
 						{#each SCORES as s (s)}<option value={s}>{s}+</option>{/each}
 					</select>
 				</label>
+			</div>
+			<div class="col-span-1">
 				<label>
 					<span class={labelCls}>Studio</span>
 					<select
-						class="{selectCls} w-full"
+						class={selectCls}
 						value={filters.studio}
 						onchange={(e) => set({ studio: (e.target as HTMLSelectElement).value })}
 					>
@@ -288,7 +291,7 @@
 				</label>
 			</div>
 
-			<div>
+			<div class="col-span-2">
 				<span class={labelCls}>Start year</span>
 				<div class="flex items-center gap-2">
 					<input
@@ -298,7 +301,7 @@
 						placeholder={options.years ? String(options.years.min) : 'From'}
 						value={filters.yearFrom || ''}
 						onchange={(e) => year('yearFrom', e)}
-						class="{selectCls} w-24"
+						class={selectCls}
 					/>
 					<span class="text-text-muted">–</span>
 					<input
@@ -308,14 +311,14 @@
 						placeholder={options.years ? String(options.years.max) : 'To'}
 						value={filters.yearTo || ''}
 						onchange={(e) => year('yearTo', e)}
-						class="{selectCls} w-24"
+						class={selectCls}
 					/>
 				</div>
 			</div>
 
-			<div class="sm:col-span-2">
+			<div class="col-span-2">
 				<span class={labelCls}>Length</span>
-				<div class="flex flex-wrap gap-1.5">
+				<div class="flex flex-wrap gap-1">
 					{#each LENGTHS as l (l.label)}
 						<button
 							type="button"
@@ -328,7 +331,7 @@
 			</div>
 
 			{#if mode === 'list'}
-				<div class="flex flex-wrap items-end gap-3 sm:col-span-2">
+				<div class="col-span-2 flex flex-wrap items-end gap-2">
 					<label>
 						<span class={labelCls}>My score</span>
 						<select
@@ -349,7 +352,7 @@
 					>
 				</div>
 			{:else if mode === 'browse'}
-				<div class="sm:col-span-2">
+				<div class="col-span-2 flex items-end">
 					<button
 						type="button"
 						class={chip(filters.hideListed)}

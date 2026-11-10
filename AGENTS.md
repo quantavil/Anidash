@@ -30,6 +30,7 @@ The original AniDash interface is restored from `c8baa61`: black/violet surfaces
 
 ## File Map
 
+- `src/lib/ui/SortMenu.svelte` — shared sort dropdown + direction button (icon-only on mobile); My List, Browse and Seasonal toolbars are one nowrap row (`FilterPanel` `leading`/`trailing` snippets, collapsible `SearchInput`); number-input spinners are hidden globally in `app.css`.
 - `src/lib/utils/filters.ts` — `AnimeFilters`, `Facet` (normalizes `DisplayAnime`/`UserListRecord`), `matchesFilters`, facet options, URL round-trip, `pickRandom`. `src/lib/ui/FilterPanel.svelte` — shared panel (modes `list`/`browse`/`season`). `src/lib/utils/sort.ts` — sort keys with natural direction; missing values always sink last.
 
 - `src/lib/api/anilist.ts` — `gqlFetch` (429→`rate_limit`, 404+null→`ok(null)`), `MEDIA_DETAIL_QUERY` (only fields the page renders), `fetchAnilistMediaByMalId` (network), `loadAnilistMedia` (cache + in-flight de-dupe), `_detailQuery` export for tests.

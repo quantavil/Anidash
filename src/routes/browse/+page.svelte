@@ -10,9 +10,10 @@
 		mergeLocalWithOnline,
 		type DisplayAnime
 	} from '#lib/utils/types.js';
-	import { LoaderCircle, SearchX, ArrowDown, ArrowUp } from 'lucide-svelte';
+	import { LoaderCircle, SearchX } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchInput from '#lib/ui/SearchInput.svelte';
+	import SortMenu from '#lib/ui/SortMenu.svelte';
 	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
 	import FilterPanel from '#lib/ui/FilterPanel.svelte';
 	import AnimeCardSkeleton from '#lib/ui/skeletons/AnimeCardSkeleton.svelte';
@@ -390,30 +391,19 @@
 {/snippet}
 
 {#snippet sortTools()}
-	<select
-		id="browse-sort"
-		aria-label="Sort results"
+	<SortMenu
+		options={SORTS}
 		value={sortKey ?? ''}
-		onchange={(e) =>
+		dir={sortDir}
+		label="Sort results"
+		dirDisabled={!sortKey}
+		onselect={(v) =>
 			setParams([
-				{ key: 'sort', value: (e.target as HTMLSelectElement).value },
+				{ key: 'sort', value: v },
 				{ key: 'dir', value: '' }
 			])}
-		class="min-h-11 cursor-pointer appearance-none rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary outline-none transition-colors focus:bg-white/10"
-	>
-		{#each SORTS as s (s.value)}
-			<option value={s.value} class="bg-surface-2">{s.label}</option>
-		{/each}
-	</select>
-	<button
-		type="button"
-		onclick={toggleDir}
-		disabled={!sortKey}
-		aria-label="Sort direction: {sortDir === 'asc' ? 'ascending' : 'descending'}"
-		class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary disabled:cursor-default disabled:opacity-40"
-	>
-		{#if sortDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
-	</button>
+		ondir={toggleDir}
+	/>
 {/snippet}
 
 <svelte:head>

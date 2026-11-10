@@ -130,14 +130,14 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<div class="flex flex-wrap items-center gap-2">
+	<div class="relative flex items-center gap-2">
 		{@render leading?.()}
 		<button
 			type="button"
 			onclick={() => (open = !open)}
 			aria-expanded={open}
 			aria-controls="filter-panel"
-			class="flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm transition-colors {open ||
+			class="flex h-10 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors sm:h-11 sm:gap-2 sm:px-4 {open ||
 			count > 0
 				? 'border-primary/40 bg-primary/10 text-primary'
 				: 'border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary'}"
@@ -151,7 +151,9 @@
 			{/if}
 			<ChevronDown size={14} class="transition-transform {open ? 'rotate-180' : ''}" />
 		</button>
-		{@render trailing?.()}
+		{#if trailing}
+			<div class="ml-auto flex items-center gap-1.5 sm:gap-2">{@render trailing()}</div>
+		{/if}
 	</div>
 
 	{#if count > 0}

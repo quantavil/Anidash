@@ -7,12 +7,13 @@
 	import { mapMalNodeToDisplay, type DisplayAnime } from '#lib/utils/types.js';
 	import { getCurrentSeason, prevSeason, nextSeason, type Season } from '#lib/utils/season.js';
 	import { capitalize } from '#lib/utils/format.js';
-	import { ChevronLeft, ChevronRight, ArrowDown, ArrowUp, Dices } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, Dices } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import SearchResultCard from '#lib/ui/SearchResultCard.svelte';
 	import AnimeCardSkeleton from '#lib/ui/skeletons/AnimeCardSkeleton.svelte';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
 	import FilterPanel from '#lib/ui/FilterPanel.svelte';
+	import SortMenu from '#lib/ui/SortMenu.svelte';
 	import { userListStore } from '#lib/stores/userlist.svelte.js';
 	import {
 		facetOfDisplay,
@@ -167,6 +168,37 @@
 	});
 </script>
 
+{#snippet trailing()}
+	<button
+		type="button"
+		onclick={randomPick}
+		disabled={filteredAnime.length === 0}
+		title="Open a random title from the current view"
+		aria-label="Random pick from the {filteredAnime.length} shown"
+		class="flex h-10 w-10 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-white/5 bg-white/5 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40 sm:h-11 sm:w-auto sm:px-4"
+	>
+		<Dices size={15} /><span class="hidden sm:inline">Random</span>
+	</button>
+	<SortMenu
+		options={SORTS}
+		value={sortKey ?? ''}
+		dir={sortDir}
+		label="Sort season"
+		dirDisabled={!sortKey}
+		onselect={(v) =>
+			setParams([
+				{ key: 'sort', value: v },
+				{ key: 'dir', value: '' }
+			])}
+		ondir={() => {
+			const flipped = sortDir === 'asc' ? 'desc' : 'asc';
+			setParams([
+				{ key: 'dir', value: sortKey && flipped === NATURAL_DIR[sortKey] ? '' : flipped }
+			]);
+		}}
+	/>
+{/snippet}
+
 <svelte:head>
 	<title>Seasonal | AniDash</title>
 </svelte:head>
@@ -213,48 +245,9 @@
 		</div>
 	</div>
 
-	<!-- Sort / random -->
-	<div class="mt-5 flex flex-wrap items-center gap-2">
-		<select
-			aria-label="Sort season"
-			value={sortKey ?? ''}
-			onchange={(e) =>
-				setParams([
-					{ key: 'sort', value: (e.target as HTMLSelectElement).value },
-					{ key: 'dir', value: '' }
-				])}
-			class="min-h-11 cursor-pointer appearance-none rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary outline-none focus:bg-white/10"
-		>
-			{#each SORTS as s (s.value)}
-				<option value={s.value} class="bg-surface-2">{s.label}</option>
-			{/each}
-		</select>
-		<button
-			type="button"
-			disabled={!sortKey}
-			onclick={() => {
-				const flipped = sortDir === 'asc' ? 'desc' : 'asc';
-				setParams([
-					{ key: 'dir', value: sortKey && flipped === NATURAL_DIR[sortKey] ? '' : flipped }
-				]);
-			}}
-			aria-label="Sort direction: {sortDir === 'asc' ? 'ascending' : 'descending'}"
-			class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary hover:bg-white/10 hover:text-text-primary disabled:cursor-default disabled:opacity-40"
-		>
-			{#if sortDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
-		</button>
-		<button
-			type="button"
-			onclick={randomPick}
-			disabled={filteredAnime.length === 0}
-			class="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40"
-		>
-			<Dices size={14} /> Random pick
-		</button>
-	</div>
-
-	<div class="mt-3">
-		<FilterPanel {filters} options={facetOptions} mode="season" onchange={setFilters} />
+	<!-- Filters · sort · random, one inline toolbar -->
+	<div class="mt-5">
+		<FilterPanel {filters} options={facetOptions} mode="season" onchange={setFilters} {trailing} />
 	</div>
 
 	<!-- Results -->

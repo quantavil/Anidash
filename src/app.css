@@ -209,3 +209,14 @@ a,
 	border-color: color-mix(in srgb, var(--site-color) 30%, transparent);
 	box-shadow: 0 0 12px color-mix(in srgb, var(--site-color) 15%, transparent);
 }
+
+/* Native number spinners are tiny, low-contrast and unusable on touch; typing is the input. */
+input[type='number'] {
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}

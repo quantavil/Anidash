@@ -18,6 +18,8 @@ export interface AnimeFilters {
 	studio: string;
 	/** Minimum MAL mean score; 0 = off. */
 	minScore: number;
+	/** Maximum MAL mean score; 0 = off. */
+	maxScore: number;
 	/** Start year range; 0 = open. */
 	yearFrom: number;
 	yearTo: number;
@@ -40,6 +42,7 @@ export const EMPTY_FILTERS: AnimeFilters = Object.freeze({
 	airing: [],
 	studio: '',
 	minScore: 0,
+	maxScore: 0,
 	yearFrom: 0,
 	yearTo: 0,
 	epsMin: 0,
@@ -121,6 +124,7 @@ export function matchesFilters(
 	if (f.airing.length > 0 && !f.airing.includes(x.animeStatus)) return false;
 	if (f.studio && !x.studios.includes(f.studio)) return false;
 	if (f.minScore > 0 && (x.mean ?? 0) < f.minScore) return false;
+	if (f.maxScore > 0 && (x.mean === null || x.mean > f.maxScore)) return false;
 
 	if (f.yearFrom > 0 && (x.year === null || x.year < f.yearFrom)) return false;
 	if (f.yearTo > 0 && (x.year === null || x.year > f.yearTo)) return false;
@@ -143,7 +147,7 @@ export function activeFilterCount(f: AnimeFilters): number {
 		f.exclude.length > 0,
 		f.airing.length > 0,
 		f.studio !== '',
-		f.minScore > 0,
+		f.minScore > 0 || f.maxScore > 0,
 		f.yearFrom > 0 || f.yearTo > 0,
 		f.epsMin > 0 || f.epsMax > 0,
 		f.myMin > 0,
@@ -212,6 +216,7 @@ const FILTER_PARAM_KEYS = [
 	'air',
 	'studio',
 	'min',
+	'max',
 	'from',
 	'to',
 	'emin',
@@ -231,6 +236,7 @@ export function filtersFromUrl(url: UrlLike): AnimeFilters {
 		airing: list(p.get('air')),
 		studio: p.get('studio') ?? '',
 		minScore: num(p.get('min'), 10),
+		maxScore: num(p.get('max'), 10),
 		yearFrom: num(p.get('from'), 2100),
 		yearTo: num(p.get('to'), 2100),
 		epsMin: num(p.get('emin'), 10000),
@@ -252,6 +258,7 @@ export function filtersToPairs(f: AnimeFilters): Array<{ key: string; value: str
 		{ key: 'air', value: f.airing.join(',') },
 		{ key: 'studio', value: f.studio },
 		{ key: 'min', value: n(f.minScore) },
+		{ key: 'max', value: n(f.maxScore) },
 		{ key: 'from', value: n(f.yearFrom) },
 		{ key: 'to', value: n(f.yearTo) },
 		{ key: 'emin', value: n(f.epsMin) },
@@ -267,3 +274,26 @@ export const CLEAR_FILTER_PAIRS = FILTER_PARAM_KEYS.map((key) => ({ key, value: 
 export function pickRandom<T>(items: readonly T[]): T | null {
 	return items.length > 0 ? items[Math.floor(Math.random() * items.length)] : null;
 }
+
+/** MAL's anime genre list, offered in Browse before any results are loaded. */
+export const MAL_GENRES = [
+	'Action',
+	'Adventure',
+	'Avant Garde',
+	'Award Winning',
+	'Boys Love',
+	'Comedy',
+	'Drama',
+	'Ecchi',
+	'Fantasy',
+	'Girls Love',
+	'Gourmet',
+	'Horror',
+	'Mystery',
+	'Romance',
+	'Sci-Fi',
+	'Slice of Life',
+	'Sports',
+	'Supernatural',
+	'Suspense'
+] as const;

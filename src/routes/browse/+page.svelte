@@ -18,7 +18,6 @@
 	import SearchResultRow from '#lib/ui/SearchResultRow.svelte';
 	import ResultsLayout from '#lib/ui/ResultsLayout.svelte';
 	import DubChip from '#lib/ui/DubChip.svelte';
-	import ViewToggle from '#lib/ui/ViewToggle.svelte';
 	import ResultsSkeleton from '#lib/ui/skeletons/ResultsSkeleton.svelte';
 	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import FilterPanel from '#lib/ui/FilterPanel.svelte';
@@ -379,7 +378,6 @@
 {/snippet}
 
 {#snippet sortTools()}
-	<ViewToggle section="browse" />
 	<SortMenu
 		options={SORTS}
 		value={sortKey ?? ''}

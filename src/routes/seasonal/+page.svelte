@@ -14,7 +14,6 @@
 	import ResultsLayout from '#lib/ui/ResultsLayout.svelte';
 	import DubChip from '#lib/ui/DubChip.svelte';
 	import RandomButton from '#lib/ui/RandomButton.svelte';
-	import ViewToggle from '#lib/ui/ViewToggle.svelte';
 	import ResultsSkeleton from '#lib/ui/skeletons/ResultsSkeleton.svelte';
 	import { settingsStore } from '#lib/stores/settings.svelte.js';
 	import { dubStore } from '#lib/stores/dub.svelte.js';
@@ -177,7 +176,6 @@
 
 {#snippet trailing()}
 	<RandomButton count={filteredAnime.length} onclick={randomPick} />
-	<ViewToggle section="seasonal" />
 	<SortMenu
 		options={SORTS}
 		value={sortKey ?? ''}

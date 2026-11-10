@@ -3,11 +3,13 @@
 	import { SlidersHorizontal, X, ChevronDown } from 'lucide-svelte';
 	import {
 		EMPTY_FILTERS,
+		MAL_GENRES,
 		activeFilterCount,
 		type AnimeFilters,
 		type FacetOptions
 	} from '#lib/utils/filters.js';
 	import { formatMediaType } from '#lib/utils/format.js';
+	import RangeSlider from './RangeSlider.svelte';
 
 	let {
 		filters,
@@ -40,18 +42,25 @@
 		{ label: '14–26', min: 14, max: 26 },
 		{ label: '27+', min: 27, max: 0 }
 	];
-	const SCORES = [6, 7, 7.5, 8, 8.5, 9];
-	const GENRE_PREVIEW = 18;
+	const YEAR_MIN = 1960;
+	const YEAR_MAX = new Date().getFullYear() + 1;
+	const GENRE_PREVIEW = 24;
 
 	let open = $state(false);
 	let showAllGenres = $state(false);
 
 	const count = $derived(activeFilterCount(filters));
 	// `options.genres` is already sorted by count, so the most common genres come first.
+	// Browse loads nothing until a search runs, so offer MAL's own genre list meanwhile.
+	const genreOptions = $derived(
+		mode === 'browse' && options.genres.length === 0
+			? MAL_GENRES.map((name) => ({ name, count: 0 }))
+			: options.genres
+	);
 	const visibleGenres = $derived(
 		showAllGenres
-			? options.genres
-			: options.genres.filter(
+			? genreOptions
+			: genreOptions.filter(
 					(g, i) =>
 						i < GENRE_PREVIEW || filters.genres.includes(g.name) || filters.exclude.includes(g.name)
 				)
@@ -76,11 +85,6 @@
 			set({ genres: [...filters.genres, name] });
 		}
 	}
-	function year(key: 'yearFrom' | 'yearTo', e: Event) {
-		const n = Math.trunc(Number((e.target as HTMLInputElement).value));
-		set({ [key]: Number.isFinite(n) && n > 0 ? n : 0 });
-	}
-
 	const chip = (active: boolean) =>
 		`min-h-7 shrink-0 cursor-pointer rounded-md border px-2 py-0.5 text-xs font-medium transition-colors ${
 			active
@@ -109,10 +113,14 @@
 				clear: { airing: filters.airing.filter((v) => v !== a) }
 			});
 		if (filters.studio) out.push({ label: filters.studio, clear: { studio: '' } });
-		if (filters.minScore > 0) out.push({ label: `★ ${filters.minScore}+`, clear: { minScore: 0 } });
+		if (filters.minScore > 0 || filters.maxScore > 0)
+			out.push({
+				label: `★ ${filters.minScore || 0}–${filters.maxScore || 10}`,
+				clear: { minScore: 0, maxScore: 0 }
+			});
 		if (filters.yearFrom || filters.yearTo)
 			out.push({
-				label: `${filters.yearFrom || '…'}–${filters.yearTo || '…'}`,
+				label: `${filters.yearFrom || YEAR_MIN}–${filters.yearTo || YEAR_MAX}`,
 				clear: { yearFrom: 0, yearTo: 0 }
 			});
 		if (filters.epsMin || filters.epsMax)
@@ -248,35 +256,46 @@
 									? 'border-error/40 bg-error/10 text-error line-through'
 									: 'border-white/5 bg-white/5 text-text-secondary hover:border-white/15 hover:text-text-primary'}"
 						>
-							{g.name}<span class="ml-1 opacity-50">{g.count}</span>
+							{g.name}{#if g.count > 0}<span class="ml-1 opacity-50">{g.count}</span>{/if}
 						</button>
 					{/each}
-					{#if options.genres.length > visibleGenres.length || showAllGenres}
+					{#if genreOptions.length > visibleGenres.length || showAllGenres}
 						<button
 							type="button"
 							class="min-h-7 cursor-pointer px-2 text-xs text-primary hover:underline"
 							onclick={() => (showAllGenres = !showAllGenres)}
 						>
-							{showAllGenres ? 'Fewer' : `All ${options.genres.length}`}
+							{showAllGenres ? 'Fewer' : `All ${genreOptions.length}`}
 						</button>
 					{/if}
 				</div>
 			</div>
 
-			<div class="col-span-1">
-				<label>
-					<span class={labelCls}>Min rating</span>
-					<select
-						class={selectCls}
-						value={filters.minScore}
-						onchange={(e) => set({ minScore: Number((e.target as HTMLSelectElement).value) })}
-					>
-						<option value={0}>Any</option>
-						{#each SCORES as s (s)}<option value={s}>{s}+</option>{/each}
-					</select>
-				</label>
+			<div class="col-span-2">
+				<RangeSlider
+					label="Rating"
+					min={0}
+					max={10}
+					step={0.5}
+					lo={filters.minScore}
+					hi={filters.maxScore || 10}
+					format={(n) => n.toFixed(1)}
+					oncommit={(lo, hi) => set({ minScore: lo, maxScore: hi >= 10 ? 0 : hi })}
+				/>
 			</div>
-			<div class="col-span-1">
+			<div class="col-span-2">
+				<RangeSlider
+					label="Start year"
+					min={YEAR_MIN}
+					max={YEAR_MAX}
+					lo={filters.yearFrom || YEAR_MIN}
+					hi={filters.yearTo || YEAR_MAX}
+					oncommit={(lo, hi) =>
+						set({ yearFrom: lo <= YEAR_MIN ? 0 : lo, yearTo: hi >= YEAR_MAX ? 0 : hi })}
+				/>
+			</div>
+
+			<div class="col-span-2">
 				<label>
 					<span class={labelCls}>Studio</span>
 					<select
@@ -290,31 +309,6 @@
 						{/each}
 					</select>
 				</label>
-			</div>
-
-			<div class="col-span-2">
-				<span class={labelCls}>Start year</span>
-				<div class="flex items-center gap-2">
-					<input
-						type="number"
-						inputmode="numeric"
-						aria-label="From year"
-						placeholder={options.years ? String(options.years.min) : 'From'}
-						value={filters.yearFrom || ''}
-						onchange={(e) => year('yearFrom', e)}
-						class={selectCls}
-					/>
-					<span class="text-text-muted">–</span>
-					<input
-						type="number"
-						inputmode="numeric"
-						aria-label="To year"
-						placeholder={options.years ? String(options.years.max) : 'To'}
-						value={filters.yearTo || ''}
-						onchange={(e) => year('yearTo', e)}
-						class={selectCls}
-					/>
-				</div>
 			</div>
 
 			<div class="col-span-2">

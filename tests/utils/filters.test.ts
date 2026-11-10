@@ -79,6 +79,7 @@ describe('url round trip', () => {
 			studio: 'Bones',
 			minScore: 7.5,
 			yearFrom: 2010,
+			maxScore: 9,
 			epsMax: 13,
 			unrated: true
 		});

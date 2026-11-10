@@ -6,7 +6,6 @@
 	import SortMenu from './SortMenu.svelte';
 	import FilterPanel from './FilterPanel.svelte';
 	import RandomButton from './RandomButton.svelte';
-	import ViewToggle from './ViewToggle.svelte';
 	import type { AnimeFilters, FacetOptions } from '#lib/utils/filters.js';
 	import { debounce } from '#lib/utils/debounce.js';
 	import { NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
@@ -96,7 +95,6 @@
 	{#if onrandom}
 		<RandomButton count={randomCount} onclick={onrandom} />
 	{/if}
-	<ViewToggle section="list" />
 	<SortMenu
 		options={SORT_OPTIONS}
 		value={currentSort}

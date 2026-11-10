@@ -23,7 +23,6 @@
 	import StoryWindow from '#lib/ui/StoryWindow.svelte';
 	import TabBar from '#lib/ui/TabBar.svelte';
 	import FilterBar from '#lib/ui/FilterBar.svelte';
-	import FilterPanel from '#lib/ui/FilterPanel.svelte';
 	import AnimeGrid from '#lib/ui/AnimeGrid.svelte';
 	import ListPageSkeleton from '#lib/ui/skeletons/ListPageSkeleton.svelte';
 
@@ -136,12 +135,15 @@
 			<TabBar counts={userListStore.statusCounts} />
 		</div>
 
-		<!-- Filters -->
-		<div class="mb-3">
-			<FilterBar onrandom={randomPick} randomCount={filteredEntries.length} />
-		</div>
+		<!-- Search · filters · random · sort, one inline toolbar -->
 		<div class="mb-5">
-			<FilterPanel {filters} options={facetOptions} mode="list" onchange={setFilters} />
+			<FilterBar
+				{filters}
+				options={facetOptions}
+				onchange={setFilters}
+				onrandom={randomPick}
+				randomCount={filteredEntries.length}
+			/>
 		</div>
 
 		<!-- Grid / List -->

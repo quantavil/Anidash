@@ -7,15 +7,13 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
-		interface Platform {
-			env: {
-				MAL_CLIENT_ID: string;
-				MAL_CLIENT_SECRET: string;
-			};
-			context: {
-				waitUntil(promise: Promise<unknown>): void;
-			};
-			caches: CacheStorage & { default: Cache };
+	}
+
+	// Worker bindings read via `import { env } from 'cloudflare:workers'`.
+	namespace Cloudflare {
+		interface Env {
+			MAL_CLIENT_ID: string;
+			MAL_CLIENT_SECRET: string;
 		}
 	}
 }

@@ -1,4 +1,5 @@
 import type { RequestHandler } from './$types';
+import { env } from 'cloudflare:workers';
 import { createIpRateLimiter, rateLimitedResponse } from '#lib/server/rate-limit.js';
 import { getMalClientId, jsonError } from '#lib/server/mal-env.js';
 
@@ -8,8 +9,9 @@ const checkRateLimit = createIpRateLimiter({ windowMs: 60_000, max: 200 });
 
 /** Only these request headers are forwarded to MAL (no cookies / cf-* / hop-by-hop leakage). */
 const FORWARDED_HEADERS = ['authorization', 'content-type', 'accept'];
+const STALE_RESPONSE_HEADERS = ['content-encoding', 'content-length', 'transfer-encoding'];
 
-export const fallback: RequestHandler = async ({ request, params, platform, url }) => {
+export const fallback: RequestHandler = async ({ request, params, url }) => {
 	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
 	if (!checkRateLimit(clientIp)) {
 		return rateLimitedResponse();
@@ -20,7 +22,7 @@ export const fallback: RequestHandler = async ({ request, params, platform, url 
 		return jsonError(400, 'Invalid path');
 	}
 
-	const malClientId = getMalClientId(platform);
+	const malClientId = getMalClientId(env);
 	if (!malClientId) {
 		return jsonError(500, 'MAL_CLIENT_ID not configured in platform environment');
 	}
@@ -44,7 +46,15 @@ export const fallback: RequestHandler = async ({ request, params, platform, url 
 			duplex: 'half'
 		});
 
-		return new Response(res.body, res);
+		// fetch() hands us a decoded body; drop the encoding/length headers that describe the
+		// compressed upstream bytes (kept, they make Node-based runtimes truncate the body).
+		const responseHeaders = new Headers(res.headers);
+		for (const name of STALE_RESPONSE_HEADERS) responseHeaders.delete(name);
+		return new Response(res.body, {
+			status: res.status,
+			statusText: res.statusText,
+			headers: responseHeaders
+		});
 	} catch {
 		return jsonError(502, 'Upstream proxy error');
 	}

@@ -1,5 +1,5 @@
 import { createIpRateLimiter, rateLimitedResponse } from '#lib/server/rate-limit.js';
-import { getMalClientId, getMalClientSecret, jsonError } from '#lib/server/mal-env.js';
+import { getMalClientId, getMalClientSecret, jsonError, type MalEnv } from '#lib/server/mal-env.js';
 
 const MAL_TOKEN_URL = 'https://myanimelist.net/v1/oauth2/token';
 
@@ -27,7 +27,7 @@ export function stringFields<K extends string>(
  */
 export async function handleOAuthRequest(
 	request: Request,
-	platform: App.Platform | undefined,
+	env: MalEnv | undefined,
 	buildParams: (body: Record<string, unknown>) => URLSearchParams | Response
 ): Promise<Response> {
 	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
@@ -35,8 +35,8 @@ export async function handleOAuthRequest(
 		return rateLimitedResponse();
 	}
 
-	const clientId = getMalClientId(platform);
-	const clientSecret = getMalClientSecret(platform);
+	const clientId = getMalClientId(env);
+	const clientSecret = getMalClientSecret(env);
 	if (!clientId || !clientSecret) {
 		return jsonError(500, 'MAL credentials not configured in platform environment');
 	}

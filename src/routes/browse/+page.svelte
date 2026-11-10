@@ -99,6 +99,7 @@
 	let fetchFailed = $state(false);
 	let scanBudget = $state(AUTO_SCAN_PAGES);
 
+	let searchEl = $state<SearchInput>();
 	let searchInput = $derived(getUrlParam(page.url, 'q', ''));
 
 	// ─── Search box ───
@@ -331,7 +332,7 @@
 			!(e.target instanceof HTMLSelectElement)
 		) {
 			e.preventDefault();
-			document.getElementById('browse-search')?.focus();
+			void searchEl?.focus();
 		}
 	}
 
@@ -374,6 +375,47 @@
 	const sourceLabel = $derived(isSearching ? `“${query}”` : chart.label);
 </script>
 
+{#snippet searchTool()}
+	<SearchInput
+		bind:this={searchEl}
+		id="browse-search"
+		value={searchInput}
+		placeholder="Search by title…  ( / )"
+		oninput={handleSearchInput}
+		onclear={clearSearch}
+		onkeydown={handleKeyDown}
+		{loading}
+		{isDebouncing}
+	/>
+{/snippet}
+
+{#snippet sortTools()}
+	<select
+		id="browse-sort"
+		aria-label="Sort results"
+		value={sortKey ?? ''}
+		onchange={(e) =>
+			setParams([
+				{ key: 'sort', value: (e.target as HTMLSelectElement).value },
+				{ key: 'dir', value: '' }
+			])}
+		class="min-h-11 cursor-pointer appearance-none rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary outline-none transition-colors focus:bg-white/10"
+	>
+		{#each SORTS as s (s.value)}
+			<option value={s.value} class="bg-surface-2">{s.label}</option>
+		{/each}
+	</select>
+	<button
+		type="button"
+		onclick={toggleDir}
+		disabled={!sortKey}
+		aria-label="Sort direction: {sortDir === 'asc' ? 'ascending' : 'descending'}"
+		class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary disabled:cursor-default disabled:opacity-40"
+	>
+		{#if sortDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
+	</button>
+{/snippet}
+
 <svelte:head>
 	<title>Browse | AniDash</title>
 </svelte:head>
@@ -382,48 +424,6 @@
 
 <div class="py-6">
 	<h1 class="text-2xl font-bold text-text-primary">Browse</h1>
-
-	<!-- Search + sort -->
-	<div class="mt-4 flex flex-col gap-3 sm:flex-row">
-		<div class="flex-1">
-			<SearchInput
-				id="browse-search"
-				value={searchInput}
-				placeholder="Search by title…  ( / )"
-				oninput={handleSearchInput}
-				onclear={clearSearch}
-				onkeydown={handleKeyDown}
-				{loading}
-				{isDebouncing}
-			/>
-		</div>
-		<div class="flex items-center gap-2">
-			<select
-				id="browse-sort"
-				aria-label="Sort results"
-				value={sortKey ?? ''}
-				onchange={(e) =>
-					setParams([
-						{ key: 'sort', value: (e.target as HTMLSelectElement).value },
-						{ key: 'dir', value: '' }
-					])}
-				class="min-h-11 flex-1 cursor-pointer appearance-none rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary outline-none transition-colors focus:bg-white/10 sm:w-44 sm:flex-none"
-			>
-				{#each SORTS as s (s.value)}
-					<option value={s.value} class="bg-surface-2">{s.label}</option>
-				{/each}
-			</select>
-			<button
-				type="button"
-				onclick={toggleDir}
-				disabled={!sortKey}
-				aria-label="Sort direction: {sortDir === 'asc' ? 'ascending' : 'descending'}"
-				class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary disabled:cursor-default disabled:opacity-40"
-			>
-				{#if sortDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
-			</button>
-		</div>
-	</div>
 
 	<!-- Charts (when not searching) -->
 	{#if !isSearching}
@@ -445,8 +445,16 @@
 		</div>
 	{/if}
 
+	<!-- Search · filters · sort, one inline toolbar -->
 	<div class="mt-4">
-		<FilterPanel {filters} options={facetOptions} mode="browse" onchange={setFilters} />
+		<FilterPanel
+			{filters}
+			options={facetOptions}
+			mode="browse"
+			onchange={setFilters}
+			leading={searchTool}
+			trailing={sortTools}
+		/>
 	</div>
 
 	<!-- Results -->

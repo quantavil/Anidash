@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { SlidersHorizontal, X, ChevronDown } from 'lucide-svelte';
 	import {
 		EMPTY_FILTERS,
@@ -12,13 +13,18 @@
 		filters,
 		options,
 		mode,
-		onchange
+		onchange,
+		leading,
+		trailing
 	}: {
 		filters: AnimeFilters;
 		options: FacetOptions;
 		/** `list` adds my-score filters; `browse` adds hide-listed. */
 		mode: 'list' | 'browse' | 'season';
 		onchange: (next: AnimeFilters) => void;
+		/** Controls rendered before / after the Filters button, in the same row. */
+		leading?: Snippet;
+		trailing?: Snippet;
 	} = $props();
 
 	const TYPES = ['tv', 'movie', 'ova', 'ona', 'special'];
@@ -125,6 +131,7 @@
 
 <div class="flex flex-col gap-2">
 	<div class="flex flex-wrap items-center gap-2">
+		{@render leading?.()}
 		<button
 			type="button"
 			onclick={() => (open = !open)}
@@ -144,19 +151,22 @@
 			{/if}
 			<ChevronDown size={14} class="transition-transform {open ? 'rotate-180' : ''}" />
 		</button>
+		{@render trailing?.()}
+	</div>
 
-		{#each summary as s (s.label)}
-			<button
-				type="button"
-				onclick={() => set(s.clear)}
-				aria-label="Remove filter {s.label}"
-				class="flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-primary/30 bg-primary/10 pl-3 pr-2 text-xs text-primary hover:bg-primary/20"
-			>
-				{s.label}<X size={12} />
-			</button>
-		{/each}
+	{#if count > 0}
+		<div class="flex flex-wrap items-center gap-2">
+			{#each summary as s (s.label)}
+				<button
+					type="button"
+					onclick={() => set(s.clear)}
+					aria-label="Remove filter {s.label}"
+					class="flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-primary/30 bg-primary/10 pl-3 pr-2 text-xs text-primary hover:bg-primary/20"
+				>
+					{s.label}<X size={12} />
+				</button>
+			{/each}
 
-		{#if count > 0}
 			<button
 				type="button"
 				onclick={() => onchange({ ...EMPTY_FILTERS })}
@@ -164,8 +174,8 @@
 			>
 				Clear all
 			</button>
-		{/if}
-	</div>
+		</div>
+	{/if}
 
 	{#if open}
 		<div

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { handleOAuthRequest, stringFields } from '../../src/routes/auth/oauth';
 
-const platform = { env: { MAL_CLIENT_ID: 'cid', MAL_CLIENT_SECRET: 'sec' } } as App.Platform;
+const env = { MAL_CLIENT_ID: 'cid', MAL_CLIENT_SECRET: 'sec' };
 
 function post(body: unknown, ip = '1.1.1.1') {
 	return new Request('http://localhost/auth/token', {
@@ -26,7 +26,7 @@ describe('handleOAuthRequest', () => {
 	it('500s when the secret is not configured (the Cloudflare-secret-missing case)', async () => {
 		const res = await handleOAuthRequest(
 			post({}, '2.2.2.2'),
-			{ env: { MAL_CLIENT_ID: 'cid' } } as App.Platform,
+			{ MAL_CLIENT_ID: 'cid' },
 			() => new URLSearchParams()
 		);
 		expect(res.status).toBe(500);
@@ -34,11 +34,7 @@ describe('handleOAuthRequest', () => {
 	});
 
 	it('rejects non-object JSON bodies', async () => {
-		const res = await handleOAuthRequest(
-			post('[1]', '3.3.3.3'),
-			platform,
-			() => new URLSearchParams()
-		);
+		const res = await handleOAuthRequest(post('[1]', '3.3.3.3'), env, () => new URLSearchParams());
 		expect(res.status).toBe(400);
 	});
 
@@ -48,7 +44,7 @@ describe('handleOAuthRequest', () => {
 			.mockResolvedValue(new Response(JSON.stringify({ error: 'invalid_grant' }), { status: 400 }));
 		vi.stubGlobal('fetch', fetchMock);
 
-		const res = await handleOAuthRequest(post({ x: 1 }, '4.4.4.4'), platform, () => {
+		const res = await handleOAuthRequest(post({ x: 1 }, '4.4.4.4'), env, () => {
 			return new URLSearchParams({ grant_type: 'refresh_token', refresh_token: 'r' });
 		});
 

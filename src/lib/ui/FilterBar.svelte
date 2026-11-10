@@ -4,10 +4,24 @@
 	import { goto } from '$app/navigation';
 	import { ArrowUpDown, ArrowDown, ArrowUp, Dices } from 'lucide-svelte';
 	import SearchInput from './SearchInput.svelte';
+	import FilterPanel from './FilterPanel.svelte';
+	import type { AnimeFilters, FacetOptions } from '#lib/utils/filters.js';
 
 	import { NATURAL_DIR, type SortKey, type SortDir } from '#lib/utils/sort.js';
 
-	let { onrandom, randomCount = 0 }: { onrandom?: () => void; randomCount?: number } = $props();
+	let {
+		filters,
+		options,
+		onchange,
+		onrandom,
+		randomCount = 0
+	}: {
+		filters: AnimeFilters;
+		options: FacetOptions;
+		onchange: (next: AnimeFilters) => void;
+		onrandom?: () => void;
+		randomCount?: number;
+	} = $props();
 
 	const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 		{ key: 'updated', label: 'Last Updated' },
@@ -111,80 +125,78 @@
 	);
 </script>
 
-<div class="flex w-full flex-wrap items-center justify-between gap-3">
-	<!-- Search -->
-	<div class="flex-1 min-w-[200px]">
-		<SearchInput
-			value={currentQuery}
-			placeholder="Search your list…"
-			oninput={handleSearch}
-			onclear={clearSearch}
-		/>
-	</div>
+{#snippet search()}
+	<SearchInput
+		value={currentQuery}
+		placeholder="Search your list…"
+		oninput={handleSearch}
+		onclear={clearSearch}
+	/>
+{/snippet}
 
-	<!-- Controls -->
-	<div class="flex items-center gap-2">
-		{#if onrandom}
-			<button
-				onclick={onrandom}
-				disabled={randomCount === 0}
-				title="Open a random title from the current view"
-				aria-label="Random pick from the {randomCount} shown"
-				class="flex min-h-11 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40"
-			>
-				<Dices size={14} /> Random
-			</button>
-		{/if}
-		<!-- Sort -->
-		<div class="relative">
-			<button
-				onclick={() => (showSortMenu = !showSortMenu)}
-				onkeydown={handleSortKeydown}
-				aria-haspopup="true"
-				aria-expanded={showSortMenu}
-				aria-label="Sort anime list: currently {sortLabel}"
-				class="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 py-2 text-sm text-text-secondary transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-			>
-				<ArrowUpDown size={14} />
-				{sortLabel}
-			</button>
-
-			{#if showSortMenu}
-				<!-- Click-away overlay -->
-				<div
-					class="fixed inset-0 z-40"
-					onclick={() => {
-						showSortMenu = false;
-						focusedIndex = -1;
-					}}
-					role="presentation"
-				></div>
-				<div class="absolute right-0 top-full mt-2 glass-dropdown border-border!" role="menu">
-					{#each SORT_OPTIONS as option, idx (option.key)}
-						<button
-							onclick={() => setSort(option.key)}
-							role="menuitem"
-							tabindex="-1"
-							class="glass-dropdown-item w-full
-              {currentSort === option.key
-								? '!bg-primary/10 !text-primary'
-								: idx === focusedIndex
-									? '!bg-white/10 !text-text-primary'
-									: 'text-text-secondary'}"
-						>
-							{option.label}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
+{#snippet controls()}
+	{#if onrandom}
 		<button
-			onclick={toggleDir}
-			aria-label="Sort direction: {currentDir === 'asc' ? 'ascending' : 'descending'}"
-			title={currentDir === 'asc' ? 'Ascending' : 'Descending'}
-			class="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95"
+			onclick={onrandom}
+			disabled={randomCount === 0}
+			title="Open a random title from the current view"
+			aria-label="Random pick from the {randomCount} shown"
+			class="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border border-white/5 bg-white/5 text-sm text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95 disabled:opacity-40 sm:px-4"
 		>
-			{#if currentDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
+			<Dices size={15} /><span class="hidden sm:inline">Random</span>
 		</button>
+	{/if}
+	<!-- Sort -->
+	<div class="relative">
+		<button
+			onclick={() => (showSortMenu = !showSortMenu)}
+			onkeydown={handleSortKeydown}
+			aria-haspopup="true"
+			aria-expanded={showSortMenu}
+			aria-label="Sort anime list: currently {sortLabel}"
+			class="flex min-h-11 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-4 text-sm text-text-secondary transition-all duration-500 ease-spring hover:bg-white/10 hover:text-text-primary active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+		>
+			<ArrowUpDown size={14} />
+			{sortLabel}
+		</button>
+
+		{#if showSortMenu}
+			<!-- Click-away overlay -->
+			<div
+				class="fixed inset-0 z-40"
+				onclick={() => {
+					showSortMenu = false;
+					focusedIndex = -1;
+				}}
+				role="presentation"
+			></div>
+			<div class="absolute left-0 top-full mt-2 glass-dropdown border-border!" role="menu">
+				{#each SORT_OPTIONS as option, idx (option.key)}
+					<button
+						onclick={() => setSort(option.key)}
+						role="menuitem"
+						tabindex="-1"
+						class="glass-dropdown-item w-full
+              {currentSort === option.key
+							? '!bg-primary/10 !text-primary'
+							: idx === focusedIndex
+								? '!bg-white/10 !text-text-primary'
+								: 'text-text-secondary'}"
+					>
+						{option.label}
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</div>
-</div>
+	<button
+		onclick={toggleDir}
+		aria-label="Sort direction: {currentDir === 'asc' ? 'ascending' : 'descending'}"
+		title={currentDir === 'asc' ? 'Ascending' : 'Descending'}
+		class="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/5 bg-white/5 text-text-secondary transition-colors hover:bg-white/10 hover:text-text-primary active:scale-95"
+	>
+		{#if currentDir === 'asc'}<ArrowUp size={14} />{:else}<ArrowDown size={14} />{/if}
+	</button>
+{/snippet}
+
+<FilterPanel {filters} {options} mode="list" {onchange} leading={search} trailing={controls} />
